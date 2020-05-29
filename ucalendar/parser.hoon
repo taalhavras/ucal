@@ -226,8 +226,10 @@
     =/  tokens=(list tape)  (split i.w col)
     ::  assert we have two tokens
     ?>  =((lent tokens) 2)
+    ::  now break first token up along its params (split on semicolon)
+    =/  props=(list tape)  (split (snag 0 tokens) mic)
     ::  lowercase and convert to term to switch against union
-    =/  tag  (^:(vevent-tag) (crip (cass (snag 0 tokens))))
+    =/  tag  (^:(vevent-tag) (crip (cass (snag 0 props))))
     ::  each tag will have a corresponding function that takes the second token
     ::  and the current vevent and produces a new vevent. all of these
     ::  functions will have the form
@@ -409,10 +411,10 @@
     ::  didn't work. i.e. t:`(lest tape)`lines
     ?~  lines
       !!
-    ::  get rid of vcalendar stuff
+    ::  get rid of vcalendar begin/end
     =/  trimmed-lines=wall
         (oust [(sub n 2) 1] t.lines)
-    ::  now go through lines and get the indices of begins/ends
+    ::  now go through lines and get the indices of begins/ends for events
     ::  this whole method is horrendously nonperformant, but will do for testing
     =/  begin-indices=(list @)  (fand ~["BEGIN:VEVENT"] trimmed-lines)
     =/  end-indices=(list @)  (fand ~["END:VEVENT"] trimmed-lines)
