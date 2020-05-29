@@ -3,7 +3,7 @@
 ::  Core for parsing ical files. The goal of this file is to go from ical file
 ::  to a list of unfolded strings (cords?) with all characters escaped
 |%
-::  rule builder for matching 0 or 1 time. regex ?
+::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
     |*(rul=rule (stun [0 1] rul))
@@ -239,8 +239,8 @@
     ::  each tag will have a corresponding function that takes the second token
     ::  and the current vevent and produces a new vevent. all of these
     ::  functions will have the form
-    ::  [tape vevent unique-tags] -> [vevent unique-tags]
-    =/  parser=$-([tape vevent unique-tags] [vevent unique-tags])
+    ::  [tape (list tape) vevent unique-tags] -> [vevent unique-tags]
+    =/  parser=$-([tape (list tape) vevent unique-tags] [vevent unique-tags])
     ?-  tag
       %dtstamp  parse-dtstamp
       %uid  parse-uid
@@ -258,8 +258,9 @@
       %status  parse-status
       %begin  parse-subcomponent
     ==
+    ::  call parser with second token (data) and props without the tag
     =/  res=[v=vevent ut=unique-tags]
-        (parser (snag 1 tokens) v ut)
+        (parser (snag 1 tokens) (slag 1 props) v ut)
     $(w t.w, v v.res, ut ut.res)
     |%
     ::  tags we expect to see exactly once (required)
@@ -296,7 +297,7 @@
     ::  TODO So is there some way to refactor these so the common parts
     ::  are collapsed? look into it...
     ++  parse-dtstamp
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ?:  dtstamp.u
           !!
@@ -304,7 +305,7 @@
         v(dtstamp (parse-date-or-datetime t))
         u(dtstamp &)
     ++  parse-dtstart
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ?:  dtstart.u
           !!
@@ -312,7 +313,7 @@
         v(dtstart (parse-date-or-datetime t))
         u(dtstart &)
     ++  parse-dtend
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ?:  dtend-duration.u
           !!
@@ -320,7 +321,7 @@
         v(end [%dtend (parse-date-or-datetime t)])
         u(dtend-duration &)
     ++  parse-vevent-duration
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ?:  dtend-duration.u
           !!
@@ -331,7 +332,7 @@
         v(end [%duration t.dur])
         u(dtend-duration &)
     ++  parse-uid
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ?:  uid.u
           !!
@@ -339,33 +340,33 @@
         v(uid (crip t))
         u(uid &)
     ++  parse-organizer
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         :-(v(organizer [~ t]) u)
     ++  parse-categories
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         =/  cats=wall  (split t com)
         :-(v(categories (weld cats categories.v)) u)
     ++  parse-class
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         =/  class  (^:(event-class) (crip (cass t)))
         :-(v(classification [~ class]) u)
     ++  parse-comment
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         :-(v(comment [t comment.v]) u)
     ++  parse-description
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         :-(v(description [~ t]) u)
     ++  parse-summary
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         :-(v(summary [~ t]) u)
     ++  parse-geo
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ::  we expect two semicolon separated float values
         =/  tokens=(list tape)  (split t mic)
@@ -376,16 +377,16 @@
             (parse-float (snag 1 tokens))
         :-(v(geo [~ ll]) u)
     ++  parse-location
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         :-(v(location [~ t]) u)
     ++  parse-status
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         =/  status  (^:(event-status) (crip t))
         :-(v(status [~ status]) u)
     ++  parse-subcomponent
-        |=  [t=tape v=vevent u=unique-tags]
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         ::  TODO implement
         !!
