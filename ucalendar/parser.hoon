@@ -3,6 +3,12 @@
 ::  Core for parsing ical files. The goal of this file is to go from ical file
 ::  to a list of unfolded strings (cords?) with all characters escaped
 |%
+::  rule builder for matching 0 or 1 time. regex ?
+::  "wut" as a name is already taken, so now we have this
+++  whut
+    |*(rul=rule (stun [0 1] rul))
+::  rule for one or more digits
+++  digits  (plus dit)
 ::  split input tape on delim rule, return list of tapes.
 ::  if delimiter isn't present, then return list containing just
 ::  the original tape.
@@ -34,9 +40,9 @@
           plug
           %+  cook
             |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
-            (stun [0 1] ;~(pose lus hep)) :: optional sign
-          (plus dit)
-          (stun [0 1] ;~(plug dot (plus dit)))
+            (whut ;~(pose lus hep)) :: optional sign
+          digits
+          (whut ;~(plug dot digits))
         ==
     =/  res  (scan t rul)
     =/  d=dn  [%d s=-:res e=--0 a=0]
@@ -81,13 +87,13 @@
     =<
     |=  t=tape
     ^-  [? tarp]
-    =/  dur-sec  (cook cook-sec ;~(plug (plus dit) (jest 'S')))
-    =/  dur-min  (cook cook-min ;~(plug (plus dit) (jest 'M') (stun [0 1] dur-sec)))
-    =/  dur-hour  (cook cook-hour ;~(plug (plus dit) (jest 'H') (stun [0 1] dur-min)))
-    =/  dur-day  (cook cook-day ;~(plug (plus dit) (jest 'D')))
-    =/  dur-week  (cook cook-week ;~(plug (plus dit) (jest 'W')))
+    =/  dur-sec  (cook cook-sec ;~(plug digits (jest 'S')))
+    =/  dur-min  (cook cook-min ;~(plug digits (jest 'M') (whut dur-sec)))
+    =/  dur-hour  (cook cook-hour ;~(plug digits (jest 'H') (whut dur-min)))
+    =/  dur-day  (cook cook-day ;~(plug digits (jest 'D')))
+    =/  dur-week  (cook cook-week ;~(plug digits (jest 'W')))
     =/  dur-time  (cook cook-time ;~(plug (jest 'T') ;~(pose dur-hour dur-min dur-sec)))
-    =/  dur-date  (cook cook-date ;~(plug dur-day (stun [0 1] dur-time)))
+    =/  dur-date  (cook cook-date ;~(plug dur-day (whut dur-time)))
     =/  res=[f=? =cord tar=tarp]
     %+  scan  t
     ;~
@@ -95,7 +101,7 @@
       %+  cook
       |=  x=tape
           !=(x "-")  ::  produce %.y if we don't have '-', %.n otherwise
-      (stun [0 1] ;~(pose lus hep)) :: optional sign
+      (whut ;~(pose lus hep)) :: optional sign
       (jest 'P')
       ;~
         pose
@@ -201,7 +207,7 @@
           two-digit
           two-digit
           two-digit
-          (stun [0 1] (jest 'Z'))
+          (whut (jest 'Z'))
         ==
     =/  hours=@  (from-two-digit -:res)
     =/  minutes=@  (from-two-digit +<:res)
