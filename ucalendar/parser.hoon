@@ -409,7 +409,6 @@
 ++  parse-calendar
     =<
     |=  lines=wall
-    =|  cal=calendar
     =/  n=@  (lent lines)
     ?>  (gte n 2)
     ?>  =((snag 0 lines) "BEGIN:VCALENDAR")
@@ -429,29 +428,11 @@
     ?>  =((lent begin-indices) (lent end-indices))
     ::  extract lines containing top level calendar properties
     =/  cal-props=(list tape)  (scag (snag 0 begin-indices) trimmed-lines)
-    =/  ut=unique-tags  [| |]
-    ::  fill in calendar with props
-    =/  prop-cal=calendar
-        |-
-        ?~  cal-props
-          ?:  &(prodid.ut version.ut)
-            cal
-          !!
-        =/  tokens=(list tape)  (split i.cal-props col)
-        ?>  =((lent tokens) 2)
-        =/  tag  (^:(vcal-tag) (crip (cass (snag 0 tokens))))
-        =/  parser=$-([tape calendar unique-tags] [calendar unique-tags])
-        ?-  tag
-          %version  parse-version
-          %prodid  parse-prodid
-        ==
-        =/  res=[c=calendar ut=unique-tags]
-            (parser (snag 1 tokens) cal ut)
-        $(cal-props t.cal-props, ut ut.res, cal c.res)
+    =/  cal=calendar  (parse-calendar-props cal-props)
     |-
     ?~  begin-indices
       ?~  end-indices
-        prop-cal
+        cal
       !!
     ?~  end-indices
       !!
@@ -461,8 +442,8 @@
     =/  num-lines=@  (sub i.end-indices begin)
     =/  target-lines=wall  (swag [begin num-lines] trimmed-lines)
     =/  event=vevent  (parse-vevent target-lines)
-    =/  new-cal=calendar  prop-cal(events [event events.cal])
-    $(begin-indices t.begin-indices, end-indices t.end-indices, prop-cal new-cal)
+    =/  new-cal=calendar  cal(events [event events.cal])
+    $(begin-indices t.begin-indices, end-indices t.end-indices, cal new-cal)
     |%
     +$  unique-tags  $:(prodid=? version=?)
     +$  vcal-tag  $?
@@ -485,5 +466,27 @@
         :-
         c(version t)
         u(version &)
+    ::  builds calendar with top level properties populated
+    ++  parse-calendar-props
+        |=  [cal-props=(list tape)]
+        ^-  calendar
+        =|  cal=calendar
+        =/  ut=unique-tags  [| |]
+        |-
+        ?~  cal-props
+          ?:  &(prodid.ut version.ut)
+            cal
+          !!
+        =/  tokens=(list tape)  (split i.cal-props col)
+        ?>  =((lent tokens) 2)
+        =/  tag  (^:(vcal-tag) (crip (cass (snag 0 tokens))))
+        =/  parser=$-([tape calendar unique-tags] [calendar unique-tags])
+        ?-  tag
+          %version  parse-version
+          %prodid  parse-prodid
+        ==
+        =/  res=[c=calendar ut=unique-tags]
+            (parser (snag 1 tokens) cal ut)
+        $(cal-props t.cal-props, ut ut.res, cal c.res)
     --
 --
