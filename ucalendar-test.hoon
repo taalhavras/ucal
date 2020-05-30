@@ -20,6 +20,16 @@
       "-99.9876"
     ==
 ::  (turn floats parse-float)
-=/  lines=wall
-    (read-file /(scot %p p)/home/(scot %da now)/txt/ics/txt)
-(parse-calendar lines)
+=/  unfoldable=wall
+    :~
+      "these lines\0d"
+      "shouldn't be unfolded\0d"
+      "but these ones \0d"
+      " should be\0d"
+      "so shou\0d"
+      " ld these \0d"
+      "\09three\0d"
+    ==
+::  (unfold-lines unfoldable)
+=/  pax=path  /(scot %p p)/home/(scot %da now)/txt/hg/txt
+(calendar-from-file pax)

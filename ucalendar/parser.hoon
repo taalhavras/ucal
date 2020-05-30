@@ -241,7 +241,7 @@
     ::  functions will have the form
     ::  [tape (list tape) vevent unique-tags] -> [vevent unique-tags]
     =/  parser=$-([tape (list tape) vevent unique-tags] [vevent unique-tags])
-    ?-  tag
+    ?+  tag  no-parse
       %dtstamp  parse-dtstamp
       %uid  parse-uid
       %dtstart  parse-dtstart
@@ -294,9 +294,22 @@
         %location
         %status
         %begin ::  subcomponent, alarms
+        ::  unsupported (as of now)
+        %rrule
+        %rdate
+        %exdate
+        %created
+        %last-modified
+        %sequence
+        %transp
         ==
     ::  TODO So is there some way to refactor these so the common parts
     ::  are collapsed? look into it...
+    ::
+    ::  used for tags we don't support
+    ++  no-parse
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
+        :-(v u)
     ++  parse-dtstamp
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
@@ -384,7 +397,7 @@
     ++  parse-status
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
-        =/  status  (^:(event-status) (crip t))
+        =/  status  (^:(event-status) (crip (cass t)))
         :-(v(status [~ status]) u)
     ++  parse-subcomponent
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
@@ -404,6 +417,54 @@
     |=(t=tank ~(ram re t))
     ::  now drop last item from list as it's a sig
     (oust [(dec (lent tapes)) 1] tapes)
+::  "unfold" lines, as per the rfc. CRLF and then a whitespace
+::  signifies a fold, so we join together lines separated by this
+::  with the separations removed
+++  unfold-lines
+    =<
+    |=  lines=wall
+    ^-  wall
+    ?~  lines
+      ~
+    =/  first=tape  i.lines
+    ?~  t.lines
+      [first ~]
+    =/  second=tape  i.t.lines
+    =/  rest=wall  t.t.lines
+    =|  acc=wall
+    |-
+    =/  unfolded=(unit tape)  (unfold first second)
+    =/  [newfirst=tape newacc=wall]
+        ?~  unfolded
+          [second [first acc]]
+        [u.unfolded acc]
+    ?~  rest
+      (flop [newfirst newacc])
+    $(acc newacc, rest t.rest, first newfirst, second i.rest)
+    |%
+    ::  whitespace rule, ace for ascii 32 (space), '\09' for tab
+    ++  wsp  ;~(pose ace (jest '\09'))
+    ::  See if two lines should be unfolded. Produces a unit tape
+    ::  which contains the unfolded line if it was possible to unfold.
+    ::  we assume that the first tape ended in a newline.
+    ++  unfold
+        |=  [first=tape second=tape]
+        ^-  (unit tape)
+        =/  n=@  (dec (lent first))
+        =/  res  (rust second ;~(plug wsp (star next)))
+        ::  check for failures
+        ::  second line doesn't start with a whitespace
+        ?~  res
+          ~
+        ::  first line doesn't end in carriage return
+        ?:  !=((snag n first) '\0d')
+          ~
+        ::  trim carriage return
+        =/  f-prefix=tape  (scag n first)
+        ::  trim whitespace
+        =/  s-tail=tape  +:u.res
+        [~ (weld f-prefix s-tail)]
+    --
 ::  parse a calendar into a list of vevents. Since vevents aren't
 ::  nestable, we can search forward until we find the next one
 ++  parse-calendar
@@ -427,7 +488,10 @@
     =/  end-indices=(list @)  (fand ~["END:VEVENT"] trimmed-lines)
     ?>  =((lent begin-indices) (lent end-indices))
     ::  extract lines containing top level calendar properties
-    =/  cal-props=(list tape)  (scag (snag 0 begin-indices) trimmed-lines)
+    ::  currently just grabbing first two lines, but this can be changed
+    ::  depending on whether or not we support more top level calendar
+    ::  properties.
+    =/  cal-props=(list tape)  (scag 2 trimmed-lines)
     =/  cal=calendar  (parse-calendar-props cal-props)
     |-
     ?~  begin-indices
@@ -489,4 +553,17 @@
             (parser (snag 1 tokens) cal ut)
         $(cal-props t.cal-props, ut ut.res, cal c.res)
     --
+++  calendar-from-file
+    |=  pax=path
+    ^-  calendar
+    =/  lines=wall
+        %+  turn
+        (unfold-lines (read-file pax))
+        ::  now trim trailing carriage-returns
+        |=  t=tape
+        =/  n=@  (dec (lent t))
+        ?:  =((snag n t) '\0d')
+          (scag n t)
+        t
+    (parse-calendar lines)
 --
