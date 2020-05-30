@@ -258,7 +258,8 @@
       %status  parse-status
       %begin  parse-subcomponent
     ==
-    ::  call parser with second token (data) and props without the tag
+    ::  call parser with second token (data) and props without the tag,
+    ::  along with our vevent and unique-tags
     =/  res=[v=vevent ut=unique-tags]
         (parser (snag 1 tokens) (slag 1 props) v ut)
     $(w t.w, v v.res, ut ut.res)
@@ -403,7 +404,7 @@
     |=(t=tank ~(ram re t))
     ::  now drop last item from list as it's a sig
     (oust [(dec (lent tapes)) 1] tapes)
-::  actually parse a calendar into a list of vevents. Since vevents aren't
+::  parse a calendar into a list of vevents. Since vevents aren't
 ::  nestable, we can search forward until we find the next one
 ++  parse-calendar
     =<
@@ -426,22 +427,48 @@
     =/  begin-indices=(list @)  (fand ~["BEGIN:VEVENT"] trimmed-lines)
     =/  end-indices=(list @)  (fand ~["END:VEVENT"] trimmed-lines)
     ?>  =((lent begin-indices) (lent end-indices))
+    ::  extract lines containing top level calendar properties
+    =/  cal-props=(list tape)  (scag (snag 0 begin-indices) trimmed-lines)
+    =/  ut=unique-tags  [| |]
+    ::  fill in calendar with props
+    =/  prop-cal=calendar
+        |-
+        ?~  cal-props
+          ?:  &(prodid.ut version.ut)
+            cal
+          !!
+        =/  tokens=(list tape)  (split i.cal-props col)
+        ?>  =((lent tokens) 2)
+        =/  tag  (^:(vcal-tag) (crip (cass (snag 0 tokens))))
+        =/  parser=$-([tape calendar unique-tags] [calendar unique-tags])
+        ?-  tag
+          %version  parse-version
+          %prodid  parse-prodid
+        ==
+        =/  res=[c=calendar ut=unique-tags]
+            (parser (snag 1 tokens) cal ut)
+        $(cal-props t.cal-props, ut ut.res, cal c.res)
     |-
     ?~  begin-indices
       ?~  end-indices
-        cal
+        prop-cal
       !!
     ?~  end-indices
       !!
-    ::  get indices in trimmed lines that don't include the begin/end tags
+    ::  get indices in trimmed lines that don't include the begin/end tags.
+    ::  extract those lines from target-lines and construct a vevent from them
     =/  begin=@  +(i.begin-indices)
     =/  num-lines=@  (sub i.end-indices begin)
     =/  target-lines=wall  (swag [begin num-lines] trimmed-lines)
     =/  event=vevent  (parse-vevent target-lines)
-    =/  new-cal=calendar  cal(events [event events.cal])
-    $(begin-indices t.begin-indices, end-indices t.end-indices, cal new-cal)
+    =/  new-cal=calendar  prop-cal(events [event events.cal])
+    $(begin-indices t.begin-indices, end-indices t.end-indices, prop-cal new-cal)
     |%
     +$  unique-tags  $:(prodid=? version=?)
+    +$  vcal-tag  $?
+        %version
+        %prodid
+        ==
     ++  parse-prodid
         |=  [t=tape c=calendar u=unique-tags]
         ^-  [calendar unique-tags]
