@@ -3,6 +3,11 @@
 ::  Core for parsing ical files. The goal of this file is to go from ical file
 ::  to a list of unfolded strings (cords?) with all characters escaped
 |%
+::  ical period datatype
++$  period  $%
+    [%explicit begin=date end=date]
+    [%start begin=date duration=tarp]
+    ==
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
@@ -78,8 +83,21 @@
 ::  parses a period
 ++  parse-period
     |=  t=tape
-    ::  TODO implement
-    !!
+    ^-  period
+    ::  split on '/'. first token is a date-time, second will either be
+    ::  date-time or duration. the duration MUST BE POSITIVE
+    =/  tokens=(list tape)  (split t fas)
+    ?>  =((lent tokens) 2)
+    =/  begin=date  (parse-datetime-value (snag 0 tokens))
+    =/  second=tape  (snag 1 tokens)
+    ::  matches prefix of duration
+    =/  dur-rul  ;~(plug (pose lus hep) (jest 'P'))
+    ?:  =((rust second (pfix dur-rul)) ~)
+      ::  we have a date-time for the second
+      [%explicit begin (parse-datetime-value second)]
+    =/  [sign=? dur=tarp]  (parse-duration second)
+    ?>  sign ::  duration must be positive
+    [%start begin dur]
 ::  takes a tape representing a duration, produces a cell of tarp and a
 ::  flag representing whether the duration is positive or negative,
 ::  %.y for positive and %.n for negative
