@@ -20,7 +20,15 @@
    it since it's a pretty large change. there will be a unified type
    (ical-time or some such) with both date and date-time in it. This will
    change pretty much every place urbit's date type is used in the code.
-
+5. For some properties that can be dates or date-times, there is probably
+   a way to enforce that they're all either one or the other. This would
+   more closely mirror what the ical spec actually says and would be a nice
+   way of having the type system reflect that validation.
+   Stuff like exdate is easy (define a new type that's either a list of
+   ical-date or ical-datetime), but things like dtstart/dtend might be more
+   tricky? Would probably need a separate type for both of them, either
+   two ical-dates or ical-datetimes. This might not be an immediate concern,
+   but is definitely something we want IMO.
 
 ## General TODOs
 
