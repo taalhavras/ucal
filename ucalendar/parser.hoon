@@ -70,13 +70,13 @@
     ::  date-time or duration. the duration MUST BE POSITIVE
     =/  tokens=(list tape)  (split t fas)
     ?>  =((lent tokens) 2)
-    =/  begin=date  d:(parse-datetime-value (snag 0 tokens))
+    =/  begin=ical-datetime  (parse-datetime-value (snag 0 tokens))
     =/  second=tape  (snag 1 tokens)
     ::  matches prefix of duration
     =/  dur-rul  ;~(plug ;~(pose lus hep) (jest 'P'))
     ?:  =((rust second ;~(pfix dur-rul (star next))) ~)
       ::  we have a date-time for the second
-      [%explicit begin d:(parse-datetime-value second)]
+      [%explicit begin (parse-datetime-value second)]
     =/  [sign=? dur=tarp]  (parse-duration second)
     ?>  sign ::  duration must be positive
     [%start begin dur]

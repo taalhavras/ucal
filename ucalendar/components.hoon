@@ -21,8 +21,8 @@
 +$  latlon  $:(lat=dn lon=dn)
 ::  ical period datatype, always date-times
 +$  period  $%
-    [%explicit begin=date end=date]
-    [%start begin=date duration=tarp]
+    [%explicit begin=ical-datetime end=ical-datetime]
+    [%start begin=ical-datetime duration=tarp]
     ==
 +$  rdate  $%
     [%time d=ical-time]
