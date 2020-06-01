@@ -164,7 +164,7 @@
 ::  used to parse tapes that are either dates or datetimes
 ++  parse-date-or-datetime
     |=  t=tape
-    ^-  ical-date
+    ^-  ical-time
     ::  check if length of tape is 8. If it is, dtstamp is a date.
     ::  otherwise, it's a date-time
     ?:  =((lent t) 8)
@@ -173,7 +173,7 @@
 ::  parse an ics date value - a tape of the form "YYYYMMDD"
 ++  parse-date-value
     |=  t=tape
-    ^-  $>(%date ical-date)
+    ^-  ical-date
     =|  d=date
     =/  four-dit-rul  ;~(plug dit dit dit dit)
     =/  two-dit-rul  ;~(plug dit dit)
@@ -193,10 +193,10 @@
 ::  optionally, there may also be a 'Z' at the end, signifying UTC time
 ++  parse-datetime-value
     |=  t=tape
-    ^-  $>(%date-time ical-date)
+    ^-  ical-datetime
     ::  expect two tokens here
     =/  tokens=(list tape)  (split t (jest 'T'))
-    =/  d=$>(%date ical-date)  (parse-date-value (snag 0 tokens))
+    =/  d=ical-date  (parse-date-value (snag 0 tokens))
     ::  TODO validate these digits? special rules with shims?
     =/  two-digit  ;~(plug dit dit)
     =/  res
@@ -315,7 +315,7 @@
         ?:  dtstamp.u
           !!
         :-
-        v(dtstamp d:(parse-datetime-value t))
+        v(dtstamp (parse-datetime-value t))
         u(dtstamp &)
     ++  parse-dtstart
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
@@ -410,7 +410,7 @@
         =/  f=$-(tape rdate)
             ?~  (find ~["VALUE=PERIOD"] props)
               |=(tok=tape [%period (parse-period tok)])
-            |=(tok=tape [%date (parse-date-or-datetime tok)])
+            |=(tok=tape [%time (parse-date-or-datetime tok)])
         :-
         v(rdate (weld rdate.v (turn tokens f)))
         u
@@ -418,7 +418,7 @@
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         =/  date-strings=(list tape)  (split t com)
-        =/  dates=(list ical-date)
+        =/  dates=(list ical-time)
             (turn date-strings parse-date-or-datetime)
         :-
         v(exdate (weld exdate.v dates))

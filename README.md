@@ -15,10 +15,10 @@
 3. Using properties where appropriate. For example, dtstart has
    an optional tzid property that we currently don't look for or store.
    there are a fair number of these, so it'll be a lot of RFC reading.
-4. In this vein, we should probably take distinguish DATE and DATE-TIME.
+4. (DONE) In this vein, we should probably take distinguish DATE and DATE-TIME.
    I (raghu) am gonna just do this on a separate branch and then merge
    it since it's a pretty large change. there will be a unified type
-   (ical-date or some such) with both date and date-time in it. This will
+   (ical-time or some such) with both date and date-time in it. This will
    change pretty much every place urbit's date type is used in the code.
 
 

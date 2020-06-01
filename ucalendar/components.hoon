@@ -1,13 +1,15 @@
 |%
 :: TODO tagged union here for component
 ++  component  $%([%vevent v=vevent])
-+$  ical-date  $%
++$  ical-time  $%
     [%date d=date]
     [%date-time d=date utc=?]
     ==
++$  ical-date  $>(%date ical-time)
++$  ical-datetime  $>(%date-time ical-time)
 ::  either have end date or duration
 +$  event-ending  $%
-    [%dtend d=ical-date]
+    [%dtend d=ical-time]
     [%duration t=tarp]
     ==
 +$  event-class  $?
@@ -23,18 +25,18 @@
     [%start begin=date duration=tarp]
     ==
 +$  rdate  $%
-    [%date d=ical-date]
+    [%time d=ical-time]
     [%period p=period]
     ==
 +$  vevent
     $:
     ::  Required Fields
     ::  date event was created (always a date-time)
-    dtstamp=date
+    dtstamp=ical-datetime
     ::  unique id
     uid=cord
     ::  start of event
-    dtstart=ical-date
+    dtstart=ical-time
     ::  end of our event
     end=event-ending
     ::
@@ -76,6 +78,6 @@
     :: RDATE
     rdate=(list rdate)
     :: EXDATE
-    exdate=(list ical-date)
+    exdate=(list ical-time)
     ==
 --
