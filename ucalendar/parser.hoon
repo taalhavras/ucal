@@ -70,13 +70,13 @@
     ::  date-time or duration. the duration MUST BE POSITIVE
     =/  tokens=(list tape)  (split t fas)
     ?>  =((lent tokens) 2)
-    =/  begin=date  (parse-datetime-value (snag 0 tokens))
+    =/  begin=date  d:(parse-datetime-value (snag 0 tokens))
     =/  second=tape  (snag 1 tokens)
     ::  matches prefix of duration
     =/  dur-rul  ;~(plug ;~(pose lus hep) (jest 'P'))
     ?:  =((rust second ;~(pfix dur-rul (star next))) ~)
       ::  we have a date-time for the second
-      [%explicit begin (parse-datetime-value second)]
+      [%explicit begin d:(parse-datetime-value second)]
     =/  [sign=? dur=tarp]  (parse-duration second)
     ?>  sign ::  duration must be positive
     [%start begin dur]
@@ -164,7 +164,7 @@
 ::  used to parse tapes that are either dates or datetimes
 ++  parse-date-or-datetime
     |=  t=tape
-    ^-  date
+    ^-  ical-date
     ::  check if length of tape is 8. If it is, dtstamp is a date.
     ::  otherwise, it's a date-time
     ?:  =((lent t) 8)
@@ -173,7 +173,7 @@
 ::  parse an ics date value - a tape of the form "YYYYMMDD"
 ++  parse-date-value
     |=  t=tape
-    ^-  date
+    ^-  $>(%date ical-date)
     =|  d=date
     =/  four-dit-rul  ;~(plug dit dit dit dit)
     =/  two-dit-rul  ;~(plug dit dit)
@@ -187,16 +187,16 @@
         %+  add
         (mul 100 (from-two-digit [a.yc b.yc]))
         (from-two-digit [c.yc d.yc])
-    d(y year, m month, d.t day)
+    [%date d(y year, m month, d.t day)]
 ::  parses an ics datetime, formatted as: YYYYMMDD followed by a 'T' and
 ::  then the time. time is formatted as HHMMSS for hour, minute, and second.
 ::  optionally, there may also be a 'Z' at the end, signifying UTC time
 ++  parse-datetime-value
     |=  t=tape
-    ^-  date
+    ^-  $>(%date-time ical-date)
     ::  expect two tokens here
     =/  tokens=(list tape)  (split t (jest 'T'))
-    =/  d=date  (parse-date-value (snag 0 tokens))
+    =/  d=$>(%date ical-date)  (parse-date-value (snag 0 tokens))
     ::  TODO validate these digits? special rules with shims?
     =/  two-digit  ;~(plug dit dit)
     =/  res
@@ -212,9 +212,8 @@
     =/  hours=@  (from-two-digit -:res)
     =/  minutes=@  (from-two-digit +<:res)
     =/  seconds=@  (from-two-digit +>-:res)
-    ::  TODO handle UTC logic
     =/  utc=?  =(+>+:res "Z")
-    d(h.t hours, m.t minutes, s.t seconds)
+    [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
 ++  parse-vevent
     =<
     |=  w=wall ::  (list tape)
@@ -316,7 +315,7 @@
         ?:  dtstamp.u
           !!
         :-
-        v(dtstamp (parse-date-or-datetime t))
+        v(dtstamp d:(parse-datetime-value t))
         u(dtstamp &)
     ++  parse-dtstart
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
@@ -419,8 +418,8 @@
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
         =/  date-strings=(list tape)  (split t com)
-        =/  dates=(list date)
-            (turn date-strings parse-date-value)
+        =/  dates=(list ical-date)
+            (turn date-strings parse-date-or-datetime)
         :-
         v(exdate (weld exdate.v dates))
         u

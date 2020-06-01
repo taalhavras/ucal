@@ -1,37 +1,40 @@
 |%
 :: TODO tagged union here for component
 ++  component  $%([%vevent v=vevent])
++$  ical-date  $%
+    [%date d=date]
+    [%date-time d=date utc=?]
+    ==
+::  either have end date or duration
++$  event-ending  $%
+    [%dtend d=ical-date]
+    [%duration t=tarp]
+    ==
 +$  event-class  $?
     %public
     %private
     %confidential
     ==
-::  we EITHER have the end time of the event OR a duration
-::  the duration is always positive
-+$  event-ending  $%
-    [%dtend d=date]
-    [%duration t=tarp]
-    ==
 +$  event-status  ?(%tentative %confirmed %cancelled)
 +$  latlon  $:(lat=dn lon=dn)
-::  ical period datatype
+::  ical period datatype, always date-times
 +$  period  $%
     [%explicit begin=date end=date]
     [%start begin=date duration=tarp]
     ==
 +$  rdate  $%
-    [%date d=date]
+    [%date d=ical-date]
     [%period p=period]
     ==
 +$  vevent
     $:
     ::  Required Fields
-    ::  date event was created
+    ::  date event was created (always a date-time)
     dtstamp=date
     ::  unique id
     uid=cord
     ::  start of event
-    dtstart=date
+    dtstart=ical-date
     ::  end of our event
     end=event-ending
     ::
@@ -73,6 +76,6 @@
     :: RDATE
     rdate=(list rdate)
     :: EXDATE
-    exdate=(list date)
+    exdate=(list ical-date)
     ==
 --
