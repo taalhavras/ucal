@@ -14,6 +14,15 @@
     ==
 +$  event-status  ?(%tentative %confirmed %cancelled)
 +$  latlon  $:(lat=dn lon=dn)
+::  ical period datatype
++$  period  $%
+    [%explicit begin=date end=date]
+    [%start begin=date duration=tarp]
+    ==
++$  rdate  $%
+    [%date d=date]
+    [%period p=period]
+    ==
 +$  vevent
     $:
     ::  Required Fields
@@ -62,6 +71,8 @@
     ::  recurrence stuff will probably be the most tricky
     :: RRULE
     :: RDATE
+    rdate=(list rdate)
     :: EXDATE
+    exdate=(list date)
     ==
 --

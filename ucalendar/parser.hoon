@@ -3,11 +3,6 @@
 ::  Core for parsing ical files. The goal of this file is to go from ical file
 ::  to a list of unfolded strings (cords?) with all characters escaped
 |%
-::  ical period datatype
-+$  period  $%
-    [%explicit begin=date end=date]
-    [%start begin=date duration=tarp]
-    ==
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
@@ -67,19 +62,6 @@
     ::  signed representation is one less than twice absolute value
     =/  neg-exponent=@s  (dec (mul 2 exponent))
     [%d s=-:res e=neg-exponent a=mantissa]
-::  parses a recurrence rule
-++  parse-recur-rule
-    |=  t=tape
-    ::  TODO implement
-    !!
-::  used for rdate and exdate, both are a comma separated list of dates or datetimes
-::  TODO nvm rdate also has period in it, RIP. Should we support it?
-++  parse-dates
-    |=  t=tape
-    ^-  (list date)
-    %+  turn
-    (split t com)
-    parse-date-or-datetime
 ::  parses a period
 ++  parse-period
     |=  t=tape
@@ -91,8 +73,8 @@
     =/  begin=date  (parse-datetime-value (snag 0 tokens))
     =/  second=tape  (snag 1 tokens)
     ::  matches prefix of duration
-    =/  dur-rul  ;~(plug (pose lus hep) (jest 'P'))
-    ?:  =((rust second (pfix dur-rul)) ~)
+    =/  dur-rul  ;~(plug ;~(pose lus hep) (jest 'P'))
+    ?:  =((rust second ;~(pfix dur-rul (star next))) ~)
       ::  we have a date-time for the second
       [%explicit begin (parse-datetime-value second)]
     =/  [sign=? dur=tarp]  (parse-duration second)
@@ -422,6 +404,26 @@
         ^-  [vevent unique-tags]
         ::  TODO implement
         !!
+    ++  parse-rdate
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
+        ^-  [vevent unique-tags]
+        =/  tokens=(list tape)  (split t com)
+        =/  f=$-(tape rdate)
+            ?~  (find ~["VALUE=PERIOD"] props)
+              |=(tok=tape [%period (parse-period tok)])
+            |=(tok=tape [%date (parse-date-or-datetime tok)])
+        :-
+        v(rdate (weld rdate.v (turn tokens f)))
+        u
+    ++  parse-exdate
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
+        ^-  [vevent unique-tags]
+        =/  date-strings=(list tape)  (split t com)
+        =/  dates=(list date)
+            (turn date-strings parse-date-value)
+        :-
+        v(exdate (weld exdate.v dates))
+        u
     --
 ::  get lines of a file in order
 ++  read-file
