@@ -9,28 +9,12 @@
     ^-  flag
     ?&((lte lower x) (gte higher x))
 ::  utilities for validating parts of times
-::  TODO these should be possible with cury, but that fails for some reason
-++  valid-month
-    |=  mo=@
-    ^-  flag
-    (in-between [0 12] mo)
-++  valid-hour
-    |=  h=@
-    ^-  flag
-    (in-between [0 23] h)
-++  valid-min
-    |=  m=@
-    ^-  flag
-    (in-between [0 59] m)
-++  valid-sec
-    |=  s=@
-    ^-  flag
-    ::  upper bound is 60 for leap seconds
-    (in-between [0 60] s)
-++  valid-monthday
-    |=  md=@
-    ^-  flag
-    (in-between [1 31] md)
+::  cury works if the functions are passed to wet gates. why?
+++  valid-month  (cury in-between [0 12])
+++  valid-hour  (cury in-between [0 23])
+++  valid-min  (cury in-between [0 59])
+++  valid-sec  (cury in-between [0 60]) ::  60 for leap seconds
+++  valid-monthday  (cury in-between [1 31])
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
@@ -123,7 +107,7 @@
     ::  parses and validates lists of two-digit atoms from a tape
     ::  if the validator fails, throw an error
     ++  parse-and-validate-two-digits
-        |=  [t=tape v=validator]
+        |*  [t=tape v=validator]
         ^-  (list @)
         =/  tokens=(list tape)  (split t com)
         %+  turn  tokens
@@ -151,7 +135,7 @@
         (parse-and-validate-two-digits t valid-hour)
     ::  parses and validates a signed number
     ++  parse-and-validate-sign-and-atom
-        |=  [t=tape v=validator]
+        |*  [t=tape v=validator]
         ^-  (list [? @])
         =/  tokens=(list tape)  (split t com)
         %+  turn  tokens
