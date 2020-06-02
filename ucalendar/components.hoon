@@ -28,8 +28,7 @@
     [%time d=ical-time]
     [%period p=period]
     ==
-+$  rrule  (list rrule-part)
-+$  rrule-part  $:
++$  rrule  $:
     ::  freq is the only required part
     freq=rrule-freq
     ::  ending date for event

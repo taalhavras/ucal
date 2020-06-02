@@ -3,6 +3,29 @@
 ::  Core for parsing ical files. The goal of this file is to go from ical file
 ::  to a list of unfolded strings (cords?) with all characters escaped
 |%
+::  checks if lower <= x <= higher
+++  in-between
+    |=  [[lower=@ higher=@] x=@]
+    ^-  flag
+    ?&((lte lower x) (gte higher x))
+::  utilities for validating parts of times
+++  valid-month
+    |=  mo=@
+    ^-  flag
+    (in-between [0 12] mo)
+++  valid-hour
+    |=  h=@
+    ^-  flag
+    (in-beween [0 23] h)
+++  valid-min
+    |=  m=@
+    ^-  flag
+    (in-beween [0 59] m)
+++  valid-sec
+    |=  s=@
+    ^-  flag
+    ::  upper bound is 60 for leap seconds
+    (in-beween [0 60] s)
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
@@ -35,12 +58,15 @@
 ++  parse-recur
     =<
     |=  t=tape
+    ^-  rrule
     ::  split on semicolon
     =/  tokens=(list tape)  (split t mic)
     =/  parts=(map tape tape)  (produce-parts-map tokens)
-
+    =/  freq=rrule-freq  (parse-freq parts)
+    ::  TODO parse rest of fields and construct rrule
     !!
     |%
+    ++  two-dit  ;~(plug dit dit)
     ::  produce map of all the parts of a recurrence rule mapped to
     ::  their values. all parts MUST be unique
     ++  produce-parts-map
@@ -57,6 +83,37 @@
         ?~  (~(get by acc) key)
           $(l t.l, acc (~(put by acc) key (snag 1 tokens)))
         !!
+    ++  parse-freq
+        |=  parts=(map tape tape)
+        ^-  rrule-freq
+        (^:(rrule-freq) (crip (cass (~(got by parts) "FREQ"))))
+    ++  parse-until
+        |=  parts=(map tape tape)
+        ^-  (unit ical-time)
+        =/  token=(unit tape)  (~(get by parts) "UNTIL")
+        ?~  token
+          ~
+        (some (parse-date-or-datetime u.token))
+    ++  parse-count
+        |=  parts=(map tape tape)
+        ^-  (unit @)
+        =/  token=(unit tape)  (~(get by parts) "COUNT")
+        ?~  token
+          ~
+        %-  some
+        %+  scan
+        u.token
+        (cook from-digits (plus dit))
+    ++  parse-interval
+        |=  parts=(map tape tape)
+        ^-  @
+        =/  token=(unit tape)  (~(get by parts) "INTERVAL")
+        ?~  token
+          1 ::  default value for interval is 1
+        %-  some
+        %+  scan
+        u.token
+        (cook from-digits (plus dit))
     --
 ::  parses a signed floating point from a string
 ++  parse-float
