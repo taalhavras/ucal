@@ -9,6 +9,7 @@
     ^-  flag
     ?&((lte lower x) (gte higher x))
 ::  utilities for validating parts of times
+::  TODO these should be possible with cury, but that fails for some reason
 ++  valid-month
     |=  mo=@
     ^-  flag
@@ -16,22 +17,28 @@
 ++  valid-hour
     |=  h=@
     ^-  flag
-    (in-beween [0 23] h)
+    (in-between [0 23] h)
 ++  valid-min
     |=  m=@
     ^-  flag
-    (in-beween [0 59] m)
+    (in-between [0 59] m)
 ++  valid-sec
     |=  s=@
     ^-  flag
     ::  upper bound is 60 for leap seconds
-    (in-beween [0 60] s)
+    (in-between [0 60] s)
+++  valid-monthday
+    |=  md=@
+    ^-  flag
+    (in-between [1 31] md)
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
     |*(rul=rule (stun [0 1] rul))
-::  rule for one or more digits
+::  rule for common digit groupings
 ++  digits  (plus dit)
+++  two-dit  ;~(plug dit dit)
+++  four-dit  ;~(plug dit dit dit dit)
 ::  split input tape on delim rule, return list of tapes.
 ::  if delimiter isn't present, then return list containing just
 ::  the original tape.
@@ -66,7 +73,7 @@
     ::  TODO parse rest of fields and construct rrule
     !!
     |%
-    ++  two-dit  ;~(plug dit dit)
+    +$  validator  $-(@ flag)
     ::  produce map of all the parts of a recurrence rule mapped to
     ::  their values. all parts MUST be unique
     ++  produce-parts-map
@@ -110,10 +117,63 @@
         =/  token=(unit tape)  (~(get by parts) "INTERVAL")
         ?~  token
           1 ::  default value for interval is 1
-        %-  some
         %+  scan
         u.token
         (cook from-digits (plus dit))
+    ::  parses and validates lists of two-digit atoms from a tape
+    ::  if the validator fails, throw an error
+    ++  parse-and-validate-two-digits
+        |=  [t=tape v=validator]
+        ^-  (list @)
+        =/  tokens=(list tape)  (split t com)
+        %+  turn  tokens
+        |=  tok=tape
+            ^-  @
+            %+  scan  tok
+            %+  cook
+            |=  digits=[@ @]
+                ^-  @
+                =/  res=@  (from-two-digit digits)
+                ?>  (v res)
+                res
+            two-dit
+    ++  parse-bysecond
+        |=  t=tape
+        ^-  (list @)
+        (parse-and-validate-two-digits t valid-sec)
+    ++  parse-byminute
+        |=  t=tape
+        ^-  (list @)
+        (parse-and-validate-two-digits t valid-min)
+    ++  parse-byhour
+        |=  t=tape
+        ^-  (list @)
+        (parse-and-validate-two-digits t valid-hour)
+    ::  parses and validates a signed number
+    ++  parse-and-validate-sign-and-atom
+        |=  [t=tape v=validator]
+        ^-  (list [? @])
+        =/  tokens=(list tape)  (split t com)
+        %+  turn  tokens
+        |=  tok=tape
+            ^-  [? @]
+            =/  res=[? a=@]
+            %+  scan  tok
+            ;~
+              plug
+              %+  cook
+                |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
+                (whut ;~(pose lus hep)) :: optional sign
+              (cook from-digits digits)
+            ==
+            ?>  (v a.res)
+            res
+    ++  parse-byweekday  !!
+    ++  parse-bymonthday
+        |=  t=tape
+        ^-  (list rrule-monthdaynum)
+        %+  parse-and-validate-sign-and-atom  t
+        valid-monthday
     --
 ::  parses a signed floating point from a string
 ++  parse-float
@@ -259,10 +319,8 @@
     |=  t=tape
     ^-  ical-date
     =|  d=date
-    =/  four-dit-rul  ;~(plug dit dit dit dit)
-    =/  two-dit-rul  ;~(plug dit dit)
     ::  parse tape into [[Y Y Y Y] [M M] [D D]]
-    =/  res  (scan t ;~(plug four-dit-rul two-dit-rul two-dit-rul))
+    =/  res  (scan t ;~(plug four-dit two-dit two-dit))
     =/  day=@  (from-two-digit +>:res)
     =/  month=@  (from-two-digit +<:res)
     =/  yc=[a=@ b=@ c=@ d=@]  -:res
