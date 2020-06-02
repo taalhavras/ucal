@@ -31,6 +31,33 @@
     ?~  l
       acc
     $(acc (add acc (mul i.l m)), m (div m 10), l t.l)
+::  parses a 'recur' data type from a tape
+++  parse-recur
+    =<
+    |=  t=tape
+    ::  split on semicolon
+    =/  tokens=(list tape)  (split t mic)
+    =/  parts=(map tape tape)  (produce-parts-map tokens)
+
+    !!
+    |%
+    ::  produce map of all the parts of a recurrence rule mapped to
+    ::  their values. all parts MUST be unique
+    ++  produce-parts-map
+        |=  l=(list tape)
+        ^-  (map tape tape)
+        =|  acc=(map tape tape)
+        |-
+        ?~  l
+          acc
+        =/  tokens=(list tape)  (split i.l tis)
+        ?>  =((lent tokens) 2)
+        =/  key=tape  (snag 0 tokens)
+        ::  check for key being unique
+        ?~  (~(get by acc) key)
+          $(l t.l, acc (~(put by acc) key (snag 1 tokens)))
+        !!
+    --
 ::  parses a signed floating point from a string
 ++  parse-float
     |=  t=tape
@@ -256,6 +283,8 @@
       %location  parse-location
       %status  parse-status
       %begin  parse-subcomponent
+      %rdate  parse-rdate
+      %exdate  parse-exdate
     ==
     ::  call parser with second token (data) and props without the tag,
     ::  along with our vevent and unique-tags

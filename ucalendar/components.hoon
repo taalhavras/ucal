@@ -28,6 +28,77 @@
     [%time d=ical-time]
     [%period p=period]
     ==
++$  rrule  (list rrule-part)
++$  rrule-part  $:
+    ::  freq is the only required part
+    freq=rrule-freq
+    ::  ending date for event
+    until=(unit ical-time)
+    ::  number of occurrences
+    count=(unit @)
+    ::  interval times freq gives the intervals at which
+    ::  the recurrence occurs. The default is 1
+    interval=$~(1 @)
+    ::  These lists contain intervals that (depending on freq) either
+    ::  increase or constrain the size of the recurrence set. See
+    ::  rfc 5545 page 44 for more info
+    bysecond=(list @)
+    byminute=(list @)
+    byhour=(list @)
+    byweekday=(list rrule-weekdaynum)
+    bymonthday=(list rrule-monthdaynum)
+    byyearday=(list rrule-yeardaynum)
+    byweek=(list rrule-weeknum)
+    bymonth=(list rrule-monthnum)
+    bysetpos=(list rrule-setpos)
+    ::  start of workweek, default is monday
+    weekstart=$~(%mo rrule-day)
+    ==
++$  rrule-freq  $?
+    %secondly
+    %minutely
+    %hourly
+    %daily
+    %weekly
+    %monthly
+    %yearly
+    ==
+::  days of the week, sunday to saturday
++$  rrule-day  $?
+    %su
+    %mo
+    %tu
+    %we
+    %th
+    %fr
+    %sa
+    ==
++$  rrule-weekdaynum  $:
+    day=rrule-day
+    weeknum=(unit rrule-weeknum)
+    ==
+::  TODO so these next types could all be represented using one, maybe with a tag?
++$  rrule-monthdaynum  $:
+    sign=?
+    monthday=@
+    ==
++$  rrule-yeardaynum  $:
+    sign=?
+    yearday=@
+    ==
++$  rrule-weeknum  $:
+    sign=?
+    ordweek=@
+    ==
++$  rrule-monthnum  $:
+    sign=?
+    month=@
+    ==
+::  setpos spec'd to be same as yeardaynum
++$  rrule-setpos  $:
+    sign=?
+    setpos=@
+    ==
 +$  vevent
     $:
     ::  Required Fields
