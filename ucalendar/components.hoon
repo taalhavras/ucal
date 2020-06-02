@@ -148,6 +148,7 @@
 
     ::  recurrence stuff will probably be the most tricky
     :: RRULE
+    rrule=(unit rrule)
     :: RDATE
     rdate=(list rdate)
     :: EXDATE

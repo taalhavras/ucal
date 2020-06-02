@@ -180,7 +180,40 @@
     ++  parse-byweekday
         |=  parts=(map tape tape)
         ^-  (list rrule-weekdaynum)
-        !!
+        =/  res=(unit tape)  (~(get by parts) "BYDAY")
+        ?~  res
+          ~
+        ::  Split on comma to get each weekdaynum. We will then need to
+        ::  parse each token individually...
+        =/  tokens=(list tape)  (split u.res com)
+        %+  turn  tokens
+        |=  t=tape
+            =/  res
+                %+  scan  t
+                ;~
+                  plug
+                  %-  whut
+                  ;~
+                    plug
+                    %+  cook
+                    |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
+                    (whut ;~(pose lus hep)) :: optional sign
+                    (cook from-digits digits)
+                  ==
+                  ;~(plug hig hig)  ::  two uppercase characters
+                ==
+            ::  day should always be present
+            =/  day=rrule-day
+                (^:(rrule-day) (crip (cass ~[+<:res +>:res])))
+            ::  now, we must go through the various cases
+            =/  hd  -:res
+            ?~  hd
+              ::  we didn't have a sign or a number
+              :-(day ~)
+            =/  num=@  -<+:res
+            ?>  (valid-weeknum num)
+            =/  sign=flag  -<-:res
+            :-(day [~ [sign num]])
     ++  parse-bymonthday
         |=  parts=(map tape tape)
         ^-  (list rrule-monthdaynum)
@@ -452,6 +485,7 @@
       %location  parse-location
       %status  parse-status
       %begin  parse-subcomponent
+      %rrule  parse-rrule
       %rdate  parse-rdate
       %exdate  parse-exdate
     ==
@@ -491,10 +525,10 @@
         %location
         %status
         %begin ::  subcomponent, alarms
-        ::  unsupported (as of now)
         %rrule
         %rdate
         %exdate
+        ::  unsupported (as of now)
         %created
         %last-modified
         %sequence
@@ -601,6 +635,12 @@
         ^-  [vevent unique-tags]
         ::  TODO implement
         !!
+    ++  parse-rrule
+        |=  [t=tape props=(list tape) v=vevent u=unique-tags]
+        ^-  [vevent unique-tags]
+        :-
+        v(rrule (some (parse-recur t)))
+        u
     ++  parse-rdate
         |=  [t=tape props=(list tape) v=vevent u=unique-tags]
         ^-  [vevent unique-tags]
