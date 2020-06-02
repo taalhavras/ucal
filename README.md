@@ -2,7 +2,7 @@
 
 ## Parser TODOs
 
-1. Parsing for recurrence rules (rrule, rdate, exdate).
+1. (DONE) Parsing for recurrence rules (rrule, rdate, exdate).
    These are the most important properties that haven't yet
    been parsed.
 2. Parsing for optional ical component properties. See

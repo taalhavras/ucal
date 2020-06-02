@@ -533,6 +533,18 @@
         %last-modified
         %sequence
         %transp
+        %priority
+        %sequence
+        %url
+        %recurid
+        %attach
+        %attendee
+        %contact
+        %rstatus
+        %related
+        %resources
+        %x-prop
+        %iana-prop
         ==
     ::  TODO So is there some way to refactor these so the common parts
     ::  are collapsed? look into it...
