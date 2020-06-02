@@ -55,13 +55,23 @@
     ::  split on semicolon
     =/  tokens=(list tape)  (split t mic)
     =/  parts=(map tape tape)  (produce-parts-map tokens)
-    =/  freq=rrule-freq  (parse-freq parts)
-    ::  TODO parse rest of fields and construct rrule
-    =/  until=(unit ical-time)  (parse-until parts)
-    =/  count=(unit @)  (parse-count parts)
-    =/  interval=@  (parse-interval parts)
-    =/  bysecond=(list @)  (parse-bysecond parts)
-    !!
+    ::  freq is the only required component here
+    :*
+      (parse-freq parts)
+      (parse-until parts)
+      (parse-count parts)
+      (parse-interval parts)
+      (parse-bysecond parts)
+      (parse-byminute parts)
+      (parse-byhour parts)
+      (parse-byweekday parts)
+      (parse-bymonthday parts)
+      (parse-byyearday parts)
+      (parse-byweek parts)
+      (parse-bymonth parts)
+      (parse-bysetpos parts)
+      (parse-weekstart parts)
+    ==
     |%
     +$  validator  $-(@ flag)
     ::  produce map of all the parts of a recurrence rule mapped to
@@ -167,7 +177,10 @@
             ==
             ?>  (v a.res)
             res
-    ++  parse-byweekday  !!
+    ++  parse-byweekday
+        |=  parts=(map tape tape)
+        ^-  (list rrule-weekdaynum)
+        !!
     ++  parse-bymonthday
         |=  parts=(map tape tape)
         ^-  (list rrule-monthdaynum)
