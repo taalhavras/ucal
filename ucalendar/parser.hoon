@@ -8,15 +8,15 @@
     |=  [[lower=@ higher=@] x=@]
     ^-  flag
     ?&((lte lower x) (gte higher x))
-::  utilities for validating parts of times
-::  cury works if the functions are passed to wet gates. why?
-++  valid-month  (cury in-between [0 12])
-++  valid-hour  (cury in-between [0 23])
-++  valid-min  (cury in-between [0 59])
-++  valid-sec  (cury in-between [0 60]) ::  60 for leap seconds
-++  valid-monthday  (cury in-between [1 31])
-++  valid-yearday  (cury in-between [1 366]) ::  366 for leap years
-++  valid-weeknum  (cury in-between [1 53])
+::  utilities for validating parts of times.
+::  bake applies the @ mold to the arg, making these dry gates
+++  valid-month  (bake (cury in-between [0 12]) @)
+++  valid-hour  (bake (cury in-between [0 23]) @)
+++  valid-min  (bake (cury in-between [0 59]) @)
+++  valid-sec  (bake (cury in-between [0 60]) @) ::  60 for leap seconds
+++  valid-monthday  (bake (cury in-between [1 31]) @)
+++  valid-yearday  (bake (cury in-between [1 366]) @) ::  366 for leap years
+++  valid-weeknum  (bake (cury in-between [1 53]) @)
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
@@ -58,6 +58,8 @@
     =/  freq=rrule-freq  (parse-freq parts)
     ::  TODO parse rest of fields and construct rrule
     !!
+    ::  =/  until
+    ::      ?~  (~(get by parts) "UNTIL")
     |%
     +$  validator  $-(@ flag)
     ::  produce map of all the parts of a recurrence rule mapped to
@@ -109,7 +111,7 @@
     ::  parses and validates lists of two-digit atoms from a tape
     ::  if the validator fails, throw an error
     ++  parse-and-validate-two-digits
-        |*  [t=tape v=validator]
+        |=  [t=tape v=validator]
         ^-  (list @)
         =/  tokens=(list tape)  (split t com)
         %+  turn  tokens
@@ -137,7 +139,7 @@
         (parse-and-validate-two-digits t valid-hour)
     ::  parses and validates a signed number
     ++  parse-and-validate-sign-and-atom
-        |*  [t=tape v=validator]
+        |=  [t=tape v=validator]
         ^-  (list [? @])
         =/  tokens=(list tape)  (split t com)
         %+  turn  tokens
@@ -180,6 +182,10 @@
         ^-  (list rrule-monthnum)
         %+  parse-and-validate-sign-and-atom  t
         valid-yearday ::  also yearday
+    ::  ++  parse-weekstart
+    ::      |=  t=tape
+    ::      ^-  rrule-day
+    ::      (^:(rrule-day) (crip (cass t)))
     --
 ::  parses a signed floating point from a string
 ++  parse-float

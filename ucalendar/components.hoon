@@ -28,6 +28,9 @@
     [%time d=ical-time]
     [%period p=period]
     ==
+::  TODO based on how this is being done now I don't think the defaults
+::  produced by $~ are needed anymore - do they add clarity? prevent misuse?
+::  or are they just superfluous?  I don't see the harm in keeping them.
 +$  rrule  $:
     ::  freq is the only required part
     freq=rrule-freq
