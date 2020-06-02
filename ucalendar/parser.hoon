@@ -15,6 +15,8 @@
 ++  valid-min  (cury in-between [0 59])
 ++  valid-sec  (cury in-between [0 60]) ::  60 for leap seconds
 ++  valid-monthday  (cury in-between [1 31])
+++  valid-yearday  (cury in-between [1 366]) ::  366 for leap years
+++  valid-weeknum  (cury in-between [1 53])
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
 ++  whut
@@ -158,6 +160,26 @@
         ^-  (list rrule-monthdaynum)
         %+  parse-and-validate-sign-and-atom  t
         valid-monthday
+    ++  parse-byyearday
+        |=  t=tape
+        ^-  (list rrule-yeardaynum)
+        %+  parse-and-validate-sign-and-atom  t
+        valid-yearday
+    ++  parse-byweek
+        |=  t=tape
+        ^-  (list rrule-weeknum)
+        %+  parse-and-validate-sign-and-atom  t
+        valid-weeknum
+    ++  parse-bymonth
+        |=  t=tape
+        ^-  (list rrule-monthnum)
+        %+  parse-and-validate-sign-and-atom  t
+        valid-month
+    ++  parse-bysetpos
+        |=  t=tape
+        ^-  (list rrule-monthnum)
+        %+  parse-and-validate-sign-and-atom  t
+        valid-yearday ::  also yearday
     --
 ::  parses a signed floating point from a string
 ++  parse-float
