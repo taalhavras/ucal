@@ -57,9 +57,11 @@
     =/  parts=(map tape tape)  (produce-parts-map tokens)
     =/  freq=rrule-freq  (parse-freq parts)
     ::  TODO parse rest of fields and construct rrule
+    =/  until=(unit ical-time)  (parse-until parts)
+    =/  count=(unit @)  (parse-count parts)
+    =/  interval=@  (parse-interval parts)
+    =/  bysecond=(list @)  (parse-bysecond parts)
     !!
-    ::  =/  until
-    ::      ?~  (~(get by parts) "UNTIL")
     |%
     +$  validator  $-(@ flag)
     ::  produce map of all the parts of a recurrence rule mapped to
@@ -126,17 +128,26 @@
                 res
             two-dit
     ++  parse-bysecond
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list @)
-        (parse-and-validate-two-digits t valid-sec)
+        =/  res=(unit tape)  (~(get by parts) "BYSECOND")
+        ?~  res
+          ~
+        (parse-and-validate-two-digits u.res valid-sec)
     ++  parse-byminute
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list @)
-        (parse-and-validate-two-digits t valid-min)
+        =/  res=(unit tape)  (~(get by parts) "BYMINUTE")
+        ?~  res
+          ~
+        (parse-and-validate-two-digits u.res valid-min)
     ++  parse-byhour
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list @)
-        (parse-and-validate-two-digits t valid-hour)
+        =/  res=(unit tape)  (~(get by parts) "BYHOUR")
+        ?~  res
+          ~
+        (parse-and-validate-two-digits u.res valid-hour)
     ::  parses and validates a signed number
     ++  parse-and-validate-sign-and-atom
         |=  [t=tape v=validator]
@@ -158,34 +169,52 @@
             res
     ++  parse-byweekday  !!
     ++  parse-bymonthday
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list rrule-monthdaynum)
-        %+  parse-and-validate-sign-and-atom  t
+        =/  res=(unit tape)  (~(get by parts) "BYMONTHDAY")
+        ?~  res
+          ~
+        %+  parse-and-validate-sign-and-atom  u.res
         valid-monthday
     ++  parse-byyearday
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list rrule-yeardaynum)
-        %+  parse-and-validate-sign-and-atom  t
+        =/  res=(unit tape)  (~(get by parts) "BYYEARDAY")
+        ?~  res
+          ~
+        %+  parse-and-validate-sign-and-atom  u.res
         valid-yearday
     ++  parse-byweek
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list rrule-weeknum)
-        %+  parse-and-validate-sign-and-atom  t
+        =/  res=(unit tape)  (~(get by parts) "BYWEEKNO")
+        ?~  res
+          ~
+        %+  parse-and-validate-sign-and-atom  u.res
         valid-weeknum
     ++  parse-bymonth
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list rrule-monthnum)
-        %+  parse-and-validate-sign-and-atom  t
+        =/  res=(unit tape)  (~(get by parts) "BYMONTH")
+        ?~  res
+          ~
+        %+  parse-and-validate-sign-and-atom  u.res
         valid-month
     ++  parse-bysetpos
-        |=  t=tape
+        |=  parts=(map tape tape)
         ^-  (list rrule-monthnum)
-        %+  parse-and-validate-sign-and-atom  t
+        =/  res=(unit tape)  (~(get by parts) "BYSETPOS")
+        ?~  res
+          ~
+        %+  parse-and-validate-sign-and-atom  u.res
         valid-yearday ::  also yearday
-    ::  ++  parse-weekstart
-    ::      |=  t=tape
-    ::      ^-  rrule-day
-    ::      (^:(rrule-day) (crip (cass t)))
+    ++  parse-weekstart
+        |=  parts=(map tape tape)
+        ^-  rrule-day
+        =/  res=(unit tape)  (~(get by parts) "WKST")
+        ?~  res
+          %mo ::  default is monday
+        (^:(rrule-day) (crip (cass u.res)))
     --
 ::  parses a signed floating point from a string
 ++  parse-float
