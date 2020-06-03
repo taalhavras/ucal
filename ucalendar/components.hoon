@@ -101,6 +101,11 @@
     sign=?
     setpos=@
     ==
+::  event transparencies, opaque is default
++$  vevent-transparency  $?
+    %transparent
+    %opaque
+    ==
 +$  vevent
     $:
     ::  Required Fields
@@ -146,12 +151,23 @@
     ::  something? is my ship just being weird?
     ::  alarms=(list component)
 
-    ::  recurrence stuff will probably be the most tricky
-    :: RRULE
+    ::  recurrence rule
     rrule=(unit rrule)
-    :: RDATE
+    ::  list of dates to include in the recurrence set
     rdate=(list rdate)
-    :: EXDATE
+    ::  list of dates to exclude from the recurrence set
     exdate=(list ical-time)
+    ::  creation and update times - these must be UTC date-times
+    ::  TODO since they must be UTC, can we just store the date?
+    created=(unit ical-datetime)
+    last-modified=(unit ical-datetime)
+    ::  revision sequence number, defaults to 0
+    sequence=@
+    ::  event transparency, how it appears to others who
+    ::  look at your schedule.
+    transparency=vevent-transparency
+    ::  event priority, 0-9. 0 is undefined, 1 is highest prio, 9 lowest
+    priority=@
+
     ==
 --

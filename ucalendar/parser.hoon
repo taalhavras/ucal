@@ -490,6 +490,11 @@
       %rrule  parse-rrule
       %rdate  parse-rdate
       %exdate  parse-exdate
+      %created  parse-created
+      %last-modified  parse-last-modified
+      %sequence  parse-sequence
+      %transp  parse-transparency
+      %priority  parse-priority
     ==
     ::  call parser with second token (data) and props without the tag,
     ::  along with our vevent and required-tags
@@ -518,7 +523,7 @@
         location=galf
         organizer=galf
         priority=galf
-        seq=galf
+        sequence=galf
         status=galf
         summary=galf
         transp=galf
@@ -548,13 +553,12 @@
         %rrule
         %rdate
         %exdate
-        ::  unsupported (as of now)
         %created
         %last-modified
         %sequence
         %transp
         %priority
-        %sequence
+        ::  unsupported (as of now)
         %url
         %recurid
         %attach
@@ -744,6 +748,57 @@
         v(exdate (weld exdate.v dates))
         rt
         ut
+    ++  parse-created
+        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        ^-  [vevent required-tags unique-tags]
+        ?:  created.ut
+          !!
+        =/  dt  (parse-datetime-value t)
+        ?>  utc.dt
+        :+
+        v(created `dt)
+        rt
+        ut(created &)
+    ++  parse-last-modified
+        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        ^-  [vevent required-tags unique-tags]
+        ?:  last-modified.ut
+          !!
+        =/  dt  (parse-datetime-value t)
+        ?>  utc.dt
+        :+
+        v(last-modified `dt)
+        rt
+        ut(last-modified &)
+    ++  parse-sequence
+        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        ^-  [vevent required-tags unique-tags]
+        ?:  sequence.ut
+          !!
+        :+
+        v(sequence (from-digits (scan t digits)))
+        rt
+        ut(sequence &)
+    ++  parse-transparency
+        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        ^-  [vevent required-tags unique-tags]
+        ?:  transp.ut
+          !!
+        :+
+        v(transparency (^:(vevent-transparency) (crip (cass t))))
+        rt
+        ut(transp &)
+    ++  parse-priority
+        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        ^-  [vevent required-tags unique-tags]
+        ?:  priority.ut
+          !!
+        =/  prio=@  (from-digits (scan t digits))
+        ?>  (in-between [0 9] prio)
+        :+
+        v(priority prio)
+        rt
+        ut(priority &)
     --
 ::  get lines of a file in order
 ++  read-file
@@ -803,7 +858,7 @@
         =/  f-prefix=tape  (scag n first)
         ::  trim whitespace
         =/  s-tail=tape  +:u.res
-        [~ (weld f-prefix s-tail)]
+        (some (weld f-prefix s-tail))
     --
 ::  parse a calendar into a list of vevents. Since vevents aren't
 ::  nestable, we can search forward until we find the next one
