@@ -467,9 +467,28 @@
     ::  now break first token up along its params (split on semicolon)
     =/  props=(list tape)  (split (snag 0 tokens) mic)
     ::  lowercase and convert to term to switch against union
-    =/  tag  (^:(vevent-tag) (crip (cass (snag 0 props))))
     ::  each tag will have a corresponding function to produce an updated
     ::  vevent.
+    =/  tag  (^:(vevent-tag) (crip (cass (snag 0 props))))
+    =/  tok=tape  (snag 1 tokens)
+    ::  begin is a special case.
+    ::  find ending index, snip out relevant lines for parse-subcomponent and advance w
+    ::  past those lines.
+    ::  FIXME I guess the most general approach is to thread t.w
+    ::  through every function and have them all return the continuation from
+    ::  whatever they parsed - this would let us include %begin in the big
+    ::  wutlus below. However, this would require changing every one of these
+    ::  parsers, which seems odd (since only nested subcomponents will consume
+    ::  more than one line from w).
+    ?:  =(tag %begin)
+      =/  end-idx=(unit @)  (find ~[(weld "END:" tok)] t.w)
+      ?~  end-idx
+        ::  subcomponent not properly closed
+        !!
+      =/  subcomponent-lines=wall  (swag [0 u.end-idx] t.w)
+      =/  res=[v=vevent rt=required-tags ut=unique-tags]
+          (parse-subcomponent subcomponent-lines tok (slag 1 props) v rt ut)
+      $(v v.res, rt rt.res, ut ut.res, w (slag +(u.end-idx) t.w))
     =/  parser=parser-fn
     ?+  tag  no-parse
       %dtstamp  parse-dtstamp
@@ -486,7 +505,7 @@
       %geo  parse-geo
       %location  parse-location
       %status  parse-status
-      %begin  parse-subcomponent
+      ::  %begin  this special case is handled above
       %rrule  parse-rrule
       %rdate  parse-rdate
       %exdate  parse-exdate
@@ -495,11 +514,12 @@
       %sequence  parse-sequence
       %transp  parse-transparency
       %priority  parse-priority
+      %url  parse-url
     ==
     ::  call parser with second token (data) and props without the tag,
     ::  along with our vevent and required-tags
     =/  res=[v=vevent rt=required-tags ut=unique-tags]
-        (parser (snag 1 tokens) (slag 1 props) v rt ut)
+        (parser tok (slag 1 props) v rt ut)
     $(w t.w, v v.res, rt rt.res, ut ut.res)
     |%
     ::  tags we expect to see exactly once (required)
@@ -528,7 +548,7 @@
         summary=galf
         transp=galf
         url=galf
-        recurid=galf
+        recurrence-id=galf
         rrule=galf
         ==
     ::  possible properties to parse for a vevent
@@ -558,17 +578,15 @@
         %sequence
         %transp
         %priority
-        ::  unsupported (as of now)
         %url
-        %recurid
+        ::  unsupported (as of now)
+        %recurrence-id
         %attach
         %attendee
         %contact
         %rstatus
         %related
         %resources
-        %x-prop
-        %iana-prop
         ==
     ::  This type is for the functions we call to update our vevent. Each
     ::  tag we're parsing will have a corresponding function of this type.
@@ -712,8 +730,10 @@
         v(status [~ status])
         rt
         ut(status &)
+    ::  the first argument of this function should be curried with the lines
+    ::  corresponding to the subcomponent
     ++  parse-subcomponent
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [lines=wall t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ::  TODO implement
         !!
@@ -799,6 +819,15 @@
         v(priority prio)
         rt
         ut(priority &)
+    ++  parse-url
+        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        ^-  [vevent required-tags unique-tags]
+        ?:  url.ut
+          !!
+        :+
+        v(url `t)
+        rt
+        ut(url &)
     --
 ::  get lines of a file in order
 ++  read-file

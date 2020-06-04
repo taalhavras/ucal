@@ -168,6 +168,7 @@
     transparency=vevent-transparency
     ::  event priority, 0-9. 0 is undefined, 1 is highest prio, 9 lowest
     priority=@
-
+    ::  url associated w/event
+    url=(unit tape)
     ==
 --
