@@ -320,7 +320,7 @@
 ++  parse-duration
     =<
     |=  t=tape
-    ^-  [? tarp]
+    ^-  ical-duration
     =/  dur-sec  (cook cook-sec ;~(plug digits (jest 'S')))
     =/  dur-min  (cook cook-min ;~(plug digits (jest 'M') (whut dur-sec)))
     =/  dur-hour  (cook cook-hour ;~(plug digits (jest 'H') (whut dur-min)))
@@ -472,14 +472,14 @@
     =/  tag  (^:(vevent-tag) (crip (cass (snag 0 props))))
     =/  tok=tape  (snag 1 tokens)
     ::  begin is a special case.
-    ::  find ending index, snip out relevant lines for parse-subcomponent and advance w
-    ::  past those lines.
+    ::  find ending index, snip out relevant lines for parse-subcomponent and
+    ::  advance w past those lines.
     ::  FIXME I guess the most general approach is to thread t.w
     ::  through every function and have them all return the continuation from
     ::  whatever they parsed - this would let us include %begin in the big
     ::  wutlus below. However, this would require changing every one of these
     ::  parsers, which seems odd (since only nested subcomponents will consume
-    ::  more than one line from w).
+    ::  more than one line from w). Not really sure which way to go on this one.
     ?:  =(tag %begin)
       =/  end-idx=(unit @)  (find ~[(weld "END:" tok)] t.w)
       ?~  end-idx
@@ -959,7 +959,7 @@
         |=  [cal-props=(list tape)]
         ^-  calendar
         =|  cal=calendar
-        =/  rt=required-tags  [| |]
+        =|  rt=required-tags
         |-
         ?~  cal-props
           ?:  &(prodid.rt version.rt)

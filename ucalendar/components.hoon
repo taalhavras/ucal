@@ -7,10 +7,12 @@
     ==
 +$  ical-date  $>(%date ical-time)
 +$  ical-datetime  $>(%date-time ical-time)
+::  a signed duration, %.y for positive
++$  ical-duration  $:(sign=? t=tarp)
 ::  either have end date or duration
 +$  event-ending  $%
     [%dtend d=ical-time]
-    [%duration t=tarp]
+    [%duration t=tarp] ::  always a positive duration
     ==
 +$  event-class  $?
     %public
@@ -22,7 +24,7 @@
 ::  ical period datatype, always date-times
 +$  period  $%
     [%explicit begin=ical-datetime end=ical-datetime]
-    [%start begin=ical-datetime duration=tarp]
+    [%start begin=ical-datetime duration=tarp] ::  always a positive duration
     ==
 +$  rdate  $%
     [%time d=ical-time]
@@ -171,4 +173,45 @@
     ::  url associated w/event
     url=(unit tape)
     ==
++$  valarm-action  ?(%audio %display %email)
+::  a trigger can be related to the start or end of an event.
+::  default is start
++$  valarm-related  ?(%end %start)
+::  either have a related trigger or an absolute one
++$  valarm-trigger  $%
+    [%rel related=valarm-related duration=ical-duration]
+    [%abs dt=ical-datetime]
+    ==
+::  duration is the interval to repeat on, repeat is the count.
+::  TODO should the duration always be positive?
++$  valarm-duration-repeat  $:(duration=ical-duration repeat=@)
++$  valarm-audio  $:
+    ::  Required fields
+    trigger=valarm-trigger
+    ::  Optional fields
+    duration-repeat=(unit valarm-duration-repeat)
+    attach=(unit tape)
+    ==
++$  valarm-display  $:
+    ::  Required fields
+    trigger=valarm-trigger
+    description=tape ::  text to display
+    ::  Optional fields
+    duration-repeat=(unit valarm-duration-repeat)
+    ==
++$  valarm-email  $:
+    ::  Required fields
+    trigger=valarm-trigger
+    description=tape ::  email body
+    summary=tape ::  email subject
+    attendees=(lest tape) ::  email address - must be at least one
+    :: Optional fields
+    attach=(list tape)
+    ==
++$  valarm  $%
+    [%audio audio=valarm-audio]
+    [%display display=valarm-display]
+    [%email email=valarm-email]
+    ==
+
 --
