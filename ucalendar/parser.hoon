@@ -446,6 +446,42 @@
     =/  seconds=@  (from-two-digit +>-:res)
     =/  utc=?  =(+>+:res "Z")
     [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
+++  parse-valarm
+    =<
+    |=  w=wall
+    ^-  valarm
+    ::  Split lines into action prop and others. Once we have
+    ::  the action prop, we can call the specific parser for
+    ::  the particular type of valarm.
+    =/  [actions=wall rest=wall]
+        %+  skid  w
+        |=  t=tape
+        ^-  flag
+        =/  res  (rust t ;~(plug (jest 'ACTION') (star next) col (star next)))
+        !=(res ~)
+    ?>  =((lent actions) 1) ::  action is a unique tag
+    =/  action-prop=tape  (snag 1 (split (snag 0 actions) col))
+    =/  action=valarm-action
+        (^:(valarm-action) (crip (cass action-prop)))
+    ?-  action
+      %audio  [%audio (parse-audio rest)]
+      %display  [%display (parse-display rest)]
+      %email  [%email (parse-email rest)]
+    ==
+    |%
+    ++  parse-audio
+        |=  w=wall
+        ^-  valarm-audio
+        !!
+    ++  parse-display
+        |=  w=wall
+        ^-  valarm-display
+        !!
+    ++  parse-email
+        |=  w=wall
+        ^-  valarm-email
+        !!
+    --
 ++  parse-vevent
     =<
     |=  w=wall ::  (list tape)
@@ -736,7 +772,10 @@
         ::  events only support nested valarm components
         ?>  =(t "VALARM")
         ::  TODO implement
-        !!
+        :+
+        v(alarms [(parse-valarm lines) alarms.v])
+        rt
+        ut
     ++  parse-rrule
         |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
