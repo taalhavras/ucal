@@ -146,12 +146,7 @@
     ::  TODO again is this necessary?
     status=(unit event-status)
     ::  nested components - for vevents only valarms can be nested
-    ::  TODO there's probably a way to make this _just_ valarms.
-    ::  Look into the mold runes relating to type restrictions
-    ::  TODO this line seems problematic - produces really odd
-    ::  ford errors - are mutually recursive types not allowed or
-    ::  something? is my ship just being weird?
-    ::  alarms=(list component)
+    alarms=(list valarm)
 
     ::  recurrence rule
     rrule=(unit rrule)

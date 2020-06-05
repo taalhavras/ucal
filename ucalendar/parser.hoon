@@ -730,11 +730,11 @@
         v(status [~ status])
         rt
         ut(status &)
-    ::  the first argument of this function should be curried with the lines
-    ::  corresponding to the subcomponent
     ++  parse-subcomponent
         |=  [lines=wall t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
+        ::  events only support nested valarm components
+        ?>  =(t "VALARM")
         ::  TODO implement
         !!
     ++  parse-rrule
