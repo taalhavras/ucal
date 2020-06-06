@@ -6,6 +6,23 @@
 ::  reverse flag type, defaults to false. used for more
 ::  convenient initialization with =| for some types
 ++  galf  $~(| ?)
+::  splits a line into tag, data, and properties
+++  process-line
+    |*  [t=tape m=mold]
+    ^-  [m tape (map tape tape)]
+    =/  tokens=(list tape)  (split t col)
+    ?>  =((lent tokens) 2)
+    =/  props=(list tape)  (split (snag 0 tokens) mic)
+    =/  data=tape  (snag 0 props)
+    =|  props-map=(map tape tape)
+    =/  props-list=(list [tape tape])
+        %+  turn  (slag 1 props)
+        |=  tok=tape
+        =/  components=(list tape)  (split tok tis)
+        ?>  =((lent components) 2)
+        [(snag 0 components) (snag 1 components)]
+    =/  tag=term  (crip (cass (snag 0 props)))
+    [(m tag) (snag 1 props) (~(gas by props-map) props-list)]
 ::  checks if lower <= x <= higher
 ++  in-between
     |=  [[lower=@ higher=@] x=@]
@@ -463,24 +480,121 @@
     =/  action-prop=tape  (snag 1 (split (snag 0 actions) col))
     =/  action=valarm-action
         (^:(valarm-action) (crip (cass action-prop)))
+    =|  acc=(jar valarm-tag [tape (map tape tape)])
+    =/  rest-jar=(jar valarm-tag [tape (map tape tape)])
+        |-
+        ?~  rest
+          acc
+        =/  [k=valarm-tag v=[tape (map tape tape)]]
+            (process-line i.rest valarm-tag)
+        $(rest t.rest, acc (~(add ja acc) k v))
     ?-  action
-      %audio  [%audio (parse-audio rest)]
-      %display  [%display (parse-display rest)]
-      %email  [%email (parse-email rest)]
+      ::  It's cool that action can just be used here as the tag.
+      %audio  [action (parse-audio rest-jar)]
+      %display  [action (parse-display rest)]
+      %email  [action (parse-email rest)]
     ==
     |%
+    ::  largest set of required tags, don't check all in all cases
+    +$  required-tags  $:
+        trigger=galf
+        duration=galf
+        repeat=galf
+        attach=galf
+        description=galf
+        summary=galf
+        attendee=galf
+        ==
+    +$  valarm-tag  $?
+        %trigger
+        %duration
+        %repeat
+        %attach
+        %description
+        %summary
+        %attendee
+        ==
     ++  parse-audio
-        |=  w=wall
+        |=  j=(jar valarm-tag [tape (map tape tape)])
         ^-  valarm-audio
+        =|  v=valarm-audio
+        =|  rt=required-tags
         !!
+        ::  |-
+        ::  ?~  w
+        ::    ?:  &(trigger.rt =(duration.rt repeat.rt))
+        ::      v
+        ::    !!
+        ::  =/  tokens=(list tape)  (split i.w col)
+        ::  ?>  =((lent tokens) 2)
+        ::  =/  props=(list tape)  (split (snag 0 tokens) mic)
+        ::  =/  tag  (^:(valarm-tag) (crip (cass (snag 0 props))))
+        ::  =/  parser
+        ::      ?+  tag  !!
+        ::          %trigger  parse-trigger
+        ::          ::  %duration  parse-valarm-duration
+        ::          ::  %repeat  parse-repeat
+        ::          ::  %attach  parse-audio-attach
+        ::          ::  %description  parse-description
+        ::          ::  %attendee  parse-attendee
+        ::          ::  %summary  parse-summary
+        ::          ==
+        ::  =/  res=[v=valarm rt=required-tags]
+        ::      (parser (snag 1 tokens) (slag 1 props) v rt)
+        ::  $(w t.w, rt rt.res, v v.res)
     ++  parse-display
         |=  w=wall
         ^-  valarm-display
+        =|  v=valarm-display
+        =|  rt=required-tags
+        |-
+        ?~  w
+          ?:  &(trigger.rt description.rt =(duration.rt repeat.rt))
+            v
+          !!
         !!
     ++  parse-email
         |=  w=wall
         ^-  valarm-email
+        =|  v=valarm-email
+        =|  rt=required-tags
+        |-
+        ?~  w
+          ?:
+            ?&
+              trigger.rt
+              description.rt
+              summary.rt
+              attendee.rt
+              =(duration.rt repeat.rt)
+              ==
+            !!
+          !!
         !!
+    ++  parse-trigger
+        |=  [t=tape props=(map tape tape)]
+        ^-  valarm-trigger
+        =/  value=(unit tape)  (~(get by props) "VALUE")
+        ?:  |(?=($~ value) =(u.value "DURATION"))
+          !!
+        !!
+    ++  parse-valarm-duration
+        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
+        ^-  [valarm required-tags]
+        !!
+    ++  parse-repeat
+        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
+        ^-  [valarm required-tags]
+        !!
+    ++  parse-attach
+        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
+        ^-  [valarm required-tags]
+        !!
+    ++  parse-audio-attach
+        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
+        ^-  [valarm required-tags]
+        !!
+
     --
 ++  parse-vevent
     =<
