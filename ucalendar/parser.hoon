@@ -574,10 +574,21 @@
     ++  parse-trigger
         |=  [t=tape props=(map tape tape)]
         ^-  valarm-trigger
-        =/  value=(unit tape)  (~(get by props) "VALUE")
-        ?:  |(?=($~ value) =(u.value "DURATION"))
-          !!
-        !!
+        =/  value-unit=(unit tape)  (~(get by props) "VALUE")
+        ::  if we don't have a "VALUE" or it's duration,
+        ::  then we have a duration to parse.
+        ?:  |(?=($~ value-unit) =(u.value-unit "DURATION"))
+          =/  related-unit=(unit tape)  (~(get by props) "RELATED")
+          =/  related=valarm-related
+              ::  if we don't have a "RELATED" it defaults to start
+              ?:  |(?=($~ related-unit) =(u.related-unit "START"))
+                %start
+              ?>  =(u.related-unit "END")
+              %end
+          [%rel related (parse-duration t)]
+        ::  otherwise, the value must be date-time
+        ?>  =(u.value-unit "DATE-TIME")
+        [%abs (parse-datetime-value t)]
     ++  parse-valarm-duration
         |=  [t=tape props=(list tape) v=valarm rt=required-tags]
         ^-  [valarm required-tags]
