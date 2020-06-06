@@ -491,8 +491,8 @@
     ?-  action
       ::  It's cool that action can just be used here as the tag.
       %audio  [action (parse-audio rest-jar)]
-      %display  [action (parse-display rest)]
-      %email  [action (parse-email rest)]
+      %display  [action (parse-display rest-jar)]
+      %email  [action (parse-email rest-jar)]
     ==
     |%
     ::  largest set of required tags, don't check all in all cases
@@ -517,63 +517,56 @@
     ++  parse-audio
         |=  j=(jar valarm-tag [tape (map tape tape)])
         ^-  valarm-audio
-        =|  v=valarm-audio
-        =|  rt=required-tags
-        !!
-        ::  |-
-        ::  ?~  w
-        ::    ?:  &(trigger.rt =(duration.rt repeat.rt))
-        ::      v
-        ::    !!
-        ::  =/  tokens=(list tape)  (split i.w col)
-        ::  ?>  =((lent tokens) 2)
-        ::  =/  props=(list tape)  (split (snag 0 tokens) mic)
-        ::  =/  tag  (^:(valarm-tag) (crip (cass (snag 0 props))))
-        ::  =/  parser
-        ::      ?+  tag  !!
-        ::          %trigger  parse-trigger
-        ::          ::  %duration  parse-valarm-duration
-        ::          ::  %repeat  parse-repeat
-        ::          ::  %attach  parse-audio-attach
-        ::          ::  %description  parse-description
-        ::          ::  %attendee  parse-attendee
-        ::          ::  %summary  parse-summary
-        ::          ==
-        ::  =/  res=[v=valarm rt=required-tags]
-        ::      (parser (snag 1 tokens) (slag 1 props) v rt)
-        ::  $(w t.w, rt rt.res, v v.res)
+        :+
+        (parse-trigger j)
+        (parse-duration-repeat j)
+        (unit-tape-from-tag j %attach)
     ++  parse-display
-        |=  w=wall
+        |=  j=(jar valarm-tag [tape (map tape tape)])
         ^-  valarm-display
-        =|  v=valarm-display
-        =|  rt=required-tags
-        |-
-        ?~  w
-          ?:  &(trigger.rt description.rt =(duration.rt repeat.rt))
-            v
-          !!
-        !!
+        :+
+        (parse-trigger j)
+        (need (unit-tape-from-tag j %description))
+        (parse-duration-repeat j)
     ++  parse-email
-        |=  w=wall
+        |=  j=(jar valarm-tag [tape (map tape tape)])
         ^-  valarm-email
-        =|  v=valarm-email
-        =|  rt=required-tags
-        |-
-        ?~  w
-          ?:
-            ?&
-              trigger.rt
-              description.rt
-              summary.rt
-              attendee.rt
-              =(duration.rt repeat.rt)
-              ==
-            !!
-          !!
-        !!
+        =/  attendees=(list tape)
+            %+  turn
+            (~(get ja j) %attendee)
+            |=  [t=tape =(map tape tape)]
+            t
+        ?~  attendees
+          !!  ::  must have at least one attendee
+        =/  attachments=(list tape)
+            %+  turn
+            (~(get ja j) %attach)
+            |=  [t=tape =(map tape tape)]
+            t
+        :*
+          (parse-trigger j)
+          (need (unit-tape-from-tag j %description))
+          (need (unit-tape-from-tag j %summary))
+          attendees
+          attachments
+        ==
+    ::  produces the tape for a given tag, asserting that
+    ::  it appears 0 or 1 times
+    ++  unit-tape-from-tag
+        |=
+        [j=(jar valarm-tag [tape (map tape tape)]) tag=valarm-tag]
+        ^-  (unit tape)
+        =/  tag-list  (~(get ja j) tag)
+        ?>  (lth (lent tag-list) 2) :: 0 or 1 of our tag
+        ?~  tag-list
+          ~
+        `-:i.tag-list
     ++  parse-trigger
-        |=  [t=tape props=(map tape tape)]
+        |=  j=(jar valarm-tag [tape (map tape tape)])
         ^-  valarm-trigger
+        =/  triggers  (~(get ja j) %trigger)
+        ?>  =((lent triggers) 1) ::  exclusive tag
+        =/  [t=tape props=(map tape tape)]  (snag 0 triggers)
         =/  value-unit=(unit tape)  (~(get by props) "VALUE")
         ::  if we don't have a "VALUE" or it's duration,
         ::  then we have a duration to parse.
@@ -589,7 +582,7 @@
         ::  otherwise, the value must be date-time
         ?>  =(u.value-unit "DATE-TIME")
         [%abs (parse-datetime-value t)]
-    ++  parse-valarm-duration-repeat
+    ++  parse-duration-repeat
         |=  j=(jar valarm-tag [tape (map tape tape)])
         ^-  (unit valarm-duration-repeat)
         =/  duration-list=(list [tape (map tape tape)])
