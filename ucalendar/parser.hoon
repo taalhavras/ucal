@@ -589,10 +589,27 @@
         ::  otherwise, the value must be date-time
         ?>  =(u.value-unit "DATE-TIME")
         [%abs (parse-datetime-value t)]
-    ++  parse-valarm-duration
-        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
-        ^-  [valarm required-tags]
-        !!
+    ++  parse-valarm-duration-repeat
+        |=  j=(jar valarm-tag [tape (map tape tape)])
+        ^-  (unit valarm-duration-repeat)
+        =/  duration-list=(list [tape (map tape tape)])
+            (~(get ja j) %duration)
+        =/  repeat-list=(list [tape (map tape tape)])
+            (~(get ja j) %repeat)
+        ?:  &(?=($~ duration-list) ?=($~ repeat-list))
+          ::  duration and repeat not specified
+          ~
+        ?:  |(?=($~ duration-list) ?=($~ repeat-list))
+          ::  one of duration or repeat specified, error
+          !!
+        ::  both specified, now assert that they're only
+        ::  specified once
+        ?>  =((lent duration-list) 1)
+        ?>  =((lent repeat-list) 1)
+        =/  repeat=@  (scan -:i.repeat-list (cook from-digits digits))
+        =/  duration=[s=? t=tarp]  (parse-duration -:i.duration-list)
+        ?>  s.duration  ::  must have positive duration
+        `[t.duration repeat]
     ++  parse-repeat
         |=  [t=tape props=(list tape) v=valarm rt=required-tags]
         ^-  [valarm required-tags]

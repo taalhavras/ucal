@@ -178,8 +178,8 @@
     [%abs dt=ical-datetime]
     ==
 ::  duration is the interval to repeat on, repeat is the count.
-::  TODO should the duration always be positive?
-+$  valarm-duration-repeat  $:(duration=ical-duration repeat=@)
+::  this duration must be positive
++$  valarm-duration-repeat  $:(duration=tarp repeat=@)
 +$  valarm-audio  $:
     ::  Required fields
     trigger=valarm-trigger
