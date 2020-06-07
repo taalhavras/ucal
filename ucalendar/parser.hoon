@@ -1,7 +1,6 @@
 /+  pretty-file, ucalendar-components, ucalendar-calendar
 =,  [ucalendar-components ucalendar-calendar]
-::  Core for parsing ical files. The goal of this file is to go from ical file
-::  to a list of unfolded strings (cords?) with all characters escaped
+::  Core for parsing .ics files containing VEVENTs and VALARMs
 |%
 ::  reverse flag type, defaults to false. used for more
 ::  convenient initialization with =| for some types
@@ -618,19 +617,6 @@
         =/  duration=[s=? t=tarp]  (parse-duration -:i.duration-list)
         ?>  s.duration  ::  must have positive duration
         `[t.duration repeat]
-    ++  parse-repeat
-        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
-        ^-  [valarm required-tags]
-        !!
-    ++  parse-attach
-        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
-        ^-  [valarm required-tags]
-        !!
-    ++  parse-audio-attach
-        |=  [t=tape props=(list tape) v=valarm rt=required-tags]
-        ^-  [valarm required-tags]
-        !!
-
     --
 ++  parse-vevent
     =<
