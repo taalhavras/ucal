@@ -65,7 +65,7 @@
     =/  res  (rust t ;~(plug (star ;~(less delim next)) delim (star next)))
     ?~  res
       ~[t]
-    ~[-:res +>:res]
+    ~[-:u.res +>:u.res]
 ::  converts a cell of two digits to a single atom (tens and ones place)
 ++  from-two-digit  |=  [a=@ b=@]  (add (mul 10 a) b)
 ::  converts a list of digits to a single atom
@@ -644,7 +644,8 @@
       !!
     ~&  "line"
     ~&  i.w
-    =/  tokens=(list tape)  (split i.w col)
+    =/  tokens=(list tape)  (split-first i.w col)
+    ~&  tokens
     ::  assert we have two tokens
     ?>  =((lent tokens) 2)
     ::  now break first token up along its params (split on semicolon)
