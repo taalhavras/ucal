@@ -22,7 +22,7 @@
         ?>  =((lent components) 2)
         [(snag 0 components) (snag 1 components)]
     =/  tag=term  (crip (cass (snag 0 props)))
-    [(m tag) (snag 1 props) (~(gas by props-map) props-list)]
+    [(m tag) (snag 1 tokens) (~(gas by props-map) props-list)]
 ::  checks if lower <= x <= higher
 ++  in-between
     |=  [[lower=@ higher=@] x=@]
@@ -476,33 +476,40 @@
 ++  parse-valarm
     =<
     |=  w=wall
-    ^-  valarm
+    ^-  (unit valarm)
     ::  Split lines into action prop and others. Once we have
     ::  the action prop, we can call the specific parser for
     ::  the particular type of valarm.
+    =/  action-rul
+        ;~(plug (jest 'ACTION') (star ;~(less col next)) col (star next))
     =/  [actions=wall rest=wall]
         %+  skid  w
         |=  t=tape
         ^-  flag
-        =/  res  (rust t ;~(plug (jest 'ACTION') (star next) col (star next)))
+        =/  res  (rust t action-rul)
         !=(res ~)
     ?>  =((lent actions) 1) ::  action is a unique tag
     =/  action-prop=tape  (snag 1 (split (snag 0 actions) col))
-    =/  action=valarm-action
-        (^:(valarm-action) (crip (cass action-prop)))
+    ~&  actions
+    ~&  action-prop
+    =/  action=(unit valarm-action)
+        ((soft valarm-action) (crip (cass action-prop)))
+    ?~  action
+      ~
     =|  acc=(jar valarm-tag [tape (map tape tape)])
     =/  rest-jar=(jar valarm-tag [tape (map tape tape)])
         |-
         ?~  rest
           acc
         =/  [k=valarm-tag v=[tape (map tape tape)]]
-            (process-line i.rest valarm-tag)
+            (process-line i.rest ^:(valarm-tag))
         $(rest t.rest, acc (~(add ja acc) k v))
-    ?-  action
+    %-  some
+    ?-  u.action
       ::  It's cool that action can just be used here as the tag.
-      %audio  [action (parse-audio rest-jar)]
-      %display  [action (parse-display rest-jar)]
-      %email  [action (parse-email rest-jar)]
+      %audio  [u.action (parse-audio rest-jar)]
+      %display  [u.action (parse-display rest-jar)]
+      %email  [u.action (parse-email rest-jar)]
     ==
     |%
     ::  largest set of required tags, don't check all in all cases
@@ -642,18 +649,19 @@
       ?:  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
         v
       !!
-    ~&  "line"
-    ~&  i.w
     =/  tokens=(list tape)  (split-first i.w col)
-    ~&  tokens
     ::  assert we have two tokens
     ?>  =((lent tokens) 2)
     ::  now break first token up along its params (split on semicolon)
     =/  props=(list tape)  (split (snag 0 tokens) mic)
+    ::  check if we have an X-PROP - if we do just skip current line
+    =/  data=tape  (snag 0 props)
+    ?:  !=((rust data ;~(plug (jest 'X-') (star next))) ~)
+      $(w t.w)
     ::  lowercase and convert to term to switch against union
     ::  each tag will have a corresponding function to produce an updated
     ::  vevent.
-    =/  tag  (^:(vevent-tag) (crip (cass (snag 0 props))))
+    =/  tag  (^:(vevent-tag) (crip (cass data)))
     =/  tok=tape  (snag 1 tokens)
     ::  begin is a special case.
     ::  find ending index, snip out relevant lines for parse-subcomponent and
@@ -876,7 +884,7 @@
         ?:  summary.ut
           !!
         :+
-        v(summary [~ t])
+        v(summary `t)
         rt
         ut(summary &)
     ++  parse-geo
@@ -919,9 +927,11 @@
         ^-  [vevent required-tags unique-tags]
         ::  events only support nested valarm components
         ?>  =(t "VALARM")
-        ::  TODO implement
+        =/  alarm=(unit valarm)  (parse-valarm lines)
+        ?~  alarm
+          :+(v rt ut)
         :+
-        v(alarms [(parse-valarm lines) alarms.v])
+        v(alarms [u.alarm alarms.v])
         rt
         ut
     ++  parse-rrule
