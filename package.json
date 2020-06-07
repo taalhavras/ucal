@@ -1,0 +1,24 @@
+{
+  "name": "ucal",
+  "version": "1.0.0",
+  "description": "A martian calendar.",
+  "main": "yarn",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "gulp",
+    "serve": "gulp watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taalhavras/ucal.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/taalhavras/ucal/issues"
+  },
+  "homepage": "https://github.com/taalhavras/ucal#readme",
+  "devDependencies": {
+    "gulp": "^4.0.0"
+  }
+}
