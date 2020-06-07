@@ -10,7 +10,7 @@
 ++  process-line
     |*  [t=tape m=mold]
     ^-  [m tape (map tape tape)]
-    =/  tokens=(list tape)  (split t col)
+    =/  tokens=(list tape)  (split-first t col)
     ?>  =((lent tokens) 2)
     =/  props=(list tape)  (split (snag 0 tokens) mic)
     =/  data=tape  (snag 0 props)
@@ -490,8 +490,6 @@
         !=(res ~)
     ?>  =((lent actions) 1) ::  action is a unique tag
     =/  action-prop=tape  (snag 1 (split (snag 0 actions) col))
-    ~&  actions
-    ~&  action-prop
     =/  action=(unit valarm-action)
         ((soft valarm-action) (crip (cass action-prop)))
     ?~  action
@@ -656,12 +654,13 @@
     =/  props=(list tape)  (split (snag 0 tokens) mic)
     ::  check if we have an X-PROP - if we do just skip current line
     =/  data=tape  (snag 0 props)
-    ?:  !=((rust data ;~(plug (jest 'X-') (star next))) ~)
-      $(w t.w)
     ::  lowercase and convert to term to switch against union
     ::  each tag will have a corresponding function to produce an updated
     ::  vevent.
-    =/  tag  (^:(vevent-tag) (crip (cass data)))
+    =/  tag=(unit vevent-tag)  ((soft vevent-tag) (crip (cass data)))
+    ?~  tag
+      ::  if tag is invalid, skip line
+      $(w t.w)
     =/  tok=tape  (snag 1 tokens)
     ::  begin is a special case.
     ::  find ending index, snip out relevant lines for parse-subcomponent and
@@ -672,7 +671,7 @@
     ::  wutlus below. However, this would require changing every one of these
     ::  parsers, which seems odd (since only nested subcomponents will consume
     ::  more than one line from w). Not really sure which way to go on this one.
-    ?:  =(tag %begin)
+    ?:  =(u.tag %begin)
       =/  end-idx=(unit @)  (find ~[(weld "END:" tok)] t.w)
       ?~  end-idx
         ::  subcomponent not properly closed
@@ -682,7 +681,7 @@
           (parse-subcomponent subcomponent-lines tok (slag 1 props) v rt ut)
       $(v v.res, rt rt.res, ut ut.res, w (slag +(u.end-idx) t.w))
     =/  parser=parser-fn
-    ?+  tag  no-parse
+    ?+  u.tag  no-parse
       %dtstamp  parse-dtstamp
       %uid  parse-uid
       %dtstart  parse-dtstart
@@ -1162,7 +1161,7 @@
           ?:  &(prodid.rt version.rt)
             cal
           !!
-        =/  tokens=(list tape)  (split i.cal-props col)
+        =/  tokens=(list tape)  (split-first i.cal-props col)
         ?>  =((lent tokens) 2)
         =/  tag  (^:(vcal-tag) (crip (cass (snag 0 tokens))))
         =/  parser=$-([tape calendar required-tags] [calendar required-tags])
