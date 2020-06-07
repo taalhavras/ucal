@@ -130,7 +130,7 @@
         =/  token=(unit tape)  (~(get by parts) "UNTIL")
         ?~  token
           ~
-        (some (parse-date-or-datetime u.token))
+        `(parse-date-or-datetime u.token)
     ++  parse-count
         |=  parts=(map tape tape)
         ^-  (unit @)
@@ -140,7 +140,7 @@
         %-  some
         %+  scan
         u.token
-        (cook from-digits (plus dit))
+        (cook from-digits digits)
     ++  parse-interval
         |=  parts=(map tape tape)
         ^-  @
@@ -149,7 +149,7 @@
           1 ::  default value for interval is 1
         %+  scan
         u.token
-        (cook from-digits (plus dit))
+        (cook from-digits digits)
     ::  parses and validates lists of two-digit atoms from a tape
     ::  if the validator fails, throw an error
     ++  parse-and-validate-two-digits
@@ -243,7 +243,7 @@
             =/  num=@  -<+:res
             ?>  (valid-weeknum num)
             =/  sign=flag  -<-:res
-            :-(day [~ [sign num]])
+            :-(day `[sign num])
     ++  parse-bymonthday
         |=  parts=(map tape tape)
         ^-  (list rrule-monthdaynum)
@@ -826,7 +826,7 @@
         ?:  organizer.ut
           !!
         :+
-        v(organizer [~ t])
+        v(organizer `t)
         rt
         ut(organizer &)
     ++  parse-categories
@@ -841,7 +841,7 @@
           !!
         =/  class  (^:(event-class) (crip (cass t)))
         :+
-        v(classification [~ class])
+        v(classification `class)
         rt
         ut(class &)
     ++  parse-comment
@@ -854,7 +854,7 @@
         ?:  description.ut
           !!
         :+
-        v(description [~ t])
+        v(description `t)
         rt
         ut(description &)
     ++  parse-summary
@@ -879,7 +879,7 @@
             (parse-float (snag 0 tokens))
             (parse-float (snag 1 tokens))
         :+
-        v(geo [~ ll])
+        v(geo `ll)
         rt
         ut(geo &)
     ++  parse-location
@@ -888,7 +888,7 @@
         ?:  location.ut
           !!
         :+
-        v(location [~ t])
+        v(location `t)
         rt
         ut(location &)
     ++  parse-status
@@ -898,7 +898,7 @@
           !!
         =/  status  (^:(event-status) (crip (cass t)))
         :+
-        v(status [~ status])
+        v(status `status)
         rt
         ut(status &)
     ++  parse-subcomponent
@@ -919,7 +919,7 @@
         ?:  rrule.ut
           !!
         :+
-        v(rrule (some (parse-recur t)))
+        v(rrule `(parse-recur t))
         rt
         ut(rrule &)
     ++  parse-rdate
@@ -1065,7 +1065,7 @@
         =/  f-prefix=tape  (scag n first)
         ::  trim whitespace
         =/  s-tail=tape  +:u.res
-        (some (weld f-prefix s-tail))
+        `(weld f-prefix s-tail)
     --
 ::  parse a calendar into a list of vevents. Since vevents aren't
 ::  nestable, we can search forward until we find the next one
