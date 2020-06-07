@@ -8,11 +8,13 @@
 ::  splits a line into tag, data, and properties
 ++  process-line
     |*  [t=tape m=mold]
-    ^-  [m tape (map tape tape)]
+    ^-  (unit [m tape (map tape tape)])
     =/  tokens=(list tape)  (split-first t col)
     ?>  =((lent tokens) 2)
     =/  props=(list tape)  (split (snag 0 tokens) mic)
-    =/  data=tape  (snag 0 props)
+    =/  tag=(unit m)  ((soft m) (crip (cass (snag 0 props))))
+    ?~  tag
+      ~
     =|  props-map=(map tape tape)
     =/  props-list=(list [tape tape])
         %+  turn  (slag 1 props)
@@ -20,8 +22,7 @@
         =/  components=(list tape)  (split tok tis)
         ?>  =((lent components) 2)
         [(snag 0 components) (snag 1 components)]
-    =/  tag=term  (crip (cass (snag 0 props)))
-    [(m tag) (snag 1 tokens) (~(gas by props-map) props-list)]
+    `[u.tag (snag 1 tokens) (~(gas by props-map) props-list)]
 ::  checks if lower <= x <= higher
 ++  in-between
     |=  [[lower=@ higher=@] x=@]
@@ -498,8 +499,10 @@
         |-
         ?~  rest
           acc
-        =/  [k=valarm-tag v=[tape (map tape tape)]]
-            (process-line i.rest ^:(valarm-tag))
+        =/  res  (process-line i.rest valarm-tag)
+        ?~  res
+          $(rest t.rest)
+        =/  [k=valarm-tag v=[tape (map tape tape)]]  u.res
         $(rest t.rest, acc (~(add ja acc) k v))
     %-  some
     ?-  u.action
@@ -633,21 +636,12 @@
       ?:  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
         v
       !!
-    =/  tokens=(list tape)  (split-first i.w col)
-    ::  assert we have two tokens
-    ?>  =((lent tokens) 2)
-    ::  now break first token up along its params (split on semicolon)
-    =/  props=(list tape)  (split (snag 0 tokens) mic)
-    ::  check if we have an X-PROP - if we do just skip current line
-    =/  data=tape  (snag 0 props)
-    ::  lowercase and convert to term to switch against union
-    ::  each tag will have a corresponding function to produce an updated
-    ::  vevent.
-    =/  tag=(unit vevent-tag)  ((soft vevent-tag) (crip (cass data)))
-    ?~  tag
-      ::  if tag is invalid, skip line
+    =/  res  (process-line i.w vevent-tag)
+    ?~  res
+      ::  tag was invalid, skip line
       $(w t.w)
-    =/  tok=tape  (snag 1 tokens)
+    =/  [tag=vevent-tag tok=tape props=(map tape tape)]
+        u.res
     ::  begin is a special case.
     ::  find ending index, snip out relevant lines for parse-subcomponent and
     ::  advance w past those lines.
@@ -657,17 +651,17 @@
     ::  wutlus below. However, this would require changing every one of these
     ::  parsers, which seems odd (since only nested subcomponents will consume
     ::  more than one line from w). Not really sure which way to go on this one.
-    ?:  =(u.tag %begin)
+    ?:  =(tag %begin)
       =/  end-idx=(unit @)  (find ~[(weld "END:" tok)] t.w)
       ?~  end-idx
         ::  subcomponent not properly closed
         !!
       =/  subcomponent-lines=wall  (swag [0 u.end-idx] t.w)
       =/  res=[v=vevent rt=required-tags ut=unique-tags]
-          (parse-subcomponent subcomponent-lines tok (slag 1 props) v rt ut)
+          (parse-subcomponent subcomponent-lines tok props v rt ut)
       $(v v.res, rt rt.res, ut ut.res, w (slag +(u.end-idx) t.w))
     =/  parser=parser-fn
-    ?+  u.tag  no-parse
+    ?+  tag  no-parse
       %dtstamp  parse-dtstamp
       %uid  parse-uid
       %dtstart  parse-dtstart
@@ -696,7 +690,7 @@
     ::  call parser with second token (data) and props without the tag,
     ::  along with our vevent and required-tags
     =/  res=[v=vevent rt=required-tags ut=unique-tags]
-        (parser tok (slag 1 props) v rt ut)
+        (parser tok props v rt ut)
     $(w t.w, v v.res, rt rt.res, ut ut.res)
     |%
     ::  tags we expect to see exactly once (required)
@@ -769,17 +763,17 @@
     ::  tag we're parsing will have a corresponding function of this type.
     ::  The first argument is the token containing the data for the tag,
     ::  the second is the list of properties specified for the tag.
-    +$  parser-fn  $-  [tape (list tape) vevent required-tags unique-tags]
+    +$  parser-fn  $-  [tape (map tape tape) vevent required-tags unique-tags]
                    [vevent required-tags unique-tags]
     ::  TODO So is there some way to refactor these so the common parts
     ::  are collapsed? look into it...
     ::
     ::  used for tags we don't support
     ++  no-parse
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         :+(v rt ut)
     ++  parse-dtstamp
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  dtstamp.rt
           !!
@@ -788,7 +782,7 @@
         rt(dtstamp &)
         ut
     ++  parse-dtstart
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  dtstart.rt
           !!
@@ -797,7 +791,7 @@
         rt(dtstart &)
         ut
     ++  parse-dtend
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  dtend-duration.rt
           !!
@@ -806,7 +800,7 @@
         rt(dtend-duration &)
         ut
     ++  parse-vevent-duration
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  dtend-duration.rt
           !!
@@ -818,7 +812,7 @@
         rt(dtend-duration &)
         ut
     ++  parse-uid
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  uid.rt
           !!
@@ -827,7 +821,7 @@
         rt(uid &)
         ut
     ++  parse-organizer
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  organizer.ut
           !!
@@ -836,12 +830,12 @@
         rt
         ut(organizer &)
     ++  parse-categories
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         =/  cats=wall  (split t com)
         :+(v(categories (weld cats categories.v)) rt ut)
     ++  parse-class
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  class.ut
           !!
@@ -851,11 +845,11 @@
         rt
         ut(class &)
     ++  parse-comment
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         :+(v(comment [t comment.v]) rt ut)
     ++  parse-description
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  description.ut
           !!
@@ -864,7 +858,7 @@
         rt
         ut(description &)
     ++  parse-summary
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  summary.ut
           !!
@@ -873,7 +867,7 @@
         rt
         ut(summary &)
     ++  parse-geo
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?~  geo.ut
           !!
@@ -889,7 +883,7 @@
         rt
         ut(geo &)
     ++  parse-location
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  location.ut
           !!
@@ -898,7 +892,7 @@
         rt
         ut(location &)
     ++  parse-status
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  status.ut
           !!
@@ -908,7 +902,7 @@
         rt
         ut(status &)
     ++  parse-subcomponent
-        |=  [lines=wall t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [lines=wall t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ::  events only support nested valarm components
         ?>  =(t "VALARM")
@@ -920,7 +914,7 @@
         rt
         ut
     ++  parse-rrule
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  rrule.ut
           !!
@@ -929,19 +923,21 @@
         rt
         ut(rrule &)
     ++  parse-rdate
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         =/  tokens=(list tape)  (split t com)
         =/  f=$-(tape rdate)
-            ?~  (find ~["VALUE=PERIOD"] props)
-              |=(tok=tape [%period (parse-period tok)])
-            |=(tok=tape [%time (parse-date-or-datetime tok)])
+            =/  res=(unit tape)  (~(get by props) "VALUE")
+            ::  value sig or not period, it's a date or datetime
+            ?:  |(?=($~ res) !=(u.res "PERIOD"))
+              |=(tok=tape [%time (parse-date-or-datetime tok)])
+            |=(tok=tape [%period (parse-period tok)])
         :+
         v(rdate (weld rdate.v (turn tokens f)))
         rt
         ut
     ++  parse-exdate
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         =/  date-strings=(list tape)  (split t com)
         =/  dates=(list ical-time)
@@ -951,7 +947,7 @@
         rt
         ut
     ++  parse-created
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  created.ut
           !!
@@ -962,7 +958,7 @@
         rt
         ut(created &)
     ++  parse-last-modified
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  last-modified.ut
           !!
@@ -973,7 +969,7 @@
         rt
         ut(last-modified &)
     ++  parse-sequence
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  sequence.ut
           !!
@@ -982,7 +978,7 @@
         rt
         ut(sequence &)
     ++  parse-transparency
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  transp.ut
           !!
@@ -991,7 +987,7 @@
         rt
         ut(transp &)
     ++  parse-priority
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  priority.ut
           !!
@@ -1002,7 +998,7 @@
         rt
         ut(priority &)
     ++  parse-url
-        |=  [t=tape props=(list tape) v=vevent rt=required-tags ut=unique-tags]
+        |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
         ^-  [vevent required-tags unique-tags]
         ?:  url.ut
           !!
