@@ -56,6 +56,16 @@
     %+  fall
       (rust t (more delim w))
     ~[t]
+::  splits a tape on the first instance of a delimiter.
+::  if delimiter isn't present, then return list containing just
+::  the original tape.
+++  split-first
+    |*  [t=tape delim=rule]
+    ^-  (list tape)
+    =/  res  (rust t ;~(plug (star ;~(less delim next)) delim (star next)))
+    ?~  res
+      ~[t]
+    ~[-:res +>:res]
 ::  converts a cell of two digits to a single atom (tens and ones place)
 ++  from-two-digit  |=  [a=@ b=@]  (add (mul 10 a) b)
 ::  converts a list of digits to a single atom
@@ -632,6 +642,8 @@
       ?:  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
         v
       !!
+    ~&  "line"
+    ~&  i.w
     =/  tokens=(list tape)  (split i.w col)
     ::  assert we have two tokens
     ?>  =((lent tokens) 2)
