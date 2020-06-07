@@ -26,17 +26,7 @@
   +*  this  .                                           :: the agent itself
       uc    ~(. +> bowl)                                :: helper core
       def   ~(. (default-agent this %|) bowl)           :: default/"stub" arms
-  ++  on-init
-    ^-  (quip card _this)
-    :_  this
-    :: use of this rune is overkill, unless we do more in the future, e.g.
-    :: - connect to clay and read ics files
-    :: - set up a landscape tile
-    :~
-      :: set up connection to Eyre for future
-      [%pass /bind %arvo %e %connect [~ /'~calendar'] %calendar]
-    ==
-  --
+  ++  on-init  on-init:def
   ::
   ++  on-save
     ^-  vase
@@ -46,7 +36,7 @@
     |=  =vase
     ^-  (quip card _this)
     :-  ~                                               :: no cards to emit
-    =/  prev  !<(versioned-state)
+    =/  prev  !<(versioned-state vase)
     ?-  -.prev
       %0  this(state prev)
     ==
@@ -70,20 +60,13 @@
       ==
     ::
         %ucal-action
-      =^  cards  state  (poke-ucal-action:rc !<(action:ucal vase))
+      =^  cards  state  (poke-ucal-action:uc !<(action:ucal vase))
       [cards this]
-    ::
-        %handle-http-request
-      :_  this
-      =+  !<([eyre-id=@ta =inbound-request:eyre] vase)
-      %+  give-simple-payload:app:server    eyre-id
-      %+  require-authorization:app:server  inbound-request
-      poke-handle-http-request:rc
     ==
   ::
   ++  on-watch  on-watch:def
   ++  on-agent  on-agent:def
-  ++  on-arvo   on-arvo:dev
+  ++  on-arvo   on-arvo:def
   ++  on-leave  on-leave:def
   ++  on-peek   on-peek:def
   ++  on-fail   on-fail:def
@@ -107,16 +90,3 @@
     [~ state]
   ==
 --
-
-
-:: NOTES ===========
-:: https://urbit.org/docs/reference/vane-apis/gall/
-:: App can be poked in the dojo by running the following commands
-:: Increment local counter
-:: :example-gall &example-gall-action [%increment ~]
-:: Increment ~zod's counter
-:: :example-gall &example-gall-action [%increment-remote ~zod]
-:: Subscribe to ~zod's counter
-:: :example-gall &example-gall-action [%view ~zod]
-:: Unsubscribe from ~zod's counter
-:: :example-gall &example-gall-action [%stop-view ~zod]

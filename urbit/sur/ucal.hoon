@@ -1,21 +1,5 @@
 |%
 ::
-+$  action
-  $%  $:  %new-calendar
-          name=@tas
-          title=@t
-      ==
-  ::
-      $:  %new-event
-          who=@p
-          cal=@tas
-          title=@t
-          start=@da
-          end=dur
-          description=@t
-      ==
-  ==
-::
 +$  calendar
   $:  owner=@p
       name=@tas                                         :: internal name, unique
@@ -39,5 +23,20 @@
 +$  dur
   $%  [%end @da]
       [%span @dr]
+  ==
++$  action
+  $%  $:  %new-calendar
+          name=@tas
+          title=@t
+      ==
+  ::
+      $:  %new-event
+          who=@p
+          cal=@tas
+          title=@t
+          start=@da
+          end=dur
+          description=@t
+      ==
   ==
 --
