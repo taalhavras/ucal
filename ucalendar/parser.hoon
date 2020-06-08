@@ -512,16 +512,6 @@
       %email  [u.action (parse-email rest-jar)]
     ==
     |%
-    ::  largest set of required tags, don't check all in all cases
-    +$  required-tags  $:
-        trigger=galf
-        duration=galf
-        repeat=galf
-        attach=galf
-        description=galf
-        summary=galf
-        attendee=galf
-        ==
     +$  valarm-tag  $?
         %trigger
         %duration
@@ -1143,16 +1133,18 @@
           ?:  &(prodid.rt version.rt)
             cal
           !!
-        =/  tokens=(list tape)  (split-first i.cal-props col)
-        ?>  =((lent tokens) 2)
-        =/  tag  (^:(vcal-tag) (crip (cass (snag 0 tokens))))
+        =/  [tag=vcal-tag data=tape =(map tape tape)]
+            (need (process-line i.cal-props vcal-tag))
+        ::  =/  tokens=(list tape)  (split-first i.cal-props col)
+        ::  ?>  =((lent tokens) 2)
+        ::  =/  tag  (^:(vcal-tag) (crip (cass (snag 0 tokens))))
         =/  parser=$-([tape calendar required-tags] [calendar required-tags])
         ?-  tag
           %version  parse-version
           %prodid  parse-prodid
         ==
         =/  res=[c=calendar rt=required-tags]
-            (parser (snag 1 tokens) cal rt)
+            (parser data cal rt)
         $(cal-props t.cal-props, rt rt.res, cal c.res)
     --
 ++  calendar-from-file

@@ -1,6 +1,4 @@
 |%
-:: TODO tagged union here for component
-++  component  $%([%vevent v=vevent])
 +$  ical-time  $%
     [%date d=date]
     [%date-time d=date utc=?]
