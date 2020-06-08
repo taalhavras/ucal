@@ -1,5 +1,5 @@
 ::  Mark for ics files
-|_  own=@t ::  TODO @t or wain?
+|_  own=@t
 ++  grow  ::  convert to
     |%
     ++  mime  `^mime`[/text/calendar (as-octs:mimes:html own)]
