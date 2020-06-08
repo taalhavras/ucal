@@ -479,7 +479,8 @@
     ^-  (unit valarm)
     ::  Split lines into action prop and others. Once we have
     ::  the action prop, we can call the specific parser for
-    ::  the particular type of valarm.
+    ::  the particular type of valarm. see valarm-action
+    ::  for supported action types.
     =/  action-rul
         ;~(plug (jest 'ACTION') (star ;~(less col next)) col (star next))
     =/  [actions=wall rest=wall]
@@ -494,6 +495,13 @@
         ((soft valarm-action) (crip (cass action-prop)))
     ?~  action
       ~
+    ::  Now we know we have a valid action, we want to preprocess
+    ::  the remaining lines. We map the tags to a list of
+    ::  [data=tape props=(map tape tape)].
+    ::  Something like "FOO;BAR=BAZ:QUX"
+    ::  would be parsed into %foo mapped to
+    ::  ~[["QUX" m]]
+    ::  where m is a map with key "BAR" and value "BAZ"
     =|  acc=(jar valarm-tag [tape (map tape tape)])
     =/  rest-jar=(jar valarm-tag [tape (map tape tape)])
         |-
