@@ -5,8 +5,12 @@
 ::
 |%
 +$  card  card:agent:gall                               :: alias for convenience
++$  cal   calendar:ucal
 ::
-+$  state-zero  cals=(map @tas calendar:ucal)
++$  state-zero
+  $:  cals=(map @tas cal)
+      events=(map @ @)
+  ==
 ::
 +$  versioned-state
   $%
@@ -70,6 +74,7 @@
   ++  on-leave  on-leave:def
   ++  on-peek   on-peek:def
   ++  on-fail   on-fail:def
+
 --
 ::
 ::: helper door
@@ -83,8 +88,26 @@
   ^-  (quip card _state)
   ?-    -.action
       %new-calendar
-    ~&  +.action
-    [~ state]
+    =/  input  +.action
+    =/  now  now.bowl
+    =/  new=cal
+      (cal our.bowl code.input title.input now now)
+    ?<  (~(has by cals.state) code.input)               :: error if exists
+    :-  ~                                               :: no cards yet
+    %=  state
+      cals  (~(put by cals.state) code.input new)
+    ==
+    ::
+      %delete-calendar
+    =/  code  code.+.action
+    ?>  (~(has by cals.state) code)
+    :-  ~
+    %=  state
+      :: TODO: delete events
+      cals  (~(del by cals.state) code)
+    ==
+    ::
+    ::
       %new-event
     ~&  +.action
     [~ state]

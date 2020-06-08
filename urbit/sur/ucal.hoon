@@ -2,20 +2,20 @@
 ::
 +$  calendar
   $:  owner=@p
-      name=@tas                                         :: internal name, unique
+      code=@tas                                         :: internal name, unique
       title=@t                                          :: external name
-      events=(list event)
       date-created=@da
       last-modified=@da
   ==
 ::
 +$  event
-  $:  organizer=@p
-      name=@tas                                         :: internal name, unique
+  $:  owner=@p
+      calendar=@tas
+      code=@tas                                         :: internal name, unique
       title=@t                                          :: external name
-      description=@t
       start=@da
       duration=dur
+      description=(unit @t)
       date-created=@da
       last-modified=@da
   ==
@@ -26,17 +26,20 @@
   ==
 +$  action
   $%  $:  %new-calendar
-          name=@tas
+          code=@tas
           title=@t
       ==
-  ::
+      ::
+      $:  %delete-calendar
+          code=@tas
+      ==
+      ::
       $:  %new-event
-          who=@p
-          cal=@tas
+          calendar=@tas
           title=@t
           start=@da
           end=dur
-          description=@t
+          description=(unit @t)
       ==
   ==
 --
