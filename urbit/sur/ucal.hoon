@@ -14,18 +14,18 @@
       code=@tas                                         :: internal name, unique
       title=@t                                          :: external name
       start=@da
-      duration=dur
+      end=@da
       description=(unit @t)
       date-created=@da
       last-modified=@da
   ==
 ::
-+$  dur
++$  dur                                               :: TODO: Is this worth it?
   $%  [%end @da]
       [%span @dr]
   ==
 +$  action
-  $%  $:  %new-calendar
+  $%  $:  %create-calendar
           code=@tas
           title=@t
       ==
@@ -34,12 +34,18 @@
           code=@tas
       ==
       ::
-      $:  %new-event
+      $:  %create-event
           calendar=@tas
           title=@t
+          code=@tas
           start=@da
           end=dur
           description=(unit @t)
+      ==
+      ::
+      $:  %query-events
+          calendars=(set @tas)
+          period=(unit [from=@da to=@da])
       ==
   ==
 --
