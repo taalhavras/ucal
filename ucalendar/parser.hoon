@@ -127,29 +127,22 @@
     ++  parse-until
         |=  parts=(map tape tape)
         ^-  (unit ical-time)
-        =/  token=(unit tape)  (~(get by parts) "UNTIL")
-        ?~  token
-          ~
-        `(parse-date-or-datetime u.token)
+        (bind (~(get by parts) "UNTIL") parse-date-or-datetime)
     ++  parse-count
         |=  parts=(map tape tape)
         ^-  (unit @)
-        =/  token=(unit tape)  (~(get by parts) "COUNT")
-        ?~  token
-          ~
-        %-  some
-        %+  scan
-        u.token
-        (cook from-digits digits)
+        %+  bind
+        (~(get by parts) "COUNT")
+        (curr scan (cook from-digits digits))
     ++  parse-interval
         |=  parts=(map tape tape)
         ^-  @
-        =/  token=(unit tape)  (~(get by parts) "INTERVAL")
-        ?~  token
-          1 ::  default value for interval is 1
-        %+  scan
-        u.token
-        (cook from-digits digits)
+        %-
+        %-  bond
+        |.(1)  ::  default value is 1
+        %+  bind
+        (~(get by parts) "INTERVAL")
+        (curr scan (cook from-digits digits))
     ::  parses and validates lists of two-digit atoms from a tape
     ::  if the validator fails, throw an error
     ++  parse-and-validate-two-digits
