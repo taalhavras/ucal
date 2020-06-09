@@ -7,27 +7,28 @@
 ++  galf  $~(| ?)
 ::  splits a line into tag, data, and properties
 ++  process-line
-    |*  [t=tape m=mold]
-    ^-  (unit [m tape (map tape tape)])
-    =/  tokens=(list tape)  (split-first t col)
-    ?>  =((lent tokens) 2)
-    =/  props=(list tape)  (split (snag 0 tokens) mic)
-    =/  tag=(unit m)  ((soft m) (crip (cass (snag 0 props))))
-    ?~  tag
-      ~
-    =|  props-map=(map tape tape)
-    =/  props-list=(list [tape tape])
-        %+  turn  (slag 1 props)
-        |=  tok=tape
-        =/  components=(list tape)  (split tok tis)
-        ?>  =((lent components) 2)
-        [(snag 0 components) (snag 1 components)]
-    `[u.tag (snag 1 tokens) (~(gas by props-map) props-list)]
+  |*  [t=tape m=mold]
+  ^-  (unit [m tape (map tape tape)])
+  =/  tokens=(list tape)  (split-first t col)
+  ?>  =((lent tokens) 2)
+  =/  props=(list tape)  (split (snag 0 tokens) mic)
+  =/  tag=(unit m)  ((soft m) (crip (cass (snag 0 props))))
+  ?~  tag
+    ~
+  =|  props-map=(map tape tape)
+  =/  props-list=(list [tape tape])
+    %+  turn
+      (slag 1 props)
+    |=  tok=tape
+    =/  components=(list tape)  (split tok tis)
+    ?>  =((lent components) 2)
+    [(snag 0 components) (snag 1 components)]
+  `[u.tag (snag 1 tokens) (~(gas by props-map) props-list)]
 ::  checks if lower <= x <= higher
 ++  in-between
-    |=  [[lower=@ higher=@] x=@]
-    ^-  flag
-    ?&((lte lower x) (gte higher x))
+  |=  [[lower=@ higher=@] x=@]
+  ^-  flag
+  ?&((lte lower x) (gte higher x))
 ::  utilities for validating parts of times.
 ::  bake applies the @ mold to the arg, making these dry gates
 ++  valid-month  (bake (cury in-between [0 12]) @)
@@ -39,8 +40,7 @@
 ++  valid-weeknum  (bake (cury in-between [1 53]) @)
 ::  rule builder for matching 0 or 1 time. regex '?'
 ::  "wut" as a name is already taken, so now we have this
-++  whut
-    |*(rul=rule (stun [0 1] rul))
+++  whut  |*(rul=rule (stun [0 1] rul))
 ::  rule for common digit groupings
 ++  digits  (plus dit)
 ++  two-dit  ;~(plug dit dit)
@@ -49,242 +49,253 @@
 ::  if delimiter isn't present, then return list containing just
 ::  the original tape.
 ++  split
-    |*  [t=tape delim=rule]
-    ^-  (list tape)
-    ::  rule to match "words" or non-delim strings
-    =/  w  (star ;~(less delim next))
-    %+  fall
-      (rust t (more delim w))
-    ~[t]
+  |*  [t=tape delim=rule]
+  ^-  (list tape)
+  ::  rule to match "words" or non-delim strings
+  =/  w  (star ;~(less delim next))
+  %+  fall
+    (rust t (more delim w))
+  ~[t]
 ::  splits a tape on the first instance of a delimiter.
 ::  if delimiter isn't present, then return list containing just
 ::  the original tape.
 ++  split-first
-    |*  [t=tape delim=rule]
-    ^-  (list tape)
-    =/  res  (rust t ;~(plug (star ;~(less delim next)) delim (star next)))
-    ?~  res
-      ~[t]
-    ~[-:u.res +>:u.res]
+  |*  [t=tape delim=rule]
+  ^-  (list tape)
+  =/  res  (rust t ;~(plug (star ;~(less delim next)) delim (star next)))
+  ?~  res
+    ~[t]
+  ~[-:u.res +>:u.res]
 ::  converts a cell of two digits to a single atom (tens and ones place)
 ++  from-two-digit  |=  [a=@ b=@]  (add (mul 10 a) b)
 ::  converts a list of digits to a single atom
 ++  from-digits
-    |=  l=(list @)
-    =|  acc=@
-    =/  m=@  (pow 10 (dec (lent l)))
+  |=  l=(list @)
+  =|  acc=@
+  =/  m=@  (pow 10 (dec (lent l)))
+  |-
+  ?~  l
+    acc
+  $(acc (add acc (mul i.l m)), m (div m 10), l t.l)
+::  parses a 'recur' data type from a tape
+++  parse-recur
+  =<
+  |=  t=tape
+  ^-  rrule
+  ::  split on semicolon
+  =/  tokens=(list tape)  (split t mic)
+  =/  parts=(map tape tape)  (produce-parts-map tokens)
+  ::  freq is the only required component here
+  :*
+    (parse-freq parts)
+    (parse-until parts)
+    (parse-count parts)
+    (parse-interval parts)
+    (parse-bysecond parts)
+    (parse-byminute parts)
+    (parse-byhour parts)
+    (parse-byweekday parts)
+    (parse-bymonthday parts)
+    (parse-byyearday parts)
+    (parse-byweek parts)
+    (parse-bymonth parts)
+    (parse-bysetpos parts)
+    (parse-weekstart parts)
+  ==
+  |%
+  +$  validator  $-(@ flag)
+  ::  produce map of all the parts of a recurrence rule mapped to
+  ::  their values. all parts MUST be unique
+  ++  produce-parts-map
+    |=  l=(list tape)
+    ^-  (map tape tape)
+    =|  acc=(map tape tape)
     |-
     ?~  l
       acc
-    $(acc (add acc (mul i.l m)), m (div m 10), l t.l)
-::  parses a 'recur' data type from a tape
-++  parse-recur
-    =<
-    |=  t=tape
-    ^-  rrule
-    ::  split on semicolon
-    =/  tokens=(list tape)  (split t mic)
-    =/  parts=(map tape tape)  (produce-parts-map tokens)
-    ::  freq is the only required component here
-    :*
-      (parse-freq parts)
-      (parse-until parts)
-      (parse-count parts)
-      (parse-interval parts)
-      (parse-bysecond parts)
-      (parse-byminute parts)
-      (parse-byhour parts)
-      (parse-byweekday parts)
-      (parse-bymonthday parts)
-      (parse-byyearday parts)
-      (parse-byweek parts)
-      (parse-bymonth parts)
-      (parse-bysetpos parts)
-      (parse-weekstart parts)
-    ==
-    |%
-    +$  validator  $-(@ flag)
-    ::  produce map of all the parts of a recurrence rule mapped to
-    ::  their values. all parts MUST be unique
-    ++  produce-parts-map
-        |=  l=(list tape)
-        ^-  (map tape tape)
-        =|  acc=(map tape tape)
-        |-
-        ?~  l
-          acc
-        =/  tokens=(list tape)  (split i.l tis)
-        ?>  =((lent tokens) 2)
-        =/  key=tape  (snag 0 tokens)
-        ::  check for key being unique
-        ?~  (~(get by acc) key)
-          $(l t.l, acc (~(put by acc) key (snag 1 tokens)))
-        !!
-    ++  parse-freq
-        |=  parts=(map tape tape)
-        ^-  rrule-freq
-        (^:(rrule-freq) (crip (cass (~(got by parts) "FREQ"))))
-    ++  parse-until
-        |=  parts=(map tape tape)
-        ^-  (unit ical-time)
-        (bind (~(get by parts) "UNTIL") parse-date-or-datetime)
-    ++  parse-count
-        |=  parts=(map tape tape)
-        ^-  (unit @)
-        %+  bind
-        (~(get by parts) "COUNT")
-        (curr scan (cook from-digits digits))
-    ++  parse-interval
-        |=  parts=(map tape tape)
+    =/  tokens=(list tape)  (split i.l tis)
+    ?>  =((lent tokens) 2)
+    =/  key=tape  (snag 0 tokens)
+    ::  check for key being unique
+    ?~  (~(get by acc) key)
+      $(l t.l, acc (~(put by acc) key (snag 1 tokens)))
+    !!
+  ++  parse-freq
+    |=  parts=(map tape tape)
+    ^-  rrule-freq
+    (^:(rrule-freq) (crip (cass (~(got by parts) "FREQ"))))
+  ++  parse-until
+    |=  parts=(map tape tape)
+    ^-  (unit ical-time)
+    (bind (~(get by parts) "UNTIL") parse-date-or-datetime)
+  ++  parse-count
+    |=  parts=(map tape tape)
+    ^-  (unit @)
+    %+  bind
+    (~(get by parts) "COUNT")
+    (curr scan (cook from-digits digits))
+  ++  parse-interval
+    |=  parts=(map tape tape)
+    ^-  @
+    %+  fall
+      %+  bind
+        (~(get by parts) "INTERVAL")
+      (curr scan (cook from-digits digits))
+    1  ::  default value is 1
+  ::  parses and validates lists of two-digit atoms from a tape
+  ::  if the validator fails, throw an error
+  ++  parse-and-validate-two-digits
+    |=  [t=tape v=validator]
+    ^-  (list @)
+    =/  tokens=(list tape)  (split t com)
+    %+  turn
+      tokens
+    |=  tok=tape
         ^-  @
-        %+  fall
-        %+  bind
-            (~(get by parts) "INTERVAL")
-            (curr scan (cook from-digits digits))
-        1  ::  default value is 1
-    ::  parses and validates lists of two-digit atoms from a tape
-    ::  if the validator fails, throw an error
-    ++  parse-and-validate-two-digits
-        |=  [t=tape v=validator]
-        ^-  (list @)
-        =/  tokens=(list tape)  (split t com)
-        %+  turn  tokens
-        |=  tok=tape
-            ^-  @
-            %+  scan  tok
-            %+  cook
-            |=  digits=[@ @]
-                ^-  @
-                =/  res=@  (from-two-digit digits)
-                ?>  (v res)
-                res
-            two-dit
-    ++  parse-bysecond
-        |=  parts=(map tape tape)
-        ^-  (list @)
-        =/  res=(unit tape)  (~(get by parts) "BYSECOND")
-        ?~  res
-          ~
-        (parse-and-validate-two-digits u.res valid-sec)
-    ++  parse-byminute
-        |=  parts=(map tape tape)
-        ^-  (list @)
-        =/  res=(unit tape)  (~(get by parts) "BYMINUTE")
-        ?~  res
-          ~
-        (parse-and-validate-two-digits u.res valid-min)
-    ++  parse-byhour
-        |=  parts=(map tape tape)
-        ^-  (list @)
-        =/  res=(unit tape)  (~(get by parts) "BYHOUR")
-        ?~  res
-          ~
-        (parse-and-validate-two-digits u.res valid-hour)
-    ::  parses and validates a signed number
-    ++  parse-and-validate-sign-and-atom
-        |=  [t=tape v=validator]
-        ^-  (list [? @])
-        =/  tokens=(list tape)  (split t com)
-        %+  turn  tokens
-        |=  tok=tape
-            ^-  [? @]
-            =/  res=[? a=@]
-            %+  scan  tok
+        %+  scan
+          tok
+        %+  cook
+          |=  digits=[@ @]
+              ^-  @
+              =/  res=@  (from-two-digit digits)
+              ?>  (v res)
+              res
+        two-dit
+  ++  parse-bysecond
+    |=  parts=(map tape tape)
+    ^-  (list @)
+    =/  res=(unit tape)  (~(get by parts) "BYSECOND")
+    ?~  res
+      ~
+    (parse-and-validate-two-digits u.res valid-sec)
+  ++  parse-byminute
+    |=  parts=(map tape tape)
+    ^-  (list @)
+    =/  res=(unit tape)  (~(get by parts) "BYMINUTE")
+    ?~  res
+      ~
+    (parse-and-validate-two-digits u.res valid-min)
+  ++  parse-byhour
+    |=  parts=(map tape tape)
+    ^-  (list @)
+    =/  res=(unit tape)  (~(get by parts) "BYHOUR")
+    ?~  res
+      ~
+    (parse-and-validate-two-digits u.res valid-hour)
+  ::  parses and validates a signed number
+  ++  parse-and-validate-sign-and-atom
+    |=  [t=tape v=validator]
+    ^-  (list [? @])
+    =/  tokens=(list tape)  (split t com)
+    %+  turn
+      tokens
+    |=  tok=tape
+        ^-  [? @]
+        =/  res=[? a=@]
+        %+  scan
+          tok
+        ;~
+          plug
+          %+  cook
+            |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
+          (whut ;~(pose lus hep)) :: optional sign
+          (cook from-digits digits)
+        ==
+        ?>  (v a.res)
+        res
+  ++  parse-byweekday
+    |=  parts=(map tape tape)
+    ^-  (list rrule-weekdaynum)
+    =/  res=(unit tape)  (~(get by parts) "BYDAY")
+    ?~  res
+      ~
+    ::  Split on comma to get each weekdaynum. We will then need to
+    ::  parse each token individually...
+    =/  tokens=(list tape)  (split u.res com)
+    %+  turn
+      tokens
+    |=  t=tape
+        =/  res
+            %+  scan
+              t
             ;~
               plug
-              %+  cook
-                |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
+              %-  whut
+              ;~
+                plug
+                %+  cook
+                  |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
                 (whut ;~(pose lus hep)) :: optional sign
-              (cook from-digits digits)
+                (cook from-digits digits)
+              ==
+              ;~(plug hig hig)  ::  two uppercase characters
             ==
-            ?>  (v a.res)
-            res
-    ++  parse-byweekday
-        |=  parts=(map tape tape)
-        ^-  (list rrule-weekdaynum)
-        =/  res=(unit tape)  (~(get by parts) "BYDAY")
-        ?~  res
-          ~
-        ::  Split on comma to get each weekdaynum. We will then need to
-        ::  parse each token individually...
-        =/  tokens=(list tape)  (split u.res com)
-        %+  turn  tokens
-        |=  t=tape
-            =/  res
-                %+  scan  t
-                ;~
-                  plug
-                  %-  whut
-                  ;~
-                    plug
-                    %+  cook
-                    |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
-                    (whut ;~(pose lus hep)) :: optional sign
-                    (cook from-digits digits)
-                  ==
-                  ;~(plug hig hig)  ::  two uppercase characters
-                ==
-            ::  day should always be present
-            =/  day=rrule-day
-                (^:(rrule-day) (crip (cass ~[+<:res +>:res])))
-            ::  now, we must go through the various cases
-            =/  hd  -:res
-            ?~  hd
-              ::  we didn't have a sign or a number
-              :-(day ~)
-            =/  num=@  -<+:res
-            ?>  (valid-weeknum num)
-            =/  sign=flag  -<-:res
-            :-(day `[sign num])
-    ++  parse-bymonthday
-        |=  parts=(map tape tape)
-        ^-  (list rrule-monthdaynum)
-        =/  res=(unit tape)  (~(get by parts) "BYMONTHDAY")
-        ?~  res
-          ~
-        %+  parse-and-validate-sign-and-atom  u.res
-        valid-monthday
-    ++  parse-byyearday
-        |=  parts=(map tape tape)
-        ^-  (list rrule-yeardaynum)
-        =/  res=(unit tape)  (~(get by parts) "BYYEARDAY")
-        ?~  res
-          ~
-        %+  parse-and-validate-sign-and-atom  u.res
-        valid-yearday
-    ++  parse-byweek
-        |=  parts=(map tape tape)
-        ^-  (list rrule-weeknum)
-        =/  res=(unit tape)  (~(get by parts) "BYWEEKNO")
-        ?~  res
-          ~
-        %+  parse-and-validate-sign-and-atom  u.res
-        valid-weeknum
-    ++  parse-bymonth
-        |=  parts=(map tape tape)
-        ^-  (list rrule-monthnum)
-        =/  res=(unit tape)  (~(get by parts) "BYMONTH")
-        ?~  res
-          ~
-        %+  parse-and-validate-sign-and-atom  u.res
-        valid-month
-    ++  parse-bysetpos
-        |=  parts=(map tape tape)
-        ^-  (list rrule-monthnum)
-        =/  res=(unit tape)  (~(get by parts) "BYSETPOS")
-        ?~  res
-          ~
-        %+  parse-and-validate-sign-and-atom  u.res
-        valid-yearday ::  also yearday
-    ++  parse-weekstart
-        |=  parts=(map tape tape)
-        ^-  rrule-day
-        %+  fall
-            %+  bind
-            (~(get by parts) "WKST")
-            ;:(cork cass crip ^:(rrule-day))
-        %mo  ::  monday is default value
-    --
+        ::  day should always be present
+        =/  day=rrule-day
+            (^:(rrule-day) (crip (cass ~[+<:res +>:res])))
+        ::  now, we must go through the various cases
+        =/  hd  -:res
+        ?~  hd
+          ::  we didn't have a sign or a number
+          :-(day ~)
+        =/  num=@  -<+:res
+        ?>  (valid-weeknum num)
+        =/  sign=flag  -<-:res
+        :-(day `[sign num])
+  ++  parse-bymonthday
+    |=  parts=(map tape tape)
+    ^-  (list rrule-monthdaynum)
+    =/  res=(unit tape)  (~(get by parts) "BYMONTHDAY")
+    ?~  res
+      ~
+    %+  parse-and-validate-sign-and-atom
+      u.res
+    valid-monthday
+  ++  parse-byyearday
+    |=  parts=(map tape tape)
+    ^-  (list rrule-yeardaynum)
+    =/  res=(unit tape)  (~(get by parts) "BYYEARDAY")
+    ?~  res
+      ~
+    %+  parse-and-validate-sign-and-atom
+      u.res
+    valid-yearday
+  ++  parse-byweek
+    |=  parts=(map tape tape)
+    ^-  (list rrule-weeknum)
+    =/  res=(unit tape)  (~(get by parts) "BYWEEKNO")
+    ?~  res
+      ~
+    %+  parse-and-validate-sign-and-atom
+      u.res
+    valid-weeknum
+  ++  parse-bymonth
+    |=  parts=(map tape tape)
+    ^-  (list rrule-monthnum)
+    =/  res=(unit tape)  (~(get by parts) "BYMONTH")
+    ?~  res
+      ~
+    %+  parse-and-validate-sign-and-atom
+      u.res
+    valid-month
+  ++  parse-bysetpos
+    |=  parts=(map tape tape)
+    ^-  (list rrule-monthnum)
+    =/  res=(unit tape)  (~(get by parts) "BYSETPOS")
+    ?~  res
+      ~
+    %+  parse-and-validate-sign-and-atom
+      u.res
+    valid-yearday ::  also yearday
+  ++  parse-weekstart
+    |=  parts=(map tape tape)
+    ^-  rrule-day
+    %+  fall
+      %+  bind
+        (~(get by parts) "WKST")
+      ;:(cork cass crip ^:(rrule-day))
+    %mo  ::  monday is default value
+  --
 ::  parses a signed floating point from a string
 ++  parse-float
     |=  t=tape
