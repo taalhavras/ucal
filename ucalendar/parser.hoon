@@ -45,6 +45,12 @@
 ++  digits  (plus dit)
 ++  two-dit  ;~(plug dit dit)
 ++  four-dit  ;~(plug dit dit dit dit)
+::  rule for parsing optional signs.
+::  produces %.y for positive and %.n for negative
+++  optional-sign
+  %+  cook
+    |=(x=tape !=(x "-"))  ::  %.y if we don't have '-', %.n otherwise
+  (whut ;~(pose lus hep))  ::  the sign itself is optional
 ::  split input tape on delim rule, return list of tapes.
 ::  if delimiter isn't present, then return list containing just
 ::  the original tape.
@@ -196,9 +202,7 @@
           tok
         ;~
           plug
-          %+  cook
-            |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
-          (whut ;~(pose lus hep)) :: optional sign
+          optional-sign
           (cook from-digits digits)
         ==
         ?>  (v a.res)
@@ -223,9 +227,7 @@
               %-  whut
               ;~
                 plug
-                %+  cook
-                  |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
-                (whut ;~(pose lus hep)) :: optional sign
+                optional-sign
                 (cook from-digits digits)
               ==
               ;~(plug hig hig)  ::  two uppercase characters
@@ -303,9 +305,7 @@
   =/  rul
       ;~
         plug
-        %+  cook
-          |=(x=tape !=(x "-")) ::  %.y if we don't have '-', %.n otherwise
-        (whut ;~(pose lus hep)) :: optional sign
+        optional-sign
         digits
         (whut ;~(plug dot digits))
       ==
@@ -364,10 +364,7 @@
     t
   ;~
     plug
-    %+  cook
-      |=  x=tape
-          !=(x "-")  ::  produce %.y if we don't have '-', %.n otherwise
-    (whut ;~(pose lus hep)) :: optional sign
+    optional-sign
     (jest 'P')
     ;~
       pose
