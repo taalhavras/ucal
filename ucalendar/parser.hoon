@@ -137,12 +137,11 @@
     ++  parse-interval
         |=  parts=(map tape tape)
         ^-  @
-        %-
-        %-  bond
-        |.(1)  ::  default value is 1
+        %+  fall
         %+  bind
-        (~(get by parts) "INTERVAL")
-        (curr scan (cook from-digits digits))
+            (~(get by parts) "INTERVAL")
+            (curr scan (cook from-digits digits))
+        1  ::  default value is 1
     ::  parses and validates lists of two-digit atoms from a tape
     ::  if the validator fails, throw an error
     ++  parse-and-validate-two-digits
@@ -280,10 +279,11 @@
     ++  parse-weekstart
         |=  parts=(map tape tape)
         ^-  rrule-day
-        =/  res=(unit tape)  (~(get by parts) "WKST")
-        ?~  res
-          %mo ::  default is monday
-        (^:(rrule-day) (crip (cass u.res)))
+        %+  fall
+            %+  bind
+            (~(get by parts) "WKST")
+            ;:(cork cass crip ^:(rrule-day))
+        %mo  ::  monday is default value
     --
 ::  parses a signed floating point from a string
 ++  parse-float
