@@ -1,7 +1,7 @@
 /+  ucalendar-parser
 =,  ucalendar-parser
 :-  %say
-|=  [[now=@da * [p=@p * *]] ~ ~]
+|=  [[now=@da * [p=@p * *]] [pax=path ~] ~]
 :-  %noun
 =/  dts=tape  "19870321"
 =/  durations=wall
@@ -31,5 +31,5 @@
       "\09three\0d"
     ==
 ::  (unfold-lines unfoldable)
-=/  pax=path  /(scot %p p)/home/(scot %da now)/txt/hg/txt
+::  =/  pax=path  /(scot %p p)/home/(scot %da now)/txt/hg/txt
 (calendar-from-file pax)
