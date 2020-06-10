@@ -211,18 +211,18 @@
     ?~  res
       ~
     (parse-and-validate-two-digits u.res valid-hour)
-  ::  +parse-and-validate-sign-and-atom:  cell of sign and atom
-  ::  from a tape, asserting validator on the atom.
+  ::  +parse-and-validate-sign-and-atom:  @s from tape,
+  ::  asserting validator on absolute value of s.
   ::
   ++  parse-and-validate-sign-and-atom
     |=  [t=tape v=validator]
-    ^-  (list [? @])
+    ^-  (list @s)
     =/  tokens=(list tape)  (split t com)
     %+  turn
       tokens
     |=  tok=tape
-        ^-  [? @]
-        =/  res=[? a=@]
+        ^-  @s
+        =/  [sign=? a=@]
         %+  scan
           tok
         ;~
@@ -230,8 +230,8 @@
           optional-sign
           (cook from-digits digits)
         ==
-        ?>  (v a.res)
-        res
+        ?>  (v a)
+        (new:si sign a)
   ::
   ++  parse-byweekday
     |=  parts=(map tape tape)
@@ -270,7 +270,9 @@
         =/  num=@  -<+:res
         ?>  (valid-weeknum num)
         =/  sign=flag  -<-:res
-        :-(day `[sign num])
+        :-
+          day
+        `(new:si sign num)
   ::
   ++  parse-bymonthday
     |=  parts=(map tape tape)
