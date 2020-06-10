@@ -1,4 +1,7 @@
 txt/hg.txt
 txt/rn.txt
+ics/*
 *.html
 *.temp
+.urbitrc
+node_modules/
