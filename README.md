@@ -33,5 +33,5 @@
 ## General TODOs
 
 1. ucal spec - how does it differ from ical, what operations will we support, etc.
-2. It'd be nice to have a mark for ics files so they don't have to be stored as
+2. (DONE) It'd be nice to have a mark for ics files so they don't have to be stored as
    ".txt" files in urbit.
