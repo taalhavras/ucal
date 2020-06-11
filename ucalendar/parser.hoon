@@ -546,7 +546,67 @@
   ^-  (unit vtimezone)
   !!
   |%
-  --
+  +$  tz-required-tags
+    $:
+      tzid=galf
+      begin=galf
+    ==
+  +$  tz-unique-tags
+    $:
+      last-mod=galf
+      tzurl=galf
+    ==
+  +$  vtimezone-tag
+    $?
+      %tzid
+      %last-mod
+      %tzurl
+      %begin
+    ==
+  +$  tzprop-tag
+    $?
+      %dtstart
+      %tzoffsetto
+      %tzoffsetfrom
+      %rrule
+      %rdate
+      %comments
+      %tzname
+    ==
+  ++  parse-tzprop
+    |=  w=wall
+    ^-  tzprop
+    =|  acc=(jar tzprop-tag [tape (map tape tape)])
+    =/  acc=(jar tzprop-tag [tape (map tape tape)])
+        |-
+        ?~  w
+          acc
+        =/  res  (process-line i.w tzprop-tag)
+        ?~  res
+          $(w t.w)
+        =/  [k=tzprop-tag v=[tape (map tape tape)]]  u.res
+        $(w t.w, acc (~(add ja acc) k v))
+    :*
+      (parse-dtstart acc)
+      (parse-tzoffsetto acc)
+      (parse-tzoffsetfrom acc)
+      (parse-rrule acc)
+      (parse-rdate acc)
+      (parse comments acc)
+      (parse-tzname acc)
+    ==
+    ++  parse-dtstart
+      |=  j=(jar tzprop-tag [tape (map tape tape)])
+      ^-  date
+      =/  dtstart-list  (~(get ja j) %dtstart)
+      ?>  =((lent dtstart-list) 1)
+      =/  [t=tape props=(map tape tape)]  (snag 0 dtstart-list)
+      =/  dtstart=ical-time  (parse-date-or-datetime t)
+      ?:  ?=([%date *] dtstart)
+        d.dtstart
+      ?<  utc.dtstart
+      d.dtstart
+    --
 ++  parse-valarm
   =<
   |=  w=wall

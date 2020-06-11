@@ -330,7 +330,6 @@
   $:
     ::  Required fields
     ::
-    type=tztype
     ::  Must be "local time" i.e. NOT utc and no TZID,
     ::  so just an urbit date
     ::
