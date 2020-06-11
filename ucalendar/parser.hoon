@@ -540,6 +540,13 @@
   =/  seconds=@  (from-two-digit +>-:res)
   =/  utc=?  =(+>+:res "Z")
   [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
+++  parse-vtimezone
+  =<
+  |=  w=wall
+  ^-  (unit vtimezone)
+  !!
+  |%
+  --
 ++  parse-valarm
   =<
   |=  w=wall

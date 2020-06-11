@@ -318,4 +318,47 @@
     [%display display=valarm-display]
     [%email email=valarm-email]
   ==
+::  $tzid:  uniquely identifies a VTIMEZONE
+::
++$  tzid  tape
+::  $utc-offset:  an offset from a local time to utc
+::
++$  utc-offset  [sign=? delta=tarp]
+::  $tzprop:  represents a specific timezone
+::
++$  tzprop
+  $:
+    ::  Required fields
+    ::
+    type=tztype
+    ::  Must be "local time" i.e. NOT utc and no TZID,
+    ::  so just an urbit date
+    ::
+    dtstart=date
+    tzoffsetto=utc-offset
+    tzoffsetfrom=utc-offset
+    ::  Optional fields
+    ::
+    rrule=(unit rrule)
+    rdate=(list rdate)
+    comments=(list tape)
+    tzname=(list tape)
+  ==
+::  $tzcomponent:  a tzprop can either refer to standard time or
+::  daylight savings time
+::
++$  tzcomponent
+  $%
+    [%standard s=tzprop]
+    [%daylight d=tzprop]
+  ==
+::  $vtimezone:  represents a parsed ics timezone
+::
++$  vtimezone
+  $:
+    ::  Required Fields
+    ::
+    id=tzid
+    props=(lest tzcomponent)
+  ==
 --

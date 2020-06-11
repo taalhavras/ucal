@@ -10,5 +10,8 @@
     version=tape
     ::  events in our calendar
     events=(list vevent)
+    ::  Optional fields
+    ::
+    timezones=(map tzid vtimezone)
   ==
 --
