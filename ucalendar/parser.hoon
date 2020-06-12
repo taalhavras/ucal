@@ -98,6 +98,19 @@
     acc
   $(acc (add acc (mul i.l m)), m (div m 10), l t.l)
 ::
+++  parse-rdate-values
+  |=  [t=tape props=(map tape tape)]
+  ^-  (list rdate)
+  =/  tokens=(list tape)  (split t com)
+  =/  f=$-(tape rdate)
+  =/  res=(unit tape)  (~(get by props) "VALUE")
+  ::  value sig or not period, it's a date or datetime
+  ::
+  ?:  |(?=($~ res) !=(u.res "PERIOD"))
+    |=(tok=tape [%time (parse-date-or-datetime tok)])
+  |=(tok=tape [%period (parse-period tok)])
+  (turn tokens f)
+::
 ++  parse-utc-offset
   |=  t=tape
   ^-  utc-offset
@@ -676,6 +689,8 @@
     ++  parse-rdate
       |=  j=(jar tzprop-tag [tape (map tape tape)])
       ^-  (list rdate)
+      %-  zing
+      (turn (~(get ja j) %rdate) parse-rdate-values)
     ::
     ++  parse-comments
       |=  j=(jar tzprop-tag [tape (map tape tape)])
@@ -1199,16 +1214,8 @@
   ++  parse-rdate
     |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags]
-    =/  tokens=(list tape)  (split t com)
-    =/  f=$-(tape rdate)
-        =/  res=(unit tape)  (~(get by props) "VALUE")
-        ::  value sig or not period, it's a date or datetime
-        ::
-        ?:  |(?=($~ res) !=(u.res "PERIOD"))
-          |=(tok=tape [%time (parse-date-or-datetime tok)])
-        |=(tok=tape [%period (parse-period tok)])
     :+
-    v(rdate (weld rdate.v (turn tokens f)))
+    v(rdate (weld rdate.v (parse-rdate-values t props)))
     rt
     ut
   ::
