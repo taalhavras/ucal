@@ -590,16 +590,36 @@
   =<
   |=  w=wall
   ^-  (unit vtimezone)
-  !!
+  =|  v=vtimezone
+  =|  rt=required-tags
+  =|  ut=unique-tags
+  |-
+  ?~  w
+    ?:  &(tzid.rt (gte (lent props.v) 1))
+      `v
+    ~
+  =/  res  (process-line i.w vtimezone-tag)
+  ?~  res
+    $(w t.w)
+  =/  [tag=vtimezone-tag tok=tape props=(map tape tape)]  u.res
+  =/  parser
+  ?-  tag
+    %tzid  parse-tzid
+    %last-mod  parse-last-modified
+    %tzurl  parse-tzurl
+    %begin  parse-subcomponent
+  ==
+  =/  parsed=[vt=vtimezone rt=required-tags ut=unique-tags w=wall]
+      (parser tok t.w props v rt ut)
+  $(w w.parsed, v vt.parsed, rt rt.parsed, ut ut.parsed)
   |%
   ::
-  +$  tz-required-tags
+  +$  required-tags
     $:
       tzid=galf
-      begin=galf
     ==
   ::
-  +$  tz-unique-tags
+  +$  unique-tags
     $:
       last-mod=galf
       tzurl=galf
@@ -623,6 +643,59 @@
       %comments
       %tzname
     ==
+  ::
+  ++  parse-tzid
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    ?:  tzid.rt
+      !!
+    :^
+    v(id (tzid t))
+    rt(tzid &)
+    ut
+    rest
+  ::
+  ++  parse-subcomponent
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    =/  end-idx=@  (need (find ~[(weld "END:" t)] rest))
+    =/  prop-lines=wall  (scag end-idx rest)
+    =/  rest-lines=wall  (slag +(end-idx) rest)
+    =/  prop=tzprop  (parse-tzprop prop-lines)
+    =/  component=tzcomponent
+        ^-  tzcomponent
+        ?:  =(t "STANDARD")
+          [%standard prop]
+        ?:  =(t "DAYLIGHT")
+          [%daylight prop]
+        !!
+    :^
+    v(props [component props.v])
+    rt
+    ut
+    rest-lines
+  ::
+  ++  parse-last-modified
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    ?:  last-mod.ut
+      !!
+    :^
+    v(last-modified `(parse-datetime-value t))
+    rt
+    ut(last-mod &)
+    rest
+  ::
+  ++  parse-tzurl
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    ?:  tzurl.ut
+      !!
+    :^
+    v(url `t)
+    rt
+    ut(tzurl &)
+    rest
   ::
   ++  parse-tzprop
     |=  w=wall

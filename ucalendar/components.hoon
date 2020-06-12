@@ -355,9 +355,13 @@
 ::
 +$  vtimezone
   $:
-    ::  Required Fields
+    ::  Required fields
     ::
     id=tzid
-    props=(lest tzcomponent)
+    props=(list tzcomponent)
+    ::  Optional fields
+    ::
+    last-modified=(unit ical-datetime)
+    url=(unit tape)
   ==
 --
