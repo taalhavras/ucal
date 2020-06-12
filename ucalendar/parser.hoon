@@ -586,6 +586,7 @@
   =/  seconds=@  (from-two-digit +>-:res)
   =/  utc=?  =(+>+:res "Z")
   [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
+::
 ++  parse-vtimezone
   =<
   |=  w=wall
@@ -719,66 +720,66 @@
       (parse-comments acc)
       (parse-tzname acc)
     ==
-    ::
-    ++  parse-dtstart
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  date
-      =/  dtstart-list  (~(get ja j) %dtstart)
-      ?>  =((lent dtstart-list) 1)
-      =/  [t=tape =(map tape tape)]  (snag 0 dtstart-list)
-      =/  dtstart=ical-time  (parse-date-or-datetime t)
-      ?:  ?=([%date *] dtstart)
-        d.dtstart
-      ::  datetime cannot be utc
-      ::
-      ?<  utc.dtstart
+  ::
+  ++  parse-dtstart
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  date
+    =/  dtstart-list  (~(get ja j) %dtstart)
+    ?>  =((lent dtstart-list) 1)
+    =/  [t=tape =(map tape tape)]  (snag 0 dtstart-list)
+    =/  dtstart=ical-time  (parse-date-or-datetime t)
+    ?:  ?=([%date *] dtstart)
       d.dtstart
+    ::  datetime cannot be utc
     ::
-    ++  parse-tzoffsetto
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  utc-offset
-      =/  offsetto-list  (~(get ja j) %tzoffsetto)
-      ?>  =((lent offsetto-list) 1)
-      =/  [t=tape =(map tape tape)]  (snag 0 offsetto-list)
-      (parse-utc-offset t)
-    ::
-    ++  parse-tzoffsetfrom
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  utc-offset
-      =/  offsetto-list  (~(get ja j) %tzoffsetfrom)
-      ?>  =((lent offsetto-list) 1)
-      =/  [t=tape =(map tape tape)]  (snag 0 offsetto-list)
-      (parse-utc-offset t)
-    ::
-    ++  parse-rrule
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  (unit rrule)
-      =/  rrule-list  (~(get ja j) %rrule)
-      ?~  rrule-list
-        ~
-      ?>  =((lent rrule-list) 1)
-      =/  [t=tape =(map tape tape)]  i.rrule-list
-      `(parse-recur t)
-    ++  parse-rdate
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  (list rdate)
-      %-  zing
-      (turn (~(get ja j) %rdate) parse-rdate-values)
-    ::
-    ++  parse-comments
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  (list tape)
-      %+  turn
-        (~(get ja j) %comments)
-      |=([t=tape =(map tape tape)] t)
-    ::
-    ++  parse-tzname
-      |=  j=(jar tzprop-tag [tape (map tape tape)])
-      ^-  (list tape)
-      %+  turn
-      (~(get ja j) %tzname)
-      |=([t=tape =(map tape tape)] t)
-    --
+    ?<  utc.dtstart
+    d.dtstart
+  ::
+  ++  parse-tzoffsetto
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  utc-offset
+    =/  offsetto-list  (~(get ja j) %tzoffsetto)
+    ?>  =((lent offsetto-list) 1)
+    =/  [t=tape =(map tape tape)]  (snag 0 offsetto-list)
+    (parse-utc-offset t)
+  ::
+  ++  parse-tzoffsetfrom
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  utc-offset
+    =/  offsetto-list  (~(get ja j) %tzoffsetfrom)
+    ?>  =((lent offsetto-list) 1)
+    =/  [t=tape =(map tape tape)]  (snag 0 offsetto-list)
+    (parse-utc-offset t)
+  ::
+  ++  parse-rrule
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (unit rrule)
+    =/  rrule-list  (~(get ja j) %rrule)
+    ?~  rrule-list
+      ~
+    ?>  =((lent rrule-list) 1)
+    =/  [t=tape =(map tape tape)]  i.rrule-list
+    `(parse-recur t)
+  ++  parse-rdate
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (list rdate)
+    %-  zing
+    (turn (~(get ja j) %rdate) parse-rdate-values)
+  ::
+  ++  parse-comments
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (list tape)
+    %+  turn
+      (~(get ja j) %comments)
+    |=([t=tape =(map tape tape)] t)
+  ::
+  ++  parse-tzname
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (list tape)
+    %+  turn
+    (~(get ja j) %tzname)
+    |=([t=tape =(map tape tape)] t)
+  --
 ++  parse-valarm
   =<
   |=  w=wall
