@@ -1503,25 +1503,51 @@
     $?
       %version
       %prodid
+      %begin
     ==
   ::
+  ++  no-parse
+    |=  [t=tape w=wall c=calendar rt=required-tags]
+    ^-  [calendar required-tags wall]
+    [c rt w]
+  ::
   ++  parse-prodid
-    |=  [t=tape c=calendar rt=required-tags]
-    ^-  [calendar required-tags]
+    |=  [t=tape w=wall c=calendar rt=required-tags]
+    ^-  [calendar required-tags wall]
     ?:  prodid.rt
       !!
-    :-
+    :+
     c(prodid t)
     rt(prodid &)
+    w
   ::
   ++  parse-version
-    |=  [t=tape c=calendar rt=required-tags]
-    ^-  [calendar required-tags]
+    |=  [t=tape w=wall c=calendar rt=required-tags]
+    ^-  [calendar required-tags wall]
     ?:  version.rt
       !!
-    :-
+    :+
     c(version t)
     rt(version &)
+    w
+  ::
+  ++  parse-subcomponent
+    |=  [t=tape w=wall c=calendar rt=required-tags]
+    ^-  [calendar required-tags wall]
+    ::  find end of subcomponent and get suffix of w
+    =/  end-idx=@  (need (find ~[(weld "END:" t)] w))
+    =/  rest=wall  (slag ~[+(end-idx)] w)
+    =/  subcomponent-lines=wall  (scag end-idx w)
+    =/  new-calendar=calendar
+        ?:  =(t "VEVENT")
+          =/  event=vevent  (parse-vevent subcomponent-lines)
+          c(events [event events.c])
+        ?:  =(t "VTIMEZONE")
+          =/  timezone=vtimezone  (need (parse-vtimezone subcomponent-lines))
+          c(timezones (~(add by timezones.c) id.timezone timezone))
+        ::  not a parse-able subcomponent, just skip over it
+        c
+    [new-calendar rt rest]
   ::  +parse-calendar-props:  builds calendar with top level properties populated
   ::
   ++  parse-calendar-props
