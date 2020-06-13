@@ -569,7 +569,6 @@
   =/  tokens=(list tape)  (split t (jest 'T'))
   ?>  =((lent tokens) 2)
   =/  d=ical-date  (parse-date-value (snag 0 tokens))
-  ::  TODO validate these digits? special rules with shims?
   =/  two-digit  ;~(plug dit dit)
   =/  res
       %+  scan
@@ -582,8 +581,11 @@
         (whut (jest 'Z'))
       ==
   =/  hours=@  (from-two-digit -:res)
+  ?>  (valid-hour hours)
   =/  minutes=@  (from-two-digit +<:res)
+  ?>  (valid-min minutes)
   =/  seconds=@  (from-two-digit +>-:res)
+  ?>  (valid-sec seconds)
   =/  utc=?  =(+>+:res "Z")
   [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
 ::
@@ -1113,9 +1115,6 @@
     $-
       [tape (map tape tape) vevent required-tags unique-tags]
       [vevent required-tags unique-tags]
-  ::  TODO So is there some way to refactor these so the common parts
-  ::  are collapsed? look into it...
-  ::
   ::  +no-parse:  used for tags we don't support
   ::
   ++  no-parse
@@ -1458,10 +1457,6 @@
   ?>  (gte n 2)
   ?>  =((snag 0 lines) "BEGIN:VCALENDAR")
   ?>  =((snag (dec n) lines) "END:VCALENDAR")
-  ::  TODO this is needed to get lines to be a lest. I tried
-  ::  directly casting it in the below expression, but it
-  ::  didn't work. i.e. t:`(lest tape)`lines
-  ::
   ?~  lines
     !!
   ::  get rid of vcalendar begin/end
