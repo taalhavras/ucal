@@ -1462,38 +1462,26 @@
   ::
   =/  trimmed-lines=wall
       (oust [(sub n 2) 1] t.lines)
-  ::  now go through lines and get the indices of begins/ends for events
-  ::
-  ::  TODO this whole method is horrendously nonperformant,
-  ::  but will do for testing
-  ::
-  =/  begin-indices=(list @)  (fand ~["BEGIN:VEVENT"] trimmed-lines)
-  =/  end-indices=(list @)  (fand ~["END:VEVENT"] trimmed-lines)
-  ?>  =((lent begin-indices) (lent end-indices))
-  ::  extract lines containing top level calendar properties
-  ::
-  ::  TODO currently just grabbing first two lines, but this can be changed
-  ::  depending on whether or not we support more top level calendar
-  ::  properties.
-  ::
-  =/  cal-props=(list tape)  (scag 2 trimmed-lines)
-  =/  cal=vcalendar  (parse-vcalendar-props cal-props)
+  =|  cal=vcalendar
+  =|  rt=required-tags
   |-
-  ?~  begin-indices
-    ?~  end-indices
+  ?~  trimmed-lines
+    ?:  &(prodid.rt version.rt)
       cal
     !!
-  ?~  end-indices
-    !!
-  ::  get indices in trimmed lines that don't include the begin/end tags.
-  ::  extract those lines from target-lines and construct a vevent from them
-  ::
-  =/  begin=@  +(i.begin-indices)
-  =/  num-lines=@  (sub i.end-indices begin)
-  =/  target-lines=wall  (swag [begin num-lines] trimmed-lines)
-  =/  event=vevent  (parse-vevent target-lines)
-  =/  new-cal=calendar  cal(events [event events.cal])
-  $(begin-indices t.begin-indices, end-indices t.end-indices, cal new-cal)
+  =+  res=(process-line i.trimmed-lines vcal-tag)
+  ?~  res
+    $(trimmed-lines t.trimmed-lines)
+  =/  [tag=vcal-tag data=tape props=(map tape tape)]  u.res
+  =/  parser
+      ?-  tag
+        %version  parse-version
+        %prodid  parse-prodid
+        %begin  parse-subcomponent
+      ==
+  =/  [newc=vcalendar nrt=required-tags rest=wall]
+      (parser data t.trimmed-lines cal rt)
+  $(cal newc, rt nrt, trimmed-lines rest)
   |%
   ::  $required-tags:  tags we expect to see exactly once in a vcalendar
   ::
@@ -1537,7 +1525,7 @@
     ^-  [vcalendar required-tags wall]
     ::  find end of subcomponent and get suffix of w
     =/  end-idx=@  (need (find ~[(weld "END:" t)] w))
-    =/  rest=wall  (slag ~[+(end-idx)] w)
+    =/  rest=wall  (slag +(end-idx) w)
     =/  subcomponent-lines=wall  (scag end-idx w)
     =/  new-calendar=vcalendar
         ?:  =(t "VEVENT")
@@ -1545,32 +1533,10 @@
           c(events [event events.c])
         ?:  =(t "VTIMEZONE")
           =/  timezone=vtimezone  (need (parse-vtimezone subcomponent-lines))
-          c(timezones (~(add by timezones.c) id.timezone timezone))
+          c(timezones (~(put by timezones.c) id.timezone timezone))
         ::  not a parse-able subcomponent, just skip over it
         c
     [new-calendar rt rest]
-  ::  +parse-vcalendar-props:  builds calendar with top level properties populated
-  ::
-  ++  parse-vcalendar-props
-    |=  [cal-props=(list tape)]
-    ^-  vcalendar
-    =|  cal=vcalendar
-    =|  rt=required-tags
-    |-
-    ?~  cal-props
-      ?:  &(prodid.rt version.rt)
-        cal
-      !!
-    =/  [tag=vcal-tag data=tape =(map tape tape)]
-        (need (process-line i.cal-props vcal-tag))
-    =/  parser=$-([tape vcalendar required-tags] [vcalendar required-tags])
-    ?-  tag
-      %version  parse-version
-      %prodid  parse-prodid
-    ==
-    =/  res=[c=vcalendar rt=required-tags]
-        (parser data cal rt)
-    $(cal-props t.cal-props, rt rt.res, cal c.res)
   --
 ::  +calendar-from-file:  builds calendar from specified file
 ::
