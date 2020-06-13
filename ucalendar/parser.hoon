@@ -1444,9 +1444,10 @@
     `(weld f-prefix s-tail)
   --
 ::
-++  parse-calendar
+++  parse-vcalendar
   =<
   |=  lines=wall
+  ^-  vcalendar
   =/  n=@  (lent lines)
   ?>  (gte n 2)
   ?>  =((snag 0 lines) "BEGIN:VCALENDAR")
@@ -1476,7 +1477,7 @@
   ::  properties.
   ::
   =/  cal-props=(list tape)  (scag 2 trimmed-lines)
-  =/  cal=calendar  (parse-calendar-props cal-props)
+  =/  cal=vcalendar  (parse-vcalendar-props cal-props)
   |-
   ?~  begin-indices
     ?~  end-indices
@@ -1507,13 +1508,13 @@
     ==
   ::
   ++  no-parse
-    |=  [t=tape w=wall c=calendar rt=required-tags]
-    ^-  [calendar required-tags wall]
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
     [c rt w]
   ::
   ++  parse-prodid
-    |=  [t=tape w=wall c=calendar rt=required-tags]
-    ^-  [calendar required-tags wall]
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
     ?:  prodid.rt
       !!
     :+
@@ -1522,8 +1523,8 @@
     w
   ::
   ++  parse-version
-    |=  [t=tape w=wall c=calendar rt=required-tags]
-    ^-  [calendar required-tags wall]
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
     ?:  version.rt
       !!
     :+
@@ -1532,13 +1533,13 @@
     w
   ::
   ++  parse-subcomponent
-    |=  [t=tape w=wall c=calendar rt=required-tags]
-    ^-  [calendar required-tags wall]
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
     ::  find end of subcomponent and get suffix of w
     =/  end-idx=@  (need (find ~[(weld "END:" t)] w))
     =/  rest=wall  (slag ~[+(end-idx)] w)
     =/  subcomponent-lines=wall  (scag end-idx w)
-    =/  new-calendar=calendar
+    =/  new-calendar=vcalendar
         ?:  =(t "VEVENT")
           =/  event=vevent  (parse-vevent subcomponent-lines)
           c(events [event events.c])
@@ -1548,12 +1549,12 @@
         ::  not a parse-able subcomponent, just skip over it
         c
     [new-calendar rt rest]
-  ::  +parse-calendar-props:  builds calendar with top level properties populated
+  ::  +parse-vcalendar-props:  builds calendar with top level properties populated
   ::
-  ++  parse-calendar-props
+  ++  parse-vcalendar-props
     |=  [cal-props=(list tape)]
-    ^-  calendar
-    =|  cal=calendar
+    ^-  vcalendar
+    =|  cal=vcalendar
     =|  rt=required-tags
     |-
     ?~  cal-props
@@ -1562,12 +1563,12 @@
       !!
     =/  [tag=vcal-tag data=tape =(map tape tape)]
         (need (process-line i.cal-props vcal-tag))
-    =/  parser=$-([tape calendar required-tags] [calendar required-tags])
+    =/  parser=$-([tape vcalendar required-tags] [vcalendar required-tags])
     ?-  tag
       %version  parse-version
       %prodid  parse-prodid
     ==
-    =/  res=[c=calendar rt=required-tags]
+    =/  res=[c=vcalendar rt=required-tags]
         (parser data cal rt)
     $(cal-props t.cal-props, rt rt.res, cal c.res)
   --
@@ -1575,7 +1576,7 @@
 ::
 ++  calendar-from-file
   |=  pax=path
-  ^-  calendar
+  ^-  vcalendar
   =/  lines=wall
       %+  turn
         (unfold-lines (read-file pax))
@@ -1586,5 +1587,5 @@
       ?:  =((snag n t) '\0d')
         (scag n t)
       t
-  (parse-calendar lines)
+  (parse-vcalendar lines)
 --

@@ -1,7 +1,7 @@
 /+  ucalendar-components
 =,  ucalendar-components
 |%
-+$  calendar
++$  vcalendar
   $:
     ::  Required fields
     ::
