@@ -2,41 +2,50 @@
 ::
 +$  calendar
   $:  owner=@p
-      name=@tas                                         :: internal name, unique
+      code=@tas                                         :: internal name, unique
       title=@t                                          :: external name
-      events=(list event)
       date-created=@da
       last-modified=@da
   ==
 ::
 +$  event
-  $:  organizer=@p
-      name=@tas                                         :: internal name, unique
+  $:  owner=@p
+      calendar=@tas
+      code=@tas                                         :: internal name, unique
       title=@t                                          :: external name
-      description=@t
       start=@da
-      duration=dur
+      end=@da
+      description=(unit @t)
       date-created=@da
       last-modified=@da
   ==
 ::
-+$  dur
++$  dur                                               :: TODO: Is this worth it?
   $%  [%end @da]
       [%span @dr]
   ==
 +$  action
-  $%  $:  %new-calendar
-          name=@tas
+  $%  $:  %create-calendar
+          code=@tas
           title=@t
       ==
-  ::
-      $:  %new-event
-          who=@p
-          cal=@tas
+      ::
+      $:  %delete-calendar
+          code=@tas
+      ==
+      ::
+      $:  %create-event
+          calendar=@tas
           title=@t
+          code=@tas
           start=@da
           end=dur
-          description=@t
+          description=(unit @t)
+      ==
+      ::
+      $:  %query-events
+          calendars=(set @tas)
+          period=(unit [from=@da to=@da])
       ==
   ==
 --

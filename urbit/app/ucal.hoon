@@ -4,9 +4,15 @@
 ::: local types
 ::
 |%
-+$  card  card:agent:gall                               :: alias for convenience
+:: aliases
++$  card   card:agent:gall
++$  cal    calendar:ucal
++$  event  event:ucal
 ::
-+$  state-zero  cals=(map @tas calendar:ucal)
++$  state-zero
+  $:  cals=(map @tas cal)
+      events=(list event)
+  ==
 ::
 +$  versioned-state
   $%
@@ -70,6 +76,7 @@
   ++  on-leave  on-leave:def
   ++  on-peek   on-peek:def
   ++  on-fail   on-fail:def
+
 --
 ::
 ::: helper door
@@ -82,11 +89,72 @@
   |=  =action:ucal
   ^-  (quip card _state)
   ?-    -.action
-      %new-calendar
-    ~&  +.action
-    [~ state]
-      %new-event
-    ~&  +.action
+      %create-calendar
+    =/  input  +.action
+    =/  new=cal
+      %:  cal                                           :: new calendar
+        our.bowl                                        :: ship
+        code.input                                      :: unique code
+        title.input                                     :: title
+        now.bowl                                        :: created
+        now.bowl                                        :: last modified
+      ==
+    ?<  (~(has by cals.state) code.input)               :: error if exists
+    :-  ~                                               :: no cards yet
+    %=  state
+      cals  (~(put by cals.state) code.input new)
+    ==
+    ::
+      %delete-calendar
+    =/  code  code.+.action
+    ?>  (~(has by cals.state) code)
+    :-  ~
+    %=  state
+      :: TODO: delete events
+      cals  (~(del by cals.state) code)
+    ==
+    ::
+      %create-event
+    =/  input  +.action
+    =/  end=@da
+      ?-    -.end.input
+          %end
+        +.end.input
+          %span
+        (add +.end.input start.input)
+      ==
+    =/  p  (period start.input end)
+    =/  new=event
+      %:  event
+        our.bowl
+        calendar.input
+        code.input                                      :: TODO: generate
+        title.input
+        -.p                                             :: start
+        +.p                                             :: end
+        description.input
+        now.bowl                                        :: created
+        now.bowl                                        :: last modified
+      ==
+    ?>  (~(has by cals.state) calendar.input)           :: calendar exists
+    :-  ~                                               :: no cards yet
+    %=  state
+      events  new^events.state
+    ==
+    ::
+    :: doesn't belong as a poke, but will be helpful for testing
+      %query-events
+    =/  input  +.action
+    ~&  [-.action input]
     [~ state]
   ==
+::
+:: period of time, properly ordered
+::
+++  period
+  |=  [a=@da b=@da]
+  ^-  [@da @da]
+  ?:  (lth b a)
+    [b a]
+  [a b]
 --
