@@ -614,17 +614,20 @@
       (parser tok t.w props v rt ut)
   $(w w.parsed, v vt.parsed, rt rt.parsed, ut ut.parsed)
   |%
+  ::  $required-tags:  tags we expect a vtimezone to specify exactly once
   ::
   +$  required-tags
     $:
       tzid=galf
     ==
+  ::  $unique-tags:  tags we expect a vtimezone to specify no more than once
   ::
   +$  unique-tags
     $:
       last-mod=galf
       tzurl=galf
     ==
+  ::  $vtimezone-tag:  tags specified in a vtimezone
   ::
   +$  vtimezone-tag
     $?
@@ -633,6 +636,7 @@
       %tzurl
       %begin
     ==
+  ::  $tzprop-tag:  tags specified in a tzprop
   ::
   +$  tzprop-tag
     $?
@@ -663,6 +667,8 @@
     =/  prop-lines=wall  (scag end-idx rest)
     =/  rest-lines=wall  (slag +(end-idx) rest)
     =/  prop=tzprop  (parse-tzprop prop-lines)
+    ::  only "STANDARD" or "DAYLIGHT" can be nested inside a vtimezone
+    ::
     =/  component=tzcomponent
         ^-  tzcomponent
         ?:  =(t "STANDARD")
@@ -1485,8 +1491,12 @@
   |%
   ::  $required-tags:  tags we expect to see exactly once in a vcalendar
   ::
-  +$  required-tags  $:(prodid=galf version=galf)
-  ::  $vcal-tag:  tags present in vcalendar
+  +$  required-tags
+    $:
+      prodid=galf
+      version=galf
+    ==
+  ::  $vcal-tag:  tags present in vcalendar that we parse
   ::
   +$  vcal-tag
     $?
@@ -1494,11 +1504,6 @@
       %prodid
       %begin
     ==
-  ::
-  ++  no-parse
-    |=  [t=tape w=wall c=vcalendar rt=required-tags]
-    ^-  [vcalendar required-tags wall]
-    [c rt w]
   ::
   ++  parse-prodid
     |=  [t=tape w=wall c=vcalendar rt=required-tags]
@@ -1523,7 +1528,10 @@
   ++  parse-subcomponent
     |=  [t=tape w=wall c=vcalendar rt=required-tags]
     ^-  [vcalendar required-tags wall]
-    ::  find end of subcomponent and get suffix of w
+    ::  find end of subcomponent and separate w into
+    ::  lines containing the subcomponent and the continuation
+    ::  to keep parsing
+    ::
     =/  end-idx=@  (need (find ~[(weld "END:" t)] w))
     =/  rest=wall  (slag +(end-idx) w)
     =/  subcomponent-lines=wall  (scag end-idx w)
@@ -1535,6 +1543,8 @@
           =/  timezone=vtimezone  (need (parse-vtimezone subcomponent-lines))
           c(timezones (~(put by timezones.c) id.timezone timezone))
         ::  not a parse-able subcomponent, just skip over it
+        ::  ex: vtodo, vjournal, vfreebusy
+        ::
         c
     [new-calendar rt rest]
   --
