@@ -185,8 +185,6 @@
       ::
       categories=wall :: (list tape)
       ::  Access classifications for calendar event (basically permissions)
-      ::  TODO Since these aren't really enforced (more like notes on what the
-      ::  event creator wanted) should we even have this?
       ::
       classification=(unit event-class)
       ::  comments from event creator on the event
@@ -220,12 +218,12 @@
       ::
       exdate=(list ical-time)
       ::  creation and update times - these must be UTC date-times
-      ::  TODO since they must be UTC, can we just store the date?
+      ::  since they must be UTC, we can just store the date
       ::
-      created=(unit ical-datetime)
+      created=(unit date)
       ::  time event was last modified
       ::
-      last-modified=(unit ical-datetime)
+      last-modified=(unit date)
       ::  revision sequence number, defaults to 0
       ::
       sequence=@

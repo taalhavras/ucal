@@ -1309,7 +1309,7 @@
     =/  dt  (parse-datetime-value t)
     ?>  utc.dt
     :^
-    v(created `dt)
+    v(created `d.dt)
     rt
     ut(created &)
     rest
@@ -1322,7 +1322,7 @@
     =/  dt  (parse-datetime-value t)
     ?>  utc.dt
     :^
-    v(last-modified `dt)
+    v(last-modified `d.dt)
     rt
     ut(last-modified &)
     rest

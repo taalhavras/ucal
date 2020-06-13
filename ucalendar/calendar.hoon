@@ -1,6 +1,8 @@
 /+  ucalendar-components
 =,  ucalendar-components
 |%
+::  $vcalendar:  ics vcalendar object
+::
 +$  vcalendar
   $:
     ::  Required fields
