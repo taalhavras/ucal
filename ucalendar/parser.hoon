@@ -9,6 +9,13 @@
 ::    for some types, see required-tags/unique-tags
 ::
 ++  galf  $~(| ?)
+::  +matches:  checks whether a tape matches a given rule
+::
+++  matches
+  |*  [t=tape rul=rule]
+  ^-  flag
+  =/  res  (rust t rul)
+  !=(res ~)
 ::  +process-line:  splits a line into tag, data, and properties
 ::
 ::    lines are of the form  TAG*(;PROP=PVAL):DATA
@@ -430,7 +437,7 @@
   ::  matches prefix of duration
   ::
   =/  dur-rul  ;~(plug ;~(pose lus hep) (jest 'P'))
-  ?:  =((rust second ;~(pfix dur-rul (star next))) ~)
+  ?:  (matches second ;~(plug dur-rul (star next)))
     ::  we have a date-time for the second
     ::
     [%explicit begin (parse-datetime-value second)]
@@ -802,10 +809,8 @@
   =/  [actions=wall rest=wall]
       %+  skid
         w
-      |=  t=tape
-          ^-  flag
-          =/  res  (rust t action-rul)
-          !=(res ~)
+      (curr matches action-rul)
+
   ::  action is a unique tag
   ?>  =((lent actions) 1)
   =/  action-prop=tape  (snag 1 (split (snag 0 actions) col))
