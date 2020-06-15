@@ -1,29 +1,147 @@
-# Design
+# Architecture #
 
-A big part of the agent is concerned with retrieval, and thereby efficient
-storage, of events.
+Urbit currently ships (no pun intended) with a number of gall agents that have
+been developed over several years, and there appear to be some emergent patterns
+in agents that have also developed. What appears to be the current preferred
+method of building userspace applications is outlined in [this
+document](https://docs.google.com/document/d/1hS_UuResG1S4j49_H-aSshoTOROKBnGoJAaRgOipf54/edit?ts=5d533e42)
+on Tlon's Userspace Architecture (TUA).
 
-There three areas to be concerned with:
+Following the conventions outlined in TUA, `ucalendar` should be broken into the
+following agents:
 
-1. Storage of events.
-2. Creation and modification of events.
-3. Retrieval of events.
+- `app/ucal-store.hoon`: stores calendar-related data.
+- `app/ucal-*-hook.hoon`: manages interactions with other agents, e.g. groups.
+- `app/ucal-*-view.hoon`: (*out of scope*) provides client interface for eventual
+  Landscape apps.
+  - **NOTE:** `ucal-tile-view.hoon` and `ucal-land-view.hoon` might be
+    appropriate.
 
-## Terms
+A calendar is probably most useful as something that can be easily shared with
+other ships. This makes it a natural fit for integration into the pre-existing
+**Groups** mechanism, so the pattern of separating the responsibilities of our
+application along the lines in the TUA makes sense. This not only seems the most
+architecturally sound, but will also enable us to leverage prior art when adding
+those functionalities.
 
-- period: range of time from start to end.
-  - NOTE: When creating a period, instead of erroring if end is before start,
-    order from earliest to latest.
+### Resources ###
 
-```
-+$  period
-  $:  s=@da                  :: start
-      e=@da                  :: end
-  ==
-```
+I'm using the **Links** application as an example project, as it appears to be
+one of the more recently developed applications (I'm guessing designed with TUA
+in place, unlike Chat and Publish) and is well-commented. Here are some places
+to look to for inspiration:
 
-## 1. Storage of events
+- [link-store](https://github.com/urbit/urbit/blob/master/pkg/arvo/app/link-store.hoon):
+  store agent for the **Links** application.
+- [link-listen-hook](https://github.com/urbit/urbit/blob/master/pkg/arvo/app/link-listen-hook.hoon):
+  link hooks for subscribing to other ships' links within the context of groups.
+- [link-proxy-hook](https://github.com/urbit/urbit/blob/master/pkg/arvo/app/link-proxy-hook.hoon):
+  serves as a proxy for local data in the store to other subscribed ships.
+- [sur/link.hoon](https://github.com/urbit/urbit/blob/master/pkg/arvo/sur/link.hoon):
+  data model for links
 
+## icalendar Integration ##
+
+`ucal` ships with [icalendar]() support, and should expose generators for
+importing an `.ics` file into a target calendar.
+
+- `gen/import-ics.hoon`: given a path to an ics file and calendar code, import
+  all events into the specified calendar.
+  - **NOTE:** allowing an input range to speciy would be a great idea here. If
+    my calendar has years of historical data that I don't want (or is just
+    gigantic), we could then only import events from a year ago and then all
+    in the future.
+- `gen/import-ics/...`: all supporting files for `import-ics` should go within
+  this folder.
+
+## `app/ucal-store.hoon` ##
+
+> Stores are the foundational components of userspace, and can be referred to as
+> "userspace infrastructure". They act as dumb data stores: small, conceptually
+> simple, and complete.
+
+Our store will manage the domain of calendar data: calendars, events, and RSVPs.
+
+`calendars` contain many events. They define an owning ship, manage subscribers
+(and the corresponding permissions), and may be part of groups. The `calendar`
+represents a *channel*, like Chats, Notebooks and Links.
+
+When viewing events in a `calendar`, we'll want to view them in a certain
+timezone. It's likely that this can be handled by the client. When saving
+events, timezone corrections may need to be made to ensure we're in UTC.
+
+`events` can have many invitees who can each provide zero or one RSVP. I'm not
+sure if this requires two data structures. We may be able to get away with a
+single `invite` structure that has an `rsvp` enum, which defaults to `~`.
+
+Additionally, `events` have a start and end date, description, title, organizer,
+and optionally a set of recurrence rules. Recurrence rules should probably
+mirror the `icalendar` spec fairly closely, as it's a general-purpose solution
+to a non-trivial problem that we don't need to focus on reinventing. (TODO:)
+Details on how we'll handle recurrence rules will be provided below.
+
+### Interfaces ###
+
+> Stores provide poke, peer and scry interfaces.
+
+- **poke**: handles mutations, often resulting in publishing updates (giving
+  `%fact`s) to subscribers.
+- **peer**: can't find any documentation on the word "peer" in other gall
+  reference materials, but I belive this is referring to managing of
+  subscriptions.
+- **scry**: a read-only namespace for exposing data.
+
+Let's cover what should be provided for each of the above interfaces.
+
+#### poke ####
+
+These actions provide a CRUD-like interface for interacting with calendar data.
+
+- `calendar-action`
+  - `%import`: import all events in an ICS file into a given calendar.
+  - `%create`: create a new calendar on `our`.
+  - `%delete`: delete an existing calendar on `our`. Should delete all
+    events, terminate all subscriptions.
+  - `%add`: subscribe to a calendar on another ship.
+  - `%remove`: unsubscribe from a calendar on another ship.
+  - `%modify`: update properties of a calendar. As of now, that's pretty much
+    just the title, so this seems not terribly urgent. Should only work for
+    calendars owned by `our`.
+  - how do invitations work? are those man
+- `event-action`
+  - `%create`: create a new event within a given calendar. A start and end date
+    are required. We could do durations like icalendar does, or accept them and
+    store them as absolute dates. Should publish to subscribers.
+  - `%respond`: respond with an RSVP to an event. Should publish to subscribers.
+  - `%delete`: delete event and publish deletion to subscribers.
+  - `%modify`: update title, description, location, and any other properties of
+    the event itself. Publishes updates to subscribers.
+  - `%invite`: invite another ship to this event. Publishes updates to
+    subscribers.
+    - **NOTE:** If another ship gets an invite straight to an event, how do we
+      determine which calendar to put the event on? Perhaps this is something
+      managed by a `ucal-view` that provides a sort of "default calendar" that
+      is used as a private calendar for the ship. This functionality would best
+      be wrapped around calendar primitives like these, rather than built in at
+      this level.
+  - `%retract`: retract an invite to a given ship. Publishes updates to
+    subscribers.
+
+#### peer ####
+
+TODO:
+
+#### scry ####
+
+TODO:
+
+--
+
+## Misc Notes
+
+* `%add-calendar`: Add another ship's calendar
+
+## Data Structures
 
 ### Concrete v. Recurring
 
@@ -52,18 +170,15 @@ leaning towards the latter.
 Special consideration will need to be given to storing RSVPs of "potential"
 events (see Concrete v. Recurring).
 
-## 3. Retrieval of events
+## Terms
 
-Urbit prefers CQRS in its design, which manifests in a pubsub pattern.
+- `period`: range of time from start to end.
+  - NOTE: When creating a period, instead of erroring if end is before start,
+    order from earliest to latest.
 
-Retrieving events will involve subscribing to a path (wire?) of time in which
-events should be delivered to a subscriber.
-
-/year/month/day
-/2020             => All events in year
-/2020/5           => All events in month
-/2020/5/25        => All events on day
-
-Can also support ranges:
-
-/2020/5/./2020/8/15 => All events from May 2020 to August 15th 2020.
+```
++$  period
+  $:  s=@da                  :: start
+      e=@da                  :: end
+  ==
+```
