@@ -1,9 +1,12 @@
 |%
+:: TODO: enumerated list of all possible timezones
++$  timezone  @t
 ::
 +$  calendar
   $:  owner=@p
       code=@tas                                         :: internal name, unique
       title=@t                                          :: external name
+      =timezone
       date-created=@da
       last-modified=@da
   ==
@@ -20,6 +23,9 @@
       last-modified=@da
   ==
 ::
+:: TODO:
+:: - rsvp
+::
 +$  dur                                               :: TODO: Is this worth it?
   $%  [%end @da]
       [%span @dr]
@@ -28,6 +34,7 @@
   $%  $:  %create-calendar
           code=@tas
           title=@t
+          timezone=(unit timezone)                      :: optional, otherwise utc
       ==
       ::
       $:  %delete-calendar
@@ -43,9 +50,11 @@
           description=(unit @t)
       ==
       ::
-      $:  %query-events
-          calendars=(set @tas)
-          period=(unit [from=@da to=@da])
-      ==
+      :: TODO:
+      :: - delete event
+      :: - cancel event?
+      :: - change rsvp
+      :: - modify event
+      :: - modify calendar
   ==
 --

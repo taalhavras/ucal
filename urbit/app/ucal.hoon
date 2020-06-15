@@ -74,6 +74,7 @@
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
   ++  on-leave  on-leave:def
+  :: TODO: Implement scry in place of querying
   ++  on-peek   on-peek:def
   ++  on-fail   on-fail:def
 
@@ -90,6 +91,7 @@
   ^-  (quip card _state)
   ?-    -.action
       %create-calendar
+    :: TODO: Move to helper core
     =/  input  +.action
     =/  new=cal
       %:  cal                                           :: new calendar
@@ -106,8 +108,10 @@
     ==
     ::
       %delete-calendar
+    :: TODO: Move to helper core
     =/  code  code.+.action
     ?>  (~(has by cals.state) code)
+    :: TODO: kick subscribers
     :-  ~
     %=  state
       :: TODO: delete events
@@ -115,6 +119,7 @@
     ==
     ::
       %create-event
+    :: TODO: Move to helper core
     =/  input  +.action
     =/  end=@da
       ?-    -.end.input
@@ -137,16 +142,11 @@
         now.bowl                                        :: last modified
       ==
     ?>  (~(has by cals.state) calendar.input)           :: calendar exists
+    :: TODO: give %fact to subscribers
     :-  ~                                               :: no cards yet
     %=  state
       events  new^events.state
     ==
-    ::
-    :: doesn't belong as a poke, but will be helpful for testing
-      %query-events
-    =/  input  +.action
-    ~&  [-.action input]
-    [~ state]
   ==
 ::
 :: period of time, properly ordered
