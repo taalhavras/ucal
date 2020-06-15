@@ -973,9 +973,8 @@
     ::  now check if all fields in rt are true - if not, we are missing
     ::  a required field and we should error
     ::
-    ?:  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
-      v
-    !!
+    ?>  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
+    v
   =/  res  (process-line i.w vevent-tag)
   ?~  res
     ::  tag was invalid, skip line
@@ -1470,9 +1469,8 @@
   =|  rt=required-tags
   |-
   ?~  trimmed-lines
-    ?:  &(prodid.rt version.rt)
-      cal
-    !!
+    ?>  &(prodid.rt version.rt)
+    cal
   =+  res=(process-line i.trimmed-lines vcal-tag)
   ?~  res
     $(trimmed-lines t.trimmed-lines)
