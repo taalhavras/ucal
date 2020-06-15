@@ -680,11 +680,11 @@
     ::
     =/  component=tzcomponent
         ^-  tzcomponent
-        ?:  =(t "STANDARD")
-          [%standard prop]
-        ?:  =(t "DAYLIGHT")
-          [%daylight prop]
-        !!
+        =/  tag=term  (crip (cass t))
+        ?+  tag  !!
+          %standard  [%standard prop]
+          %daylight  [%daylight prop]
+        ==
     :^
     v(props [component props.v])
     rt
@@ -1534,16 +1534,18 @@
     =/  rest=wall  (slag +(end-idx) w)
     =/  subcomponent-lines=wall  (scag end-idx w)
     =/  new-calendar=vcalendar
-        ?:  =(t "VEVENT")
-          =/  event=vevent  (parse-vevent subcomponent-lines)
-          c(events [event events.c])
-        ?:  =(t "VTIMEZONE")
-          =/  timezone=vtimezone  (need (parse-vtimezone subcomponent-lines))
-          c(timezones (~(put by timezones.c) id.timezone timezone))
-        ::  not a parse-able subcomponent, just skip over it
-        ::  ex: vtodo, vjournal, vfreebusy
+        ::  now check to see if we have a parse-able subcomponent,
+        ::  updating the calendar appropriately. non parse-able
+        ::  subcomponents are VTODO, VJOURNAL, and VFREEBUSY
         ::
-        c
+        =/  tag=term  (crip (cass t))
+        ?+  tag  c
+          %vevent     =/  event=vevent  (parse-vevent subcomponent-lines)
+                      c(events [event events.c])
+          %vtimezone  =/  timezone=vtimezone
+                          (need (parse-vtimezone subcomponent-lines))
+                      c(timezones (~(put by timezones.c) id.timezone timezone))
+        ==
     [new-calendar rt rest]
   --
 ::  +calendar-from-file:  builds calendar from specified file
