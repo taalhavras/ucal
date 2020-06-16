@@ -661,8 +661,7 @@
   ++  parse-tzid
     |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
     ^-  [vtimezone required-tags unique-tags wall]
-    ?:  tzid.rt
-      !!
+    ?<  tzid.rt
     :^
     v(id (tzid t))
     rt(tzid &)
@@ -694,8 +693,7 @@
   ++  parse-last-modified
     |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
     ^-  [vtimezone required-tags unique-tags wall]
-    ?:  last-mod.ut
-      !!
+    ?<  last-mod.ut
     :^
     v(last-modified `(parse-datetime-value t))
     rt
@@ -705,8 +703,7 @@
   ++  parse-tzurl
     |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
     ^-  [vtimezone required-tags unique-tags wall]
-    ?:  tzurl.ut
-      !!
+    ?<  tzurl.ut
     :^
     v(url `t)
     rt
@@ -1097,8 +1094,7 @@
   ++  parse-dtstamp
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  dtstamp.rt
-      !!
+    ?<  dtstamp.rt
     :^
     v(dtstamp (parse-datetime-value t))
     rt(dtstamp &)
@@ -1108,8 +1104,7 @@
   ++  parse-dtstart
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  dtstart.rt
-      !!
+    ?<  dtstart.rt
     :^
     v(dtstart (parse-date-or-datetime t))
     rt(dtstart &)
@@ -1119,8 +1114,7 @@
   ++  parse-dtend
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  dtend-duration.rt
-      !!
+    ?<  dtend-duration.rt
     :^
     v(end [%dtend (parse-date-or-datetime t)])
     rt(dtend-duration &)
@@ -1130,8 +1124,7 @@
   ++  parse-vevent-duration
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  dtend-duration.rt
-      !!
+    ?<  dtend-duration.rt
     =/  dur=[sign=? t=tarp]  (parse-duration t)
     ::  assert positive duration for vevent
     ::
@@ -1145,8 +1138,7 @@
   ++  parse-uid
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  uid.rt
-      !!
+    ?<  uid.rt
     :^
     v(uid (crip t))
     rt(uid &)
@@ -1156,8 +1148,7 @@
   ++  parse-organizer
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  organizer.ut
-      !!
+    ?<  organizer.ut
     :^
     v(organizer `t)
     rt
@@ -1173,8 +1164,7 @@
   ++  parse-class
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  class.ut
-      !!
+    ?<  class.ut
     =/  class  (^:(event-class) (crip (cass t)))
     :^
     v(classification `class)
@@ -1190,8 +1180,7 @@
   ++  parse-description
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  description.ut
-      !!
+    ?<  description.ut
     :^
     v(description `t)
     rt
@@ -1201,8 +1190,7 @@
   ++  parse-summary
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  summary.ut
-      !!
+    ?<  summary.ut
     :^
     v(summary `t)
     rt
@@ -1212,8 +1200,7 @@
   ++  parse-geo
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?~  geo.ut
-      !!
+    ?<  geo.ut
     ::  we expect two semicolon separated float values
     ::
     =/  tokens=(list tape)  (split t mic)
@@ -1231,8 +1218,7 @@
   ++  parse-location
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  location.ut
-      !!
+    ?<  location.ut
     :^
     v(location `t)
     rt
@@ -1242,8 +1228,7 @@
   ++  parse-status
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  status.ut
-      !!
+    ?<  status.ut
     =/  status  (^:(event-status) (crip (cass t)))
     :^
     v(status `status)
@@ -1276,8 +1261,7 @@
   ++  parse-rrule
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  rrule.ut
-      !!
+    ?<  rrule.ut
     :^
     v(rrule `(parse-recur t))
     rt
@@ -1308,8 +1292,7 @@
   ++  parse-created
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  created.ut
-      !!
+    ?<  created.ut
     =/  dt  (parse-datetime-value t)
     ?>  utc.dt
     :^
@@ -1321,8 +1304,7 @@
   ++  parse-last-modified
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  last-modified.ut
-      !!
+    ?<  last-modified.ut
     =/  dt  (parse-datetime-value t)
     ?>  utc.dt
     :^
@@ -1334,8 +1316,7 @@
   ++  parse-sequence
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  sequence.ut
-      !!
+    ?<  sequence.ut
     :^
     v(sequence (from-digits (scan t digits)))
     rt
@@ -1345,8 +1326,7 @@
   ++  parse-transparency
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  transp.ut
-      !!
+    ?<  transp.ut
     :^
     v(transparency (^:(vevent-transparency) (crip (cass t))))
     rt
@@ -1356,8 +1336,7 @@
   ++  parse-priority
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  priority.ut
-      !!
+    ?<  priority.ut
     =/  prio=@  (from-digits (scan t digits))
     ?>  (in-between [0 9] prio)
     :^
@@ -1369,8 +1348,7 @@
   ++  parse-url
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
-    ?:  url.ut
-      !!
+    ?<  url.ut
     :^
     v(url `t)
     rt
@@ -1504,8 +1482,7 @@
   ++  parse-prodid
     |=  [t=tape w=wall c=vcalendar rt=required-tags]
     ^-  [vcalendar required-tags wall]
-    ?:  prodid.rt
-      !!
+    ?<  prodid.rt
     :+
     c(prodid t)
     rt(prodid &)
@@ -1514,8 +1491,7 @@
   ++  parse-version
     |=  [t=tape w=wall c=vcalendar rt=required-tags]
     ^-  [vcalendar required-tags wall]
-    ?:  version.rt
-      !!
+    ?<  version.rt
     :+
     c(version t)
     rt(version &)
