@@ -143,13 +143,7 @@
   -:second-val
   :-
     -:res
-  :*
-    0
-    hour
-    minute
-    second
-    ~
-  ==
+  `@dr`(yule [0 hour minute second ~])
 ::
 ++  parse-recur
   =<
@@ -441,7 +435,7 @@
     ::  we have a date-time for the second
     ::
     [%explicit begin (parse-datetime-value second)]
-  =/  [sign=? dur=tarp]  (parse-duration second)
+  =/  [sign=? dur=@dr]  (parse-duration second)
   ::  duration must be positive
   ::
   ?>  sign
@@ -472,7 +466,7 @@
       dur-week
     ==
   ==
-  [f.res tar.res]
+  [f.res `@dr`(yule tar.res)]
   |%
   ::
   ++  cook-week
@@ -559,11 +553,11 @@
   =/  yc=[a=@ b=@ c=@ d=@]  -:res
   ::  computes 1000*a + 100*b + 10*c + d
   ::
-  =/  year=@
+  =/  yer=@
       %+  add
         (mul 100 (from-two-digit [a.yc b.yc]))
       (from-two-digit [c.yc d.yc])
-  [%date d(y year, m month, d.t day)]
+  [%date `@da`(year d(y yer, m month, d.t day))]
 ::  +parse-datetime-value:  parses an ics datetime.
 ::
 ::    formatted as: YYYYMMDD followed by a 'T' and then the time.
@@ -594,7 +588,7 @@
   =/  seconds=@  (from-two-digit +>-:res)
   ?>  (valid-sec seconds)
   =/  utc=?  =(+>+:res "Z")
-  [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
+  [%date-time `@da`(add d.d (yule [0 hours minutes seconds ~])) utc]
 ::
 ++  parse-vtimezone
   =<
@@ -735,7 +729,7 @@
   ::
   ++  parse-dtstart
     |=  j=(jar tzprop-tag [tape (map tape tape)])
-    ^-  date
+    ^-  @da
     =/  dtstart-list  (~(get ja j) %dtstart)
     ?>  =((lent dtstart-list) 1)
     =/  [t=tape =(map tape tape)]  (snag 0 dtstart-list)
@@ -950,10 +944,10 @@
     ?>  =((lent duration-list) 1)
     ?>  =((lent repeat-list) 1)
     =/  repeat=@  (scan -:i.repeat-list (cook from-digits digits))
-    =/  duration=[s=? t=tarp]  (parse-duration -:i.duration-list)
+    =/  [s=? d=@dr]  (parse-duration -:i.duration-list)
     ::  must have positive duration
-    ?>  s.duration
-    `[t.duration repeat]
+    ?>  s
+    `[d repeat]
   --
 ::
 ++  parse-vevent
@@ -1125,12 +1119,12 @@
     |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
     ^-  [vevent required-tags unique-tags wall]
     ?<  dtend-duration.rt
-    =/  dur=[sign=? t=tarp]  (parse-duration t)
+    =/  [sign=? d=@dr]  (parse-duration t)
     ::  assert positive duration for vevent
     ::
-    ?>  sign.dur
+    ?>  sign
     :^
-    v(end [%duration t.dur])
+    v(end [%duration d])
     rt(dtend-duration &)
     ut
     rest

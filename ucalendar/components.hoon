@@ -220,10 +220,10 @@
       ::  creation and update times - these must be UTC date-times
       ::  since they must be UTC, we can just store the date
       ::
-      created=(unit date)
+      created=(unit @da)
       ::  time event was last modified
       ::
-      last-modified=(unit date)
+      last-modified=(unit @da)
       ::  revision sequence number, defaults to 0
       ::
       sequence=@
