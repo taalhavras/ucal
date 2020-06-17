@@ -129,7 +129,40 @@ These actions provide a CRUD-like interface for interacting with calendar data.
 
 #### peer ####
 
-TODO:
+This is the interface that I'm least comfortable with speccing out, as my
+experience with subscription-based applications is limited. Bear that in mind,
+and please consider the following with scrutiny.
+
+Perusal of chat and link stores indicates that the `scry` and `peer` interfaces
+are very similar. This makes sense, because the two are both concerned with
+reading data. `scry` (`on-peek`) is for providing specific data on request,
+whereas `peer` (`on-watch`) is for providing a series of updates (`[%give %fact ...]`)
+for a specific path (set of resources) as they're delivered.
+
+##### Marks #####
+
+Subscriptions provide `*-update`, where `*` is the name of the app. Ours would
+be `calendar-update`. You can see examples of this in the
+`[link-store](https://github.com/urbit/urbit/blob/master/pkg/arvo/app/link-store.hoon#L371)`
+and
+`[chat-store](https://github.com/urbit/urbit/blob/master/pkg/arvo/app/chat-store.hoon#L72)`.
+These updates are *marks*, which I believe are derived by the combination of
+`mar/<app>/<mark>.hoon`, so a `mar/chat/update.hoon` is how we end up with
+`%chat-update`. The pattern appears to be:
+
+- Define an `+$  update` structure in `/sur`.
+  - [link](https://github.com/urbit/urbit/blob/master/pkg/arvo/sur/link.hoon#L86)
+  - [chat](https://github.com/urbit/urbit/blob/master/pkg/arvo/sur/chat-store.hoon#L48)
+- Define a mark in `mar/<app>/<mark>.hoon`. In the example cases below, the
+  `noun` arm of the `grow` and `grab` arms in the mark resolves to the the
+  `update` structure defined in `/sur`.
+  - [link](https://github.com/urbit/urbit/blob/master/pkg/arvo/mar/link/update.hoon)
+  - [chat](https://github.com/urbit/urbit/blob/master/pkg/arvo/mar/chat/update.hoon)
+
+These updates are examples of data that will be sent to other gall agents, hence
+the need for marks.
+
+TODO: More understanding of marks is needed.
 
 #### scry ####
 
