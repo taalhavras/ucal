@@ -9,6 +9,13 @@
 ::    for some types, see required-tags/unique-tags
 ::
 ++  galf  $~(| ?)
+::  +matches:  checks whether a tape matches a given rule
+::
+++  matches
+  |*  [t=tape rul=rule]
+  ^-  flag
+  =/  res  (rust t rul)
+  !=(res ~)
 ::  +process-line:  splits a line into tag, data, and properties
 ::
 ::    lines are of the form  TAG*(;PROP=PVAL):DATA
@@ -97,6 +104,46 @@
   ?~  l
     acc
   $(acc (add acc (mul i.l m)), m (div m 10), l t.l)
+::
+++  parse-rdate-values
+  |=  [t=tape props=(map tape tape)]
+  ^-  (list rdate)
+  =/  tokens=(list tape)  (split t com)
+  =/  f=$-(tape rdate)
+  =/  res=(unit tape)  (~(get by props) "VALUE")
+  ::  value sig or not period, it's a date or datetime
+  ::
+  ?:  |(?=($~ res) !=(u.res "PERIOD"))
+    |=(tok=tape [%time (parse-date-or-datetime tok)])
+  |=(tok=tape [%period (parse-period tok)])
+  (turn tokens f)
+::
+++  parse-utc-offset
+  |=  t=tape
+  ^-  utc-offset
+  =/  res
+  %+  scan
+    t
+  ::  tape is formatted as an optional sign then HHMMSS
+  ::  for hours, minutes, and optionally seconds (default to 0)
+  ::
+  ;~
+    plug
+    optional-sign
+    (cook from-two-digit two-dit)
+    (cook from-two-digit two-dit)
+    (whut (cook from-two-digit two-dit))
+  ==
+  =/  hour=@  +<:res
+  =/  minute=@  +>-:res
+  =/  second-val  +>+:res
+  =/  second=@
+  ?~  second-val
+    0
+  -:second-val
+  :-
+    -:res
+  `@dr`(yule [0 hour minute second ~])
 ::
 ++  parse-recur
   =<
@@ -384,11 +431,11 @@
   ::  matches prefix of duration
   ::
   =/  dur-rul  ;~(plug ;~(pose lus hep) (jest 'P'))
-  ?:  =((rust second ;~(pfix dur-rul (star next))) ~)
+  ?:  (matches second ;~(plug dur-rul (star next)))
     ::  we have a date-time for the second
     ::
     [%explicit begin (parse-datetime-value second)]
-  =/  [sign=? dur=tarp]  (parse-duration second)
+  =/  [sign=? dur=@dr]  (parse-duration second)
   ::  duration must be positive
   ::
   ?>  sign
@@ -419,7 +466,7 @@
       dur-week
     ==
   ==
-  [f.res tar.res]
+  [f.res `@dr`(yule tar.res)]
   |%
   ::
   ++  cook-week
@@ -506,11 +553,11 @@
   =/  yc=[a=@ b=@ c=@ d=@]  -:res
   ::  computes 1000*a + 100*b + 10*c + d
   ::
-  =/  year=@
+  =/  yer=@
       %+  add
         (mul 100 (from-two-digit [a.yc b.yc]))
       (from-two-digit [c.yc d.yc])
-  [%date d(y year, m month, d.t day)]
+  [%date `@da`(year d(y yer, m month, d.t day))]
 ::  +parse-datetime-value:  parses an ics datetime.
 ::
 ::    formatted as: YYYYMMDD followed by a 'T' and then the time.
@@ -523,7 +570,6 @@
   =/  tokens=(list tape)  (split t (jest 'T'))
   ?>  =((lent tokens) 2)
   =/  d=ical-date  (parse-date-value (snag 0 tokens))
-  ::  TODO validate these digits? special rules with shims?
   =/  two-digit  ;~(plug dit dit)
   =/  res
       %+  scan
@@ -536,10 +582,210 @@
         (whut (jest 'Z'))
       ==
   =/  hours=@  (from-two-digit -:res)
+  ?>  (valid-hour hours)
   =/  minutes=@  (from-two-digit +<:res)
+  ?>  (valid-min minutes)
   =/  seconds=@  (from-two-digit +>-:res)
+  ?>  (valid-sec seconds)
   =/  utc=?  =(+>+:res "Z")
-  [%date-time d.d(h.t hours, m.t minutes, s.t seconds) utc]
+  [%date-time `@da`(add d.d (yule [0 hours minutes seconds ~])) utc]
+::
+++  parse-vtimezone
+  =<
+  |=  w=wall
+  ^-  (unit vtimezone)
+  =|  v=vtimezone
+  =|  rt=required-tags
+  =|  ut=unique-tags
+  |-
+  ?~  w
+    ?:  &(tzid.rt (gte (lent props.v) 1))
+      `v
+    ~
+  =/  res  (process-line i.w vtimezone-tag)
+  ?~  res
+    $(w t.w)
+  =/  [tag=vtimezone-tag tok=tape props=(map tape tape)]  u.res
+  =/  parser
+  ?-  tag
+    %tzid  parse-tzid
+    %last-mod  parse-last-modified
+    %tzurl  parse-tzurl
+    %begin  parse-subcomponent
+  ==
+  =/  parsed=[vt=vtimezone rt=required-tags ut=unique-tags w=wall]
+      (parser tok t.w props v rt ut)
+  $(w w.parsed, v vt.parsed, rt rt.parsed, ut ut.parsed)
+  |%
+  ::  $required-tags:  tags we expect a vtimezone to specify exactly once
+  ::
+  +$  required-tags
+    $:
+      tzid=galf
+    ==
+  ::  $unique-tags:  tags we expect a vtimezone to specify no more than once
+  ::
+  +$  unique-tags
+    $:
+      last-mod=galf
+      tzurl=galf
+    ==
+  ::  $vtimezone-tag:  tags specified in a vtimezone
+  ::
+  +$  vtimezone-tag
+    $?
+      %tzid
+      %last-mod
+      %tzurl
+      %begin
+    ==
+  ::  $tzprop-tag:  tags specified in a tzprop
+  ::
+  +$  tzprop-tag
+    $?
+      %dtstart
+      %tzoffsetto
+      %tzoffsetfrom
+      %rrule
+      %rdate
+      %comments
+      %tzname
+    ==
+  ::
+  ++  parse-tzid
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    ?<  tzid.rt
+    :^
+    v(id (tzid t))
+    rt(tzid &)
+    ut
+    rest
+  ::
+  ++  parse-subcomponent
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    =/  end-idx=@  (need (find ~[(weld "END:" t)] rest))
+    =/  prop-lines=wall  (scag end-idx rest)
+    =/  rest-lines=wall  (slag +(end-idx) rest)
+    =/  prop=tzprop  (parse-tzprop prop-lines)
+    ::  only "STANDARD" or "DAYLIGHT" can be nested inside a vtimezone
+    ::
+    =/  component=tzcomponent
+        ^-  tzcomponent
+        =/  tag=term  (crip (cass t))
+        ?+  tag  !!
+          %standard  [%standard prop]
+          %daylight  [%daylight prop]
+        ==
+    :^
+    v(props [component props.v])
+    rt
+    ut
+    rest-lines
+  ::
+  ++  parse-last-modified
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    ?<  last-mod.ut
+    :^
+    v(last-modified `(parse-datetime-value t))
+    rt
+    ut(last-mod &)
+    rest
+  ::
+  ++  parse-tzurl
+    |=  [t=tape rest=wall props=(map tape tape) v=vtimezone rt=required-tags ut=unique-tags]
+    ^-  [vtimezone required-tags unique-tags wall]
+    ?<  tzurl.ut
+    :^
+    v(url `t)
+    rt
+    ut(tzurl &)
+    rest
+  ::
+  ++  parse-tzprop
+    |=  w=wall
+    ^-  tzprop
+    =|  acc=(jar tzprop-tag [tape (map tape tape)])
+    =/  acc=(jar tzprop-tag [tape (map tape tape)])
+        |-
+        ?~  w
+          acc
+        =/  res  (process-line i.w tzprop-tag)
+        ?~  res
+          $(w t.w)
+        =/  [k=tzprop-tag v=[tape (map tape tape)]]  u.res
+        $(w t.w, acc (~(add ja acc) k v))
+    :*
+      (parse-dtstart acc)
+      (parse-tzoffsetto acc)
+      (parse-tzoffsetfrom acc)
+      (parse-rrule acc)
+      (parse-rdate acc)
+      (parse-comments acc)
+      (parse-tzname acc)
+    ==
+  ::
+  ++  parse-dtstart
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  @da
+    =/  dtstart-list  (~(get ja j) %dtstart)
+    ?>  =((lent dtstart-list) 1)
+    =/  [t=tape =(map tape tape)]  (snag 0 dtstart-list)
+    =/  dtstart=ical-time  (parse-date-or-datetime t)
+    ?:  ?=([%date *] dtstart)
+      d.dtstart
+    ::  datetime cannot be utc
+    ::
+    ?<  utc.dtstart
+    d.dtstart
+  ::
+  ++  parse-tzoffsetto
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  utc-offset
+    =/  offsetto-list  (~(get ja j) %tzoffsetto)
+    ?>  =((lent offsetto-list) 1)
+    =/  [t=tape =(map tape tape)]  (snag 0 offsetto-list)
+    (parse-utc-offset t)
+  ::
+  ++  parse-tzoffsetfrom
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  utc-offset
+    =/  offsetto-list  (~(get ja j) %tzoffsetfrom)
+    ?>  =((lent offsetto-list) 1)
+    =/  [t=tape =(map tape tape)]  (snag 0 offsetto-list)
+    (parse-utc-offset t)
+  ::
+  ++  parse-rrule
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (unit rrule)
+    =/  rrule-list  (~(get ja j) %rrule)
+    ?~  rrule-list
+      ~
+    ?>  =((lent rrule-list) 1)
+    =/  [t=tape =(map tape tape)]  i.rrule-list
+    `(parse-recur t)
+  ++  parse-rdate
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (list rdate)
+    %-  zing
+    (turn (~(get ja j) %rdate) parse-rdate-values)
+  ::
+  ++  parse-comments
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (list tape)
+    %+  turn
+      (~(get ja j) %comments)
+    |=([t=tape =(map tape tape)] t)
+  ::
+  ++  parse-tzname
+    |=  j=(jar tzprop-tag [tape (map tape tape)])
+    ^-  (list tape)
+    %+  turn
+    (~(get ja j) %tzname)
+    |=([t=tape =(map tape tape)] t)
+  --
 ++  parse-valarm
   =<
   |=  w=wall
@@ -554,10 +800,8 @@
   =/  [actions=wall rest=wall]
       %+  skid
         w
-      |=  t=tape
-          ^-  flag
-          =/  res  (rust t action-rul)
-          !=(res ~)
+      (curr matches action-rul)
+
   ::  action is a unique tag
   ?>  =((lent actions) 1)
   =/  action-prop=tape  (snag 1 (split (snag 0 actions) col))
@@ -700,10 +944,10 @@
     ?>  =((lent duration-list) 1)
     ?>  =((lent repeat-list) 1)
     =/  repeat=@  (scan -:i.repeat-list (cook from-digits digits))
-    =/  duration=[s=? t=tarp]  (parse-duration -:i.duration-list)
+    =/  [s=? d=@dr]  (parse-duration -:i.duration-list)
     ::  must have positive duration
-    ?>  s.duration
-    `[t.duration repeat]
+    ?>  s
+    `[d repeat]
   --
 ::
 ++  parse-vevent
@@ -720,9 +964,8 @@
     ::  now check if all fields in rt are true - if not, we are missing
     ::  a required field and we should error
     ::
-    ?:  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
-      v
-    !!
+    ?>  &(dtstamp.rt uid.rt dtstart.rt dtend-duration.rt)
+    v
   =/  res  (process-line i.w vevent-tag)
   ?~  res
     ::  tag was invalid, skip line
@@ -730,27 +973,7 @@
     $(w t.w)
   =/  [tag=vevent-tag tok=tape props=(map tape tape)]
       u.res
-  ::  begin is a special case.
-  ::  find ending index, snip out relevant lines for parse-subcomponent and
-  ::  advance w past those lines.
-  ::  FIXME I guess the most general approach is to thread t.w
-  ::  through every function and have them all return the continuation from
-  ::  whatever they parsed - this would let us include %begin in the big
-  ::  wutlus below. However, this would require changing every one of these
-  ::  parsers, which seems odd (since only nested subcomponents will consume
-  ::  more than one line from w). Not really sure which way to go on this one.
-  ::
-  ?:  =(tag %begin)
-    =/  end-idx=(unit @)  (find ~[(weld "END:" tok)] t.w)
-    ::  if subcomponent not properly closed, error
-    ::
-    ?~  end-idx
-      !!
-    =/  subcomponent-lines=wall  (swag [0 u.end-idx] t.w)
-    =/  res=[v=vevent rt=required-tags ut=unique-tags]
-        (parse-subcomponent subcomponent-lines tok props v rt ut)
-    $(v v.res, rt rt.res, ut ut.res, w (slag +(u.end-idx) t.w))
-  =/  parser=parser-fn
+  =/  parser
   ?+  tag  no-parse
     %dtstamp  parse-dtstamp
     %uid  parse-uid
@@ -766,7 +989,7 @@
     %geo  parse-geo
     %location  parse-location
     %status  parse-status
-    ::  %begin  this special case is handled above
+    %begin  parse-subcomponent
     %rrule  parse-rrule
     %rdate  parse-rdate
     %exdate  parse-exdate
@@ -780,9 +1003,9 @@
   ::  call parser with second token (data) and props without the tag,
   ::  along with our vevent and required-tags
   ::
-  =/  res=[v=vevent rt=required-tags ut=unique-tags]
-      (parser tok props v rt ut)
-  $(w t.w, v v.res, rt rt.res, ut ut.res)
+  =/  res=[v=vevent rt=required-tags ut=unique-tags l=wall]
+      (parser tok t.w props v rt ut)
+  $(w l.res, v v.res, rt rt.res, ut ut.res)
   |%
   ::  $required-tags:  tags we expect to see exactly once in a vevent
   ::
@@ -856,137 +1079,122 @@
       %related
       %resources
     ==
-  ::  $parser-fn:  type for the functions we call to update our vevent.
-  ::
-  ::    each tag we're parsing will have a corresponding function of
-  ::    this type. the first argument is the token containing the data
-  ::    for the tag, the second is the list of properties specified
-  ::    for the tag.
-  ::
-  +$  parser-fn
-    $-
-      [tape (map tape tape) vevent required-tags unique-tags]
-      [vevent required-tags unique-tags]
-  ::  TODO So is there some way to refactor these so the common parts
-  ::  are collapsed? look into it...
-  ::
   ::  +no-parse:  used for tags we don't support
   ::
   ++  no-parse
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    :+(v rt ut)
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    :^(v rt ut rest)
   ::
   ++  parse-dtstamp
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  dtstamp.rt
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  dtstamp.rt
+    :^
     v(dtstamp (parse-datetime-value t))
     rt(dtstamp &)
     ut
+    rest
   ::
   ++  parse-dtstart
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  dtstart.rt
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  dtstart.rt
+    :^
     v(dtstart (parse-date-or-datetime t))
     rt(dtstart &)
     ut
+    rest
   ::
   ++  parse-dtend
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  dtend-duration.rt
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  dtend-duration.rt
+    :^
     v(end [%dtend (parse-date-or-datetime t)])
     rt(dtend-duration &)
     ut
+    rest
   ::
   ++  parse-vevent-duration
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  dtend-duration.rt
-      !!
-    =/  dur=[sign=? t=tarp]  (parse-duration t)
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  dtend-duration.rt
+    =/  [sign=? d=@dr]  (parse-duration t)
     ::  assert positive duration for vevent
     ::
-    ?>  sign.dur
-    :+
-    v(end [%duration t.dur])
+    ?>  sign
+    :^
+    v(end [%duration d])
     rt(dtend-duration &)
     ut
+    rest
   ::
   ++  parse-uid
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  uid.rt
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  uid.rt
+    :^
     v(uid (crip t))
     rt(uid &)
     ut
+    rest
   ::
   ++  parse-organizer
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  organizer.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  organizer.ut
+    :^
     v(organizer `t)
     rt
     ut(organizer &)
+    rest
   ::
   ++  parse-categories
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
     =/  cats=wall  (split t com)
-    :+(v(categories (weld cats categories.v)) rt ut)
+    :^(v(categories (weld cats categories.v)) rt ut rest)
   ::
   ++  parse-class
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  class.ut
-      !!
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  class.ut
     =/  class  (^:(event-class) (crip (cass t)))
-    :+
+    :^
     v(classification `class)
     rt
     ut(class &)
+    rest
   ::
   ++  parse-comment
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    :+(v(comment [t comment.v]) rt ut)
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    :^(v(comment [t comment.v]) rt ut rest)
   ::
   ++  parse-description
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  description.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  description.ut
+    :^
     v(description `t)
     rt
     ut(description &)
+    rest
   ::
   ++  parse-summary
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  summary.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  summary.ut
+    :^
     v(summary `t)
     rt
     ut(summary &)
+    rest
   ::
   ++  parse-geo
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?~  geo.ut
-      !!
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  geo.ut
     ::  we expect two semicolon separated float values
     ::
     =/  tokens=(list tape)  (split t mic)
@@ -995,148 +1203,151 @@
         :-
         (parse-float (snag 0 tokens))
         (parse-float (snag 1 tokens))
-    :+
+    :^
     v(geo `ll)
     rt
     ut(geo &)
+    rest
   ::
   ++  parse-location
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  location.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  location.ut
+    :^
     v(location `t)
     rt
     ut(location &)
+    rest
   ::
   ++  parse-status
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  status.ut
-      !!
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  status.ut
     =/  status  (^:(event-status) (crip (cass t)))
-    :+
+    :^
     v(status `status)
     rt
     ut(status &)
+    rest
   ::
   ++  parse-subcomponent
-    |=  [lines=wall t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
     ::  vevents only support nested valarm components
     ::
     ?>  =(t "VALARM")
-    =/  alarm=(unit valarm)  (parse-valarm lines)
+    =/  end-idx=(unit @)  (find ~["END:VALARM"] rest)
+    ::  if subcomponent not properly closed, error
+    ::
+    ?~  end-idx
+      !!
+    =/  alarm-lines=wall  (scag u.end-idx rest)
+    =/  continuation=wall  (slag +(u.end-idx) rest)
+    =/  alarm=(unit valarm)  (parse-valarm alarm-lines)
     ?~  alarm
-      :+(v rt ut)
-    :+
+      :^(v rt ut continuation)
+    :^
     v(alarms [u.alarm alarms.v])
     rt
     ut
+    continuation
   ::
   ++  parse-rrule
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  rrule.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  rrule.ut
+    :^
     v(rrule `(parse-recur t))
     rt
     ut(rrule &)
+    rest
   ::
   ++  parse-rdate
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    =/  tokens=(list tape)  (split t com)
-    =/  f=$-(tape rdate)
-        =/  res=(unit tape)  (~(get by props) "VALUE")
-        ::  value sig or not period, it's a date or datetime
-        ::
-        ?:  |(?=($~ res) !=(u.res "PERIOD"))
-          |=(tok=tape [%time (parse-date-or-datetime tok)])
-        |=(tok=tape [%period (parse-period tok)])
-    :+
-    v(rdate (weld rdate.v (turn tokens f)))
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    :^
+    v(rdate (weld rdate.v (parse-rdate-values t props)))
     rt
     ut
+    rest
   ::
   ++  parse-exdate
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
     =/  date-strings=(list tape)  (split t com)
     =/  dates=(list ical-time)
         (turn date-strings parse-date-or-datetime)
-    :+
+    :^
     v(exdate (weld exdate.v dates))
     rt
     ut
+    rest
   ::
   ++  parse-created
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  created.ut
-      !!
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  created.ut
     =/  dt  (parse-datetime-value t)
     ?>  utc.dt
-    :+
-    v(created `dt)
+    :^
+    v(created `d.dt)
     rt
     ut(created &)
+    rest
   ::
   ++  parse-last-modified
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  last-modified.ut
-      !!
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  last-modified.ut
     =/  dt  (parse-datetime-value t)
     ?>  utc.dt
-    :+
-    v(last-modified `dt)
+    :^
+    v(last-modified `d.dt)
     rt
     ut(last-modified &)
+    rest
   ::
   ++  parse-sequence
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  sequence.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  sequence.ut
+    :^
     v(sequence (from-digits (scan t digits)))
     rt
     ut(sequence &)
+    rest
   ::
   ++  parse-transparency
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  transp.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  transp.ut
+    :^
     v(transparency (^:(vevent-transparency) (crip (cass t))))
     rt
     ut(transp &)
+    rest
   ::
   ++  parse-priority
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  priority.ut
-      !!
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  priority.ut
     =/  prio=@  (from-digits (scan t digits))
     ?>  (in-between [0 9] prio)
-    :+
+    :^
     v(priority prio)
     rt
     ut(priority &)
+    rest
   ::
   ++  parse-url
-    |=  [t=tape props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
-    ^-  [vevent required-tags unique-tags]
-    ?:  url.ut
-      !!
-    :+
+    |=  [t=tape rest=wall props=(map tape tape) v=vevent rt=required-tags ut=unique-tags]
+    ^-  [vevent required-tags unique-tags wall]
+    ?<  url.ut
+    :^
     v(url `t)
     rt
     ut(url &)
+    rest
   --
 ::  +read-file:  get lines of a file in order
 ::
@@ -1212,112 +1423,104 @@
     `(weld f-prefix s-tail)
   --
 ::
-++  parse-calendar
+++  parse-vcalendar
   =<
   |=  lines=wall
+  ^-  vcalendar
   =/  n=@  (lent lines)
   ?>  (gte n 2)
   ?>  =((snag 0 lines) "BEGIN:VCALENDAR")
   ?>  =((snag (dec n) lines) "END:VCALENDAR")
-  ::  TODO this is needed to get lines to be a lest. I tried
-  ::  directly casting it in the below expression, but it
-  ::  didn't work. i.e. t:`(lest tape)`lines
-  ::
   ?~  lines
     !!
   ::  get rid of vcalendar begin/end
   ::
   =/  trimmed-lines=wall
       (oust [(sub n 2) 1] t.lines)
-  ::  now go through lines and get the indices of begins/ends for events
-  ::
-  ::  TODO this whole method is horrendously nonperformant,
-  ::  but will do for testing
-  ::
-  =/  begin-indices=(list @)  (fand ~["BEGIN:VEVENT"] trimmed-lines)
-  =/  end-indices=(list @)  (fand ~["END:VEVENT"] trimmed-lines)
-  ?>  =((lent begin-indices) (lent end-indices))
-  ::  extract lines containing top level calendar properties
-  ::
-  ::  TODO currently just grabbing first two lines, but this can be changed
-  ::  depending on whether or not we support more top level calendar
-  ::  properties.
-  ::
-  =/  cal-props=(list tape)  (scag 2 trimmed-lines)
-  =/  cal=calendar  (parse-calendar-props cal-props)
+  =|  cal=vcalendar
+  =|  rt=required-tags
   |-
-  ?~  begin-indices
-    ?~  end-indices
-      cal
-    !!
-  ?~  end-indices
-    !!
-  ::  get indices in trimmed lines that don't include the begin/end tags.
-  ::  extract those lines from target-lines and construct a vevent from them
-  ::
-  =/  begin=@  +(i.begin-indices)
-  =/  num-lines=@  (sub i.end-indices begin)
-  =/  target-lines=wall  (swag [begin num-lines] trimmed-lines)
-  =/  event=vevent  (parse-vevent target-lines)
-  =/  new-cal=calendar  cal(events [event events.cal])
-  $(begin-indices t.begin-indices, end-indices t.end-indices, cal new-cal)
+  ?~  trimmed-lines
+    ?>  &(prodid.rt version.rt)
+    cal
+  =+  res=(process-line i.trimmed-lines vcal-tag)
+  ?~  res
+    $(trimmed-lines t.trimmed-lines)
+  =/  [tag=vcal-tag data=tape props=(map tape tape)]  u.res
+  =/  parser
+      ?-  tag
+        %version  parse-version
+        %prodid  parse-prodid
+        %begin  parse-subcomponent
+      ==
+  =/  [newc=vcalendar nrt=required-tags rest=wall]
+      (parser data t.trimmed-lines cal rt)
+  $(cal newc, rt nrt, trimmed-lines rest)
   |%
   ::  $required-tags:  tags we expect to see exactly once in a vcalendar
   ::
-  +$  required-tags  $:(prodid=galf version=galf)
-  ::  $vcal-tag:  tags present in vcalendar
+  +$  required-tags
+    $:
+      prodid=galf
+      version=galf
+    ==
+  ::  $vcal-tag:  tags present in vcalendar that we parse
   ::
   +$  vcal-tag
     $?
       %version
       %prodid
+      %begin
     ==
   ::
   ++  parse-prodid
-    |=  [t=tape c=calendar rt=required-tags]
-    ^-  [calendar required-tags]
-    ?:  prodid.rt
-      !!
-    :-
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
+    ?<  prodid.rt
+    :+
     c(prodid t)
     rt(prodid &)
+    w
   ::
   ++  parse-version
-    |=  [t=tape c=calendar rt=required-tags]
-    ^-  [calendar required-tags]
-    ?:  version.rt
-      !!
-    :-
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
+    ?<  version.rt
+    :+
     c(version t)
     rt(version &)
-  ::  +parse-calendar-props:  builds calendar with top level properties populated
+    w
   ::
-  ++  parse-calendar-props
-    |=  [cal-props=(list tape)]
-    ^-  calendar
-    =|  cal=calendar
-    =|  rt=required-tags
-    |-
-    ?~  cal-props
-      ?:  &(prodid.rt version.rt)
-        cal
-      !!
-    =/  [tag=vcal-tag data=tape =(map tape tape)]
-        (need (process-line i.cal-props vcal-tag))
-    =/  parser=$-([tape calendar required-tags] [calendar required-tags])
-    ?-  tag
-      %version  parse-version
-      %prodid  parse-prodid
-    ==
-    =/  res=[c=calendar rt=required-tags]
-        (parser data cal rt)
-    $(cal-props t.cal-props, rt rt.res, cal c.res)
+  ++  parse-subcomponent
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
+    ::  find end of subcomponent and separate w into
+    ::  lines containing the subcomponent and the continuation
+    ::  to keep parsing
+    ::
+    =/  end-idx=@  (need (find ~[(weld "END:" t)] w))
+    =/  rest=wall  (slag +(end-idx) w)
+    =/  subcomponent-lines=wall  (scag end-idx w)
+    =/  new-calendar=vcalendar
+        ::  now check to see if we have a parse-able subcomponent,
+        ::  updating the calendar appropriately. non parse-able
+        ::  subcomponents are VTODO, VJOURNAL, and VFREEBUSY
+        ::
+        =/  tag=term  (crip (cass t))
+        ?+  tag  c
+          %vevent     =/  event=vevent  (parse-vevent subcomponent-lines)
+                      c(events [event events.c])
+          %vtimezone  =/  timezone=vtimezone
+                          (need (parse-vtimezone subcomponent-lines))
+                      c(timezones (~(put by timezones.c) id.timezone timezone))
+        ==
+    [new-calendar rt rest]
   --
 ::  +calendar-from-file:  builds calendar from specified file
 ::
 ++  calendar-from-file
   |=  pax=path
-  ^-  calendar
+  ^-  vcalendar
   =/  lines=wall
       %+  turn
         (unfold-lines (read-file pax))
@@ -1328,5 +1531,5 @@
       ?:  =((snag n t) '\0d')
         (scag n t)
       t
-  (parse-calendar lines)
+  (parse-vcalendar lines)
 --

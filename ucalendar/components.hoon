@@ -6,8 +6,8 @@
 ::
 +$  ical-time
   $%
-    [%date d=date]
-    [%date-time d=date utc=?]
+    [%date d=@da]
+    [%date-time d=@da utc=?]
   ==
 ::  $ical-date:  type for ics dates
 ::
@@ -17,13 +17,13 @@
 +$  ical-datetime  $>(%date-time ical-time)
 ::  $ical-duration:  a signed duration
 ::
-+$  ical-duration  $:(sign=? t=tarp)
++$  ical-duration  $:(sign=? duration=@dr)
 ::  $event-ending:  we either have end date or positive duration
 ::
 +$  event-ending
   $%
-    [%dtend d=ical-time]
-    [%duration t=tarp] ::  always a positive duration
+    [%dtend end=ical-time]
+    [%duration duration=@dr] ::  always a positive duration
   ==
 ::  $event-class:  the different classes of event per the rfc
 ::
@@ -44,7 +44,7 @@
 +$  period
   $%
     [%explicit begin=ical-datetime end=ical-datetime]
-    [%start begin=ical-datetime duration=tarp] ::  always a positive duration
+    [%start begin=ical-datetime duration=@dr] ::  always a positive duration
   ==
 ::  $rdate:  definition for an ics rdate
 ::
@@ -54,7 +54,7 @@
 ::
 +$  rdate
   $%
-    [%time d=ical-time]
+    [%time t=ical-time]
     [%period p=period]
   ==
 ::  $rrule:  a recurrence rule as defined by the rfc. used to compute the
@@ -185,8 +185,6 @@
       ::
       categories=wall :: (list tape)
       ::  Access classifications for calendar event (basically permissions)
-      ::  TODO Since these aren't really enforced (more like notes on what the
-      ::  event creator wanted) should we even have this?
       ::
       classification=(unit event-class)
       ::  comments from event creator on the event
@@ -220,12 +218,12 @@
       ::
       exdate=(list ical-time)
       ::  creation and update times - these must be UTC date-times
-      ::  TODO since they must be UTC, can we just store the date?
+      ::  since they must be UTC, we can just store the date
       ::
-      created=(unit ical-datetime)
+      created=(unit @da)
       ::  time event was last modified
       ::
-      last-modified=(unit ical-datetime)
+      last-modified=(unit @da)
       ::  revision sequence number, defaults to 0
       ::
       sequence=@
@@ -258,7 +256,7 @@
 ::  $valarm-duration-repeat:  the positive duration to repeat an alarm on
 ::  along with the count.
 ::
-+$  valarm-duration-repeat  $:(duration=tarp repeat=@)
++$  valarm-duration-repeat  $:(duration=@dr repeat=@)
 ::  $valarm-audio:  audio alarm component
 ::
 +$  valarm-audio
@@ -317,5 +315,51 @@
     [%audio audio=valarm-audio]
     [%display display=valarm-display]
     [%email email=valarm-email]
+  ==
+::  $tzid:  uniquely identifies a VTIMEZONE
+::
++$  tzid  tape
+::  $utc-offset:  an offset from a local time to utc
+::
++$  utc-offset  [sign=? delta=@dr]
+::  $tzprop:  represents a specific timezone
+::
++$  tzprop
+  $:
+    ::  Required fields
+    ::
+    ::  Must be "local time" i.e. NOT utc and no TZID,
+    ::  so just an urbit date
+    ::
+    dtstart=@da
+    tzoffsetto=utc-offset
+    tzoffsetfrom=utc-offset
+    ::  Optional fields
+    ::
+    rrule=(unit rrule)
+    rdate=(list rdate)
+    comments=(list tape)
+    tzname=(list tape)
+  ==
+::  $tzcomponent:  a tzprop can either refer to standard time or
+::  daylight savings time
+::
++$  tzcomponent
+  $%
+    [%standard s=tzprop]
+    [%daylight d=tzprop]
+  ==
+::  $vtimezone:  represents a parsed ics timezone
+::
++$  vtimezone
+  $:
+    ::  Required fields
+    ::
+    id=tzid
+    props=(list tzcomponent)
+    ::  Optional fields
+    ::
+    last-modified=(unit ical-datetime)
+    url=(unit tape)
   ==
 --
