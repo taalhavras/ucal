@@ -23,6 +23,8 @@
       last-modified=@da
   ==
 ::
++$  calendars  (list calendar)
++$  events  (list event) ::
 :: TODO:
 :: - rsvp
 ::

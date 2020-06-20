@@ -102,8 +102,8 @@ These actions provide a CRUD-like interface for interacting with calendar data.
   - `%create`: create a new calendar on `our`.
   - `%delete`: delete an existing calendar on `our`. Should delete all
     events, terminate all subscriptions.
-  - `%add`: subscribe to a calendar on another ship.
-  - `%remove`: unsubscribe from a calendar on another ship.
+  - `%add`: add a calendar on another ship.
+  - `%remove`: remove a calendar on another ship.
   - `%modify`: update properties of a calendar. As of now, that's pretty much
     just the title, so this seems not terribly urgent. Should only work for
     calendars owned by `our`.
@@ -161,6 +161,15 @@ These updates are *marks*, which I believe are derived by the combination of
 
 These updates are examples of data that will be sent to other gall agents, hence
 the need for marks.
+
+
+##### Paths #####
+
+- /calendars
+- /events
+
+How do we bootstrap the initial payload of events? Do we stick things in the
+path?
 
 TODO: More understanding of marks is needed.
 

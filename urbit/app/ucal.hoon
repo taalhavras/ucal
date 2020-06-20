@@ -1,3 +1,8 @@
+:: TODO:
+:: - set up scry paths
+:: - poke
+:: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
+::
 /-  ucal
 /+  default-agent
 ::
@@ -7,11 +12,12 @@
 :: aliases
 +$  card   card:agent:gall
 +$  cal    calendar:ucal
++$  calendars  calendars:ucal
 +$  event  event:ucal
 ::
 +$  state-zero
   $:  cals=(map @tas cal)
-      events=(list event)
+      events=(map @tas events:ucal)
   ==
 ::
 +$  versioned-state
@@ -74,15 +80,32 @@
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
   ++  on-leave  on-leave:def
-  :: TODO: Implement scry in place of querying
-  ++  on-peek   on-peek:def
+  ++  on-peek
+    |=  =path
+    ~&  [%path-is path]
+    ^-  (unit (unit cage))
+    ?+  path  (on-peek:def path)
+        :: y the y???
+        [%y %calendars ~]
+      ``noun+!>((get-calendars:uc t.t.path))
+        [%y %events *]
+      ``noun+!>((get-events:uc t.t.path))
+    ==
   ++  on-fail   on-fail:def
-
 --
 ::
 ::: helper door
 ::
 |_  bowl=bowl:gall
+++  get-calendars
+  |=  =path
+  ^-  calendars
+  %+  turn  ~(tap by cals.state)
+  tail
+++  get-events
+  |=  =path
+  ^-  events:ucal
+  ~
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -98,6 +121,7 @@
         our.bowl                                        :: ship
         code.input                                      :: unique code
         title.input                                     :: title
+        timezone.input                                  :: timezone
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
@@ -142,10 +166,10 @@
         now.bowl                                        :: last modified
       ==
     ?>  (~(has by cals.state) calendar.input)           :: calendar exists
-    :: TODO: give %fact to subscribers
+    ::    :: TODO: give %fact to subscribers
     :-  ~                                               :: no cards yet
     %=  state
-      events  new^events.state
+      events  (~(put by events.state) calendar.input new)
     ==
   ==
 ::
