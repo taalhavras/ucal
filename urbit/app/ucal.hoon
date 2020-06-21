@@ -17,7 +17,7 @@
 ::
 +$  state-zero
   $:  cals=(map @tas cal)
-      events=(map @tas events:ucal)
+      events=(jar @tas event)
   ==
 ::
 +$  versioned-state
@@ -44,14 +44,14 @@
     ^-  vase
     !>(state)
   ::
-  ++  on-load
-    |=  =vase
-    ^-  (quip card _this)
-    :-  ~                                               :: no cards to emit
-    =/  prev  !<(versioned-state vase)
-    ?-  -.prev
-      %0  this(state prev)
-    ==
+  ++  on-load  on-load:def
+    ::  |=  =vase
+    ::  ^-  (quip card _this)
+    ::  :-  ~                                               :: no cards to emit
+    ::  =/  prev  !<(versioned-state vase)
+    ::  ?-  -.prev
+    ::    %0  this(state prev)
+    ::  ==
   ::
   ++  on-poke
     |=  [=mark =vase]
@@ -169,7 +169,7 @@
     ::    :: TODO: give %fact to subscribers
     :-  ~                                               :: no cards yet
     %=  state
-      events  (~(put by events.state) calendar.input new)
+      events  (~(add ja events.state) calendar.input new)
     ==
   ==
 ::
