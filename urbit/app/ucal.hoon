@@ -44,14 +44,14 @@
     ^-  vase
     !>(state)
   ::
-  ++  on-load  on-load:def
-    ::  |=  =vase
-    ::  ^-  (quip card _this)
-    ::  :-  ~                                               :: no cards to emit
-    ::  =/  prev  !<(versioned-state vase)
-    ::  ?-  -.prev
-    ::    %0  this(state prev)
-    ::  ==
+  ++  on-load  ::on-load:def
+    |=  =vase
+    ^-  (quip card _this)
+    :-  ~                                               :: no cards to emit
+    =/  prev  !<(versioned-state vase)
+    ?-  -.prev
+      %0  this(state prev)
+    ==
   ::
   ++  on-poke
     |=  [=mark =vase]
@@ -84,12 +84,27 @@
     |=  =path
     ~&  [%path-is path]
     ^-  (unit (unit cage))
-    ?+  path  (on-peek:def path)
+    ?+  path
+      (on-peek:def path)
+    ::
         :: y the y???
+        :: Alright, so the y seems to correspond to whether the last piece
+        :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
+        :: /x/a/b as our path, while with %gy we get /x/a/b/c
         [%y %calendars ~]
       ``noun+!>((get-calendars:uc t.t.path))
-        [%y %events *]
+    ::
+        [%y %events ~]
       ``noun+!>((get-events:uc t.t.path))
+    ::
+        [%y %calendars *]
+      ``noun+!>((get-calendar:uc t.t.path))
+    ::
+        [%y %events %specific *]
+      ``noun+!>((get-specific-event:uc t.t.t.path))
+    ::
+        [%y %events %bycal *]
+      ``noun+!>((get-events-bycal:uc t.t.t.path))
     ==
   ++  on-fail   on-fail:def
 --
@@ -97,15 +112,57 @@
 ::: helper door
 ::
 |_  bowl=bowl:gall
+::
+++  get-calendar
+  |=  =path
+  ^-  (unit cal)
+  ?.  =((lent path) 1)
+    ~
+  =/  code=@tas  (snag 0 path)
+  (~(get by cals.state) code)
+::
+++  get-specific-event
+  |=  =path
+  ^-  (unit event)
+  ~&  [%specific-event-path path]
+  ?.  =((lent path) 1)
+    ~
+  =/  code=@tas  (snag 0 path)
+  ::  TODO I guess we could flatten, but seems expensive
+  =/  events=(list (list event))
+      %+  turn  ~(tap by events.state)
+      tail
+  |-
+  ?~  events
+    ~
+  =/  l=(list event)  i.events
+  |-
+  ?~  l
+    ^$(events t.events)
+  ?:  =(code.i.l code)
+    `i.l
+  $(l t.l)
+::
+++  get-events-bycal
+  |=  =path
+  ^-  (list event)
+  ~&  [%bycal-path path]
+  ?.  =((lent path) 1)
+    ~
+  =/  code=@tas  (snag 0 path)
+  (~(get ja events.state) code)
+::
 ++  get-calendars
   |=  =path
   ^-  calendars
   %+  turn  ~(tap by cals.state)
   tail
+::
 ++  get-events
   |=  =path
   ^-  events:ucal
-  ~
+  %-  zing  ::  flattens list
+  (turn ~(tap by events.state) tail)
 ::
 ::  Handler for '%ucal-action' pokes
 ::
