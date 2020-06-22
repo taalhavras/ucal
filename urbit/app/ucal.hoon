@@ -228,6 +228,24 @@
     %=  state
       events  (~(add ja events.state) calendar.input new)
     ==
+    ::
+      %delete-event
+    =/  code  code.+.action
+    =/  l=(list [@tas (list event)])  ~(tap by events.state)
+    |-
+    ?~  l
+      [~ state]  :: no changes, deleting nonexistent event
+    =/  events=(list event)  +:i.l
+    =/  [kept=(list event) gone=(list event)]
+        %+  skid  +:i.l
+        |=(e=event =(code code.e))
+    ?~  gone
+      $(l t.l)
+    ?>  =((lent gone) 1)
+    :-
+    ~
+    state(events (~(put by events.state) -:i.l kept))
+
   ==
 ::
 :: period of time, properly ordered
