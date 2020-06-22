@@ -56,14 +56,20 @@
       ==
       ::
       :: TODO:
+      :: TODO not sure if we want calendar-code on delete-event
+      :: and change-rsvp - just the event code could be enough if
+      :: they're globally unique. even in that case optionally
+      :: specifying the calendar could be good too.
       :: - delete event
       $:  %delete-event
-          code=@tas
+          calendar-code=@tas
+          event-code=@tas
       ==
       :: - cancel event?
       :: - change rsvp
       $:  %change-rsvp
-          code=@tas
+          calendar-code=@tas
+          event-code=@tas
           who=@p
           status=rsvp-status
       ==

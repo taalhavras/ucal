@@ -230,22 +230,31 @@
     ==
     ::
       %delete-event
-    =/  code  code.+.action
-    =/  l=(list [@tas (list event)])  ~(tap by events.state)
-    |-
-    ?~  l
-      [~ state]  :: no changes, deleting nonexistent event
-    =/  events=(list event)  +:i.l
+    =/  cal-code  calendar-code.+.action
+    =/  event-code  event-code.+.action
     =/  [kept=(list event) gone=(list event)]
-        %+  skid  +:i.l
-        |=(e=event =(code code.e))
+        %+  skid  (~(get ja events.state) cal-code)
+        |=(e=event !=(event-code code.e))
     ?~  gone
-      $(l t.l)
+      [~ state] :: deleting nonexistant event
     ?>  =((lent gone) 1)
     :-
     ~
-    state(events (~(put by events.state) -:i.l kept))
-
+    state(events (~(put by events.state) cal-code kept))
+    ::
+      %change-rsvp
+    =/  input  +.action
+    =/  new-events=(list event)
+        %+  reel :: right fold to avoid reversing list
+          (~(get ja events.state) calendar-code.input)
+        |=  [cur=event acc=(list event)]
+        ^-  (list event)
+        ?.  =(event-code.input code.cur)
+          [cur acc]
+        [cur(rsvps (~(put by rsvps.cur) who.input status.input)) acc]
+    :-
+    ~
+    state(events (~(put by events.state) calendar-code.input new-events))
   ==
 ::
 :: period of time, properly ordered
