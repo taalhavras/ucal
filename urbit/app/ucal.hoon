@@ -82,33 +82,37 @@
     |=  =path
     ^-  (quip card _this)
     :_  this
+    ::  NOTE
+    ::  if we crash it terminates the subscription
+    ::  (a negative watch-ack goes to the subscriber)
+    ::  as it it never started.
     ?+  path
       (on-watch:def path)
     ::
-      [%calendars ~]
+        [%calendars ~]
       %+  give  %ucal-initial
       ^-  initial:ucal
       [%calendars (get-calendars:uc)]
     ::
-      [%events ~]
+        [%events ~]
       %+  give  %ucal-initial
       ^-  initial:ucal
       [%events (get-events:uc)]
     ::
-      [%calendars *]
+        [%calendars *]
       %+  give  %ucal-initial
       ^-  initial:ucal
-      [%calendar (get-calendar:uc t.path)]
+      [%calendar (need (get-calendar:uc t.path))]
     ::
-      [%events %specific *]
+        [%events %specific *]
       %+  give  %ucal-initial
       ^-  initial:ucal
-      [%specific-event (get-specific-event:uc t.t.path)]
+      [%specific-event (need (get-specific-event:uc t.t.path))]
     ::
-      [%events %bycal *]
+        [%events %bycal *]
       %+  give  %ucal-initial
       ^-  initial:ucal
-      [%events-bycal (get-events-bycal:uc t.t.path)]
+      [%events-bycal (need (get-events-bycal:uc t.t.path))]
     ==
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
@@ -131,13 +135,22 @@
       ``noun+!>((get-events:uc))
     ::
         [%y %calendars *]
-      ``noun+!>((get-calendar:uc t.t.path))
+      =/  res  (get-calendar:uc t.t.path)
+      ?~  res
+        [~ ~]
+      ``noun+!>(u.res)
     ::
         [%y %events %specific *]
-      ``noun+!>((get-specific-event:uc t.t.t.path))
+      =/  res  (get-specific-event:uc t.t.t.path)
+      ?~  res
+        [~ ~]
+      ``noun+!>(u.res)
     ::
         [%y %events %bycal *]
-      ``noun+!>((get-events-bycal:uc t.t.t.path))
+      =/  res  (get-events-bycal:uc t.t.t.path)
+      ?~  res
+        [~ ~]
+      ``noun+!>(u.res)
     ==
   ++  on-fail   on-fail:def
 --
@@ -178,12 +191,12 @@
 ::
 ++  get-events-bycal
   |=  =path
-  ^-  (list event)
+  ^-  (unit (list event))
   ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  (snag 0 path)
-  (~(get ja events.state) code)
+  (~(get by events.state) code)
 ::
 ++  get-calendars
   |.
