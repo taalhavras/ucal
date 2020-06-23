@@ -1,10 +1,12 @@
 |%
 :: TODO: enumerated list of all possible timezones
 +$  timezone  @t
++$  event-code  @tas
++$  calendar-code  @tas
 ::
 +$  calendar
   $:  owner=@p
-      code=@tas                                         :: internal name, unique
+      =calendar-code                                    :: internal name, unique
       title=@t                                          :: external name
       =timezone
       date-created=@da
@@ -14,7 +16,7 @@
 +$  event
   $:  owner=@p
       calendar=@tas
-      code=@tas                                         :: internal name, unique
+      =event-code                                       :: internal name, unique
                                                         :: TODO are codes unique across calendars?
       title=@t                                          :: external name
       start=@da
@@ -37,19 +39,19 @@
   ==
 +$  action
   $%  $:  %create-calendar
-          code=@tas
+          =calendar-code
           title=@t
           timezone=(unit timezone)                      :: optional, otherwise utc
       ==
       ::
       $:  %delete-calendar
-          code=@tas
+          =calendar-code
       ==
       ::
       $:  %create-event
-          calendar=@tas
+          =calendar-code
           title=@t
-          code=@tas
+          =event-code
           start=@da
           end=dur
           description=(unit @t)
@@ -62,14 +64,14 @@
       :: specifying the calendar could be good too.
       :: - delete event
       $:  %delete-event
-          calendar-code=@tas
-          event-code=@tas
+          =calendar-code
+          =event-code
       ==
       :: - cancel event?
       :: - change rsvp
       $:  %change-rsvp
-          calendar-code=@tas
-          event-code=@tas
+          =calendar-code
+          =event-code
           who=@p
           status=rsvp-status
       ==

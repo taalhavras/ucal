@@ -14,10 +14,12 @@
 +$  cal    calendar:ucal
 +$  calendars  calendars:ucal
 +$  event  event:ucal
++$  calendar-code  calendar-code:ucal
++$  event-code  event-code:ucal
 ::
 +$  state-zero
-  $:  cals=(map @tas cal)
-      events=(jar @tas event)
+  $:  cals=(map calendar-code cal)
+      events=(jar event-code event)
   ==
 ::
 +$  versioned-state
@@ -76,7 +78,28 @@
       [cards this]
     ==
   ::
-  ++  on-watch  on-watch:def
+  ++  on-watch
+    |=  =path
+    ^-  (quip card _this)
+    :_  this
+    ?+  path
+      (on-watch:def path)
+    ::
+      [%calendars ~]
+    !!
+    ::
+      [%events ~]
+    !!
+    ::
+      [%calendars *]
+    !!
+    ::
+      [%events %specific *]
+    !!
+    ::
+      [%events %bycal *]
+    !!
+    ==
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
   ++  on-leave  on-leave:def
@@ -118,7 +141,7 @@
   ^-  (unit cal)
   ?.  =((lent path) 1)
     ~
-  =/  code=@tas  (snag 0 path)
+  =/  code=calendar-code  (snag 0 path)
   (~(get by cals.state) code)
 ::
 ++  get-specific-event
@@ -127,7 +150,7 @@
   ~&  [%specific-event-path path]
   ?.  =((lent path) 1)
     ~
-  =/  code=@tas  (snag 0 path)
+  =/  code=event-code  (snag 0 path)
   ::  TODO I guess we could flatten, but seems expensive
   =/  events=(list (list event))
       %+  turn  ~(tap by events.state)
@@ -139,7 +162,7 @@
   |-
   ?~  l
     ^$(events t.events)
-  ?:  =(code.i.l code)
+  ?:  =(event-code.i.l code)
     `i.l
   $(l t.l)
 ::
@@ -149,7 +172,7 @@
   ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
-  =/  code=@tas  (snag 0 path)
+  =/  code=calendar-code  (snag 0 path)
   (~(get ja events.state) code)
 ::
 ++  get-calendars
@@ -176,21 +199,21 @@
     =/  new=cal
       %:  cal                                           :: new calendar
         our.bowl                                        :: ship
-        code.input                                      :: unique code
+        calendar-code.input                             :: unique code
         title.input                                     :: title
         timezone.input                                  :: timezone
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?<  (~(has by cals.state) code.input)               :: error if exists
+    ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
     :-  ~                                               :: no cards yet
     %=  state
-      cals  (~(put by cals.state) code.input new)
+      cals  (~(put by cals.state) calendar-code.input new)
     ==
     ::
       %delete-calendar
     :: TODO: Move to helper core
-    =/  code  code.+.action
+    =/  code  calendar-code.+.action
     ?>  (~(has by cals.state) code)
     :: TODO: kick subscribers
     :-  ~
@@ -213,8 +236,8 @@
     =/  new=event
       %:  event
         our.bowl
-        calendar.input
-        code.input                                      :: TODO: generate
+        calendar-code.input
+        event-code.input                                :: TODO: generate
         title.input
         -.p                                             :: start
         +.p                                             :: end
@@ -222,19 +245,19 @@
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?>  (~(has by cals.state) calendar.input)           :: calendar exists
+    ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
     ::    :: TODO: give %fact to subscribers
     :-  ~                                               :: no cards yet
     %=  state
-      events  (~(add ja events.state) calendar.input new)
+      events  (~(add ja events.state) calendar-code.input new)
     ==
     ::
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  [kept=(list event) gone=(list event)]
+    =/  [gone=(list event) kept=(list event)]
         %+  skid  (~(get ja events.state) cal-code)
-        |=(e=event !=(event-code code.e))
+        |=(e=event =(event-code event-code.e))
     ?~  gone
       [~ state] :: deleting nonexistant event
     ?>  =((lent gone) 1)
@@ -249,7 +272,7 @@
           (~(get ja events.state) calendar-code.input)
         |=  [cur=event acc=(list event)]
         ^-  (list event)
-        ?.  =(event-code.input code.cur)
+        ?.  =(event-code.input event-code.cur)
           [cur acc]
         [cur(rsvps (~(put by rsvps.cur) who.input status.input)) acc]
     :-
@@ -265,4 +288,14 @@
   ?:  (lth b a)
     [b a]
   [a b]
+::
+++  give
+  |*  [=mark =noun]
+  ^-  (list card)
+  [%give %fact ~ mark !>(noun)]~
+::
+++  give-single
+  |*  [=mark =noun]
+  ^-  card
+  [%give %fact ~ mark !>(noun)]
 --
