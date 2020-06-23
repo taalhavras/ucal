@@ -28,7 +28,7 @@
   ==
 ::
 +$  calendars  (list calendar)
-+$  events  (list event) ::
++$  events  (list event)
 :: TODO:
 :: - rsvp
 +$  rsvp-status  $?(%yes %no %maybe %unanswered)
@@ -77,5 +77,15 @@
       ==
       :: - modify event
       :: - modify calendar
+  ==
+::  +initial: sent to subscribers on initial subscription
+::
++$  initial
+  $%
+    [%calendars =calendars]
+    [%calendar =calendar]
+    [%events =events]
+    [%specific-event =event]
+    [%events-bycal =events]
   ==
 --

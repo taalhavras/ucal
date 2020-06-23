@@ -86,19 +86,29 @@
       (on-watch:def path)
     ::
       [%calendars ~]
-    !!
+      %+  give  %ucal-initial
+      ^-  initial:ucal
+      [%calendars (get-calendars:uc)]
     ::
       [%events ~]
-    !!
+      %+  give  %ucal-initial
+      ^-  initial:ucal
+      [%events (get-events:uc)]
     ::
       [%calendars *]
-    !!
+      %+  give  %ucal-initial
+      ^-  initial:ucal
+      [%calendar (get-calendar:uc t.path)]
     ::
       [%events %specific *]
-    !!
+      %+  give  %ucal-initial
+      ^-  initial:ucal
+      [%specific-event (get-specific-event:uc t.t.path)]
     ::
       [%events %bycal *]
-    !!
+      %+  give  %ucal-initial
+      ^-  initial:ucal
+      [%events-bycal (get-events-bycal:uc t.t.path)]
     ==
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
@@ -115,10 +125,10 @@
         :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
         :: /x/a/b as our path, while with %gy we get /x/a/b/c
         [%y %calendars ~]
-      ``noun+!>((get-calendars:uc t.t.path))
+      ``noun+!>((get-calendars:uc))
     ::
         [%y %events ~]
-      ``noun+!>((get-events:uc t.t.path))
+      ``noun+!>((get-events:uc))
     ::
         [%y %calendars *]
       ``noun+!>((get-calendar:uc t.t.path))
@@ -176,13 +186,13 @@
   (~(get ja events.state) code)
 ::
 ++  get-calendars
-  |=  =path
+  |.
   ^-  calendars
   %+  turn  ~(tap by cals.state)
   tail
 ::
 ++  get-events
-  |=  =path
+  |.
   ^-  events:ucal
   %-  zing  ::  flattens list
   (turn ~(tap by events.state) tail)
