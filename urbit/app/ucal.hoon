@@ -94,21 +94,6 @@
       ^-  initial:ucal
       [%calendars (get-calendars:uc)]
     ::
-        [%events ~]
-      %+  give  %ucal-initial
-      ^-  initial:ucal
-      [%events (get-events:uc)]
-    ::
-        [%calendars *]
-      %+  give  %ucal-initial
-      ^-  initial:ucal
-      [%calendar (need (get-calendar:uc t.path))]
-    ::
-        [%events %specific *]
-      %+  give  %ucal-initial
-      ^-  initial:ucal
-      [%specific-event (need (get-specific-event:uc t.t.path))]
-    ::
         [%events %bycal *]
       %+  give  %ucal-initial
       ^-  initial:ucal
@@ -238,11 +223,14 @@
     :: TODO: Move to helper core
     =/  code  calendar-code.+.action
     ?>  (~(has by cals.state) code)
-    :: TODO: kick subscribers
-    :: TODO since we're deleting the events and we _currently_
-    :: support subscribing to an individual event, we have to
-    :: close those here. Is that something we even want?
-    :-  ~[[%give %kick ~[(snoc /calendars code)] ~]]
+    ::  TODO: produce cards
+    ::  kick from /events/bycal/calendar-code
+    ::  give fact to /calendars
+    =/  cal-update=card
+        [%give %fact ~[/calendars] %ucal-update %calendar-removed code]
+    =/  kick-subs=card
+        [%give %kick ~[(snoc /events/bycal code)] ~]
+    :-  ~[cal-update kick-subs]
     %=  state
       :: TODO: delete events
       cals  (~(del by cals.state) code)
@@ -288,7 +276,7 @@
       [~ state] :: deleting nonexistant event
     ?>  =((lent gone) 1)
     :-
-    ::  TODO cards for /events and events/bycal/calendar-code
+    ::  TODO cards for events/bycal/calendar-code
     ~
     state(events (~(put by events.state) cal-code kept))
     ::
@@ -303,7 +291,7 @@
           [cur acc]
         [cur(rsvps (~(put by rsvps.cur) who.input status.input)) acc]
     :-
-    ::  TODO cards for /events and events/bycal/calendar-code
+    ::  TODO cards for events/bycal/calendar-code
     ~
     state(events (~(put by events.state) calendar-code.input new-events))
     ::

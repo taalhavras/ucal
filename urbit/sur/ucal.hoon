@@ -88,9 +88,6 @@
 +$  initial
   $%
     [%calendars =calendars]
-    [%calendar =calendar]
-    [%events =events]
-    [%specific-event =event]
     [%events-bycal =events]
   ==
 ::  $update: updates sent to subscribers
