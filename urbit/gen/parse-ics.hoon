@@ -1,5 +1,5 @@
-/+  ucalendar-parser
-=,  ucalendar-parser
+/+  ucal-parser
+=,  ucal-parser
 :-  %say
 |=  [* [pax=path ~] ~]
 :-  %noun
