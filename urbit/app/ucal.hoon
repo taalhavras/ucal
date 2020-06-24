@@ -229,7 +229,7 @@
         now.bowl                                        :: last modified
       ==
     ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
-    :-  ~                                               :: no cards yet
+    :-  ~[[%give %fact ~[/calendars] noun+!>(new)]]
     %=  state
       cals  (~(put by cals.state) calendar-code.input new)
     ==
@@ -272,7 +272,6 @@
         now.bowl                                        :: last modified
       ==
     ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
-    ::    :: TODO: give %fact to subscribers
     =/  paths=(list path)  ~[/events (snoc `path`/events/bycal calendar-code.input)]
     :-  ~[[%give %fact paths noun+!>(new)]]
     %=  state
@@ -289,6 +288,7 @@
       [~ state] :: deleting nonexistant event
     ?>  =((lent gone) 1)
     :-
+    ::  TODO cards for /events and events/bycal/calendar-code
     ~
     state(events (~(put by events.state) cal-code kept))
     ::
@@ -303,6 +303,7 @@
           [cur acc]
         [cur(rsvps (~(put by rsvps.cur) who.input status.input)) acc]
     :-
+    ::  TODO cards for /events and events/bycal/calendar-code
     ~
     state(events (~(put by events.state) calendar-code.input new-events))
     ::
