@@ -239,7 +239,10 @@
     =/  code  calendar-code.+.action
     ?>  (~(has by cals.state) code)
     :: TODO: kick subscribers
-    :-  ~
+    :: TODO since we're deleting the events and we _currently_
+    :: support subscribing to an individual event, we have to
+    :: close those here. Is that something we even want?
+    :-  ~[[%give %kick ~[(snoc /calendars code)] ~]]
     %=  state
       :: TODO: delete events
       cals  (~(del by cals.state) code)
@@ -270,7 +273,8 @@
       ==
     ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
     ::    :: TODO: give %fact to subscribers
-    :-  ~                                               :: no cards yet
+    =/  paths=(list path)  ~[/events (snoc `path`/events/bycal calendar-code.input)]
+    :-  ~[[%give %fact paths noun+!>(new)]]
     %=  state
       events  (~(add ja events.state) calendar-code.input new)
     ==
@@ -301,6 +305,10 @@
     :-
     ~
     state(events (~(put by events.state) calendar-code.input new-events))
+    ::
+      %import-from-ics
+    ::  TODO implement
+    :-(~ state)
   ==
 ::
 :: period of time, properly ordered

@@ -1,3 +1,4 @@
+/+  ucal-components
 |%
 :: TODO: enumerated list of all possible timezones
 +$  timezone  @t
@@ -77,6 +78,10 @@
       ==
       :: - modify event
       :: - modify calendar
+      :: - import calendar from file
+      $:  %import-from-ics
+          =path
+      ==
   ==
 ::  +initial: sent to subscribers on initial subscription
 ::
