@@ -83,7 +83,7 @@
           =path
       ==
   ==
-::  +initial: sent to subscribers on initial subscription
+::  $initial: sent to subscribers on initial subscription
 ::
 +$  initial
   $%
@@ -92,5 +92,16 @@
     [%events =events]
     [%specific-event =event]
     [%events-bycal =events]
+  ==
+::  $update: updates sent to subscribers
+::
++$  update
+  $%
+    [%calendar-added =calendar]
+    [%calendar-changed =calendar]
+    [%calendar-removed =calendar-code]
+    [%event-added =event]
+    [%event-changed =event]
+    [%event-removed =event-code]
   ==
 --
