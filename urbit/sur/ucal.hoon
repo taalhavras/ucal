@@ -45,6 +45,12 @@
           timezone=(unit timezone)                      :: optional, otherwise utc
       ==
       ::
+      $:  %update-calendar
+          =calendar-code
+          title=(unit @t)
+          timezone=(unit (unit timezone))
+      ==
+      ::
       $:  %delete-calendar
           =calendar-code
       ==
@@ -58,11 +64,15 @@
           description=(unit @t)
       ==
       ::
-      :: TODO:
-      :: TODO not sure if we want calendar-code on delete-event
-      :: and change-rsvp - just the event code could be enough if
-      :: they're globally unique. even in that case optionally
-      :: specifying the calendar could be good too.
+      $:  %update-event
+          =calendar-code
+          title=(unit @t)
+          =event-code
+          start=(unit @da)
+          end=(unit dur)
+          description=(unit (unit @t))
+      ==
+      ::
       :: - delete event
       $:  %delete-event
           =calendar-code

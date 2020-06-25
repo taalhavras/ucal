@@ -219,6 +219,21 @@
       cals  (~(put by cals.state) calendar-code.input new)
     ==
     ::
+      %update-calendar
+    =/  input  +.action
+    =/  old=cal  (~(got by cals.state) calendar-code.input)
+    =/  new=cal
+      %:  cal
+        owner.old
+        calendar-code.old
+        (fall title.input title.old)
+        (fall timezone.input timezone.old)
+        created.old
+        now.bowl
+      ==
+    :-  [%give %fact ~[/calnedars] %ucal-update %calendar-changed new]~
+    state(cals (~(put by cals.state) calendar-code.input new))
+    ::
       %delete-calendar
     :: TODO: Move to helper core
     =/  code  calendar-code.+.action
