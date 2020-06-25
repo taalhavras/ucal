@@ -214,7 +214,7 @@
         now.bowl                                        :: last modified
       ==
     ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
-    :-  ~[[%give %fact ~[/calendars] noun+!>(new)]]
+    :-  [%give %fact ~[/calendars] %ucal-update %calendar-added new]~
     %=  state
       cals  (~(put by cals.state) calendar-code.input new)
     ==
@@ -229,7 +229,7 @@
     =/  cal-update=card
         [%give %fact ~[/calendars] %ucal-update %calendar-removed code]
     =/  kick-subs=card
-        [%give %kick ~[(snoc /events/bycal code)] ~]
+        [%give %kick ~[(snoc `path`/events/bycal code)] ~]
     :-  ~[cal-update kick-subs]
     %=  state
       :: TODO: delete events
@@ -260,8 +260,8 @@
         now.bowl                                        :: last modified
       ==
     ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
-    =/  paths=(list path)  ~[/events (snoc `path`/events/bycal calendar-code.input)]
-    :-  ~[[%give %fact paths noun+!>(new)]]
+    =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
+    :-  [%give %fact paths %ucal-update %event-added new]~
     %=  state
       events  (~(add ja events.state) calendar-code.input new)
     ==
@@ -276,23 +276,43 @@
       [~ state] :: deleting nonexistant event
     ?>  =((lent gone) 1)
     :-
-    ::  TODO cards for events/bycal/calendar-code
-    ~
+      :~
+        %give
+        %fact
+        ~[(snoc `path`/events/bycal cal-code)]
+        %ucal-update
+        %event-removed
+        event-code
+      ==
     state(events (~(put by events.state) cal-code kept))
     ::
       %change-rsvp
     =/  input  +.action
-    =/  new-events=(list event)
-        %+  reel :: right fold to avoid reversing list
-          (~(get ja events.state) calendar-code.input)
-        |=  [cur=event acc=(list event)]
-        ^-  (list event)
+    ::  update event with rsvp, maintains list order
+    =/  [new-events=(list event) new=event]
+        =/  cur-events  (~(get ja events.state) calendar-code.input)
+        =|  acc=(list event)
+        |-
+        ?~  cur-events
+          !!
+        =/  cur=event  i.cur-events
         ?.  =(event-code.input event-code.cur)
-          [cur acc]
-        [cur(rsvps (~(put by rsvps.cur) who.input status.input)) acc]
+          $(acc [cur acc], cur-events t.cur-events)
+        =/  new=event  cur(rsvps (~(put by rsvps.cur) who.input status.input))
+        =/  res=(list event)  [new t.cur-events]
+        |-
+        ?~  acc
+          [res new]
+        $(res [i.acc res], acc t.acc)
     :-
-    ::  TODO cards for events/bycal/calendar-code
-    ~
+      :~
+        %give
+        %fact
+        ~[(snoc `path`/events/bycal calendar-code.input)]
+        %ucal-update
+        %event-changed
+        new
+      ==
     state(events (~(put by events.state) calendar-code.input new-events))
     ::
       %import-from-ics
