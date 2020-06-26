@@ -1,4 +1,5 @@
 /-  ucal
+|%
 +$  action
   $%  $:  %subscribe-all
           =ship
@@ -18,3 +19,4 @@
           =calendar-code:ucal
       ==
   ==
+--

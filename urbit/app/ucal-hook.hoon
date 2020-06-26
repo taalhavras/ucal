@@ -1,4 +1,4 @@
-/-  ucal
+/-  ucal, ucal-hook
 /+  default-agent
 ::
 ::: local types
@@ -13,7 +13,7 @@
 +$  event-code  event-code:ucal
 ::
 ::  TODO figure out what this will actually contain - probably some
-::  permissions stuff
+::  permissions stuff.
 +$  state-zero
   $:
     a=@
@@ -73,8 +73,42 @@
     ==
   ::
   ++  on-watch  on-watch:def
-  ++  on-agent  on-agent:def
-  ++  on-arvo   on-arvo:def
+  ++  on-agent
+    |=  [=wire sign=sign:agent:gall]
+    ^-  (quip card _this)
+    ~&  [%on-agent wire]
+    ?+  wire  (on-agent:def wire sign)
+        [%calendars @tas ~]
+      ?+  -.sign  `this
+          %watch-ack
+        ?~  p.sign
+          `this
+        ((slog [leaf+"negative watch-ack for calendars" u.p.sign]) `this)
+      ==
+    ::
+        [%events %bycal @tas ~]
+      ?+  -.sign  `this
+          %watch-ack
+        ?~  p.sign
+          `this
+        ((slog [leaf+"negative watch-ack for events" u.p.sign]) `this)
+      ==
+    ::
+        [%unsubscribe %calendars ~]
+      ?+  -.sign  `this
+          %kick
+        ~&  %calendars-kick-rec
+        `this
+      ==
+    ::
+        [%unsubscribe %events %bycal @tas ~]
+      ?+  -.sign  `this
+          %kick
+        ~&  [%events-kick-rec t.t.t.wire]
+        `this
+      ==
+    ==
+  ++  on-arvo  on-arvo:def
   ++  on-leave  on-leave:def
   ++  on-peek  on-peek:def
   ++  on-fail   on-fail:def
@@ -90,40 +124,23 @@
   ?-    -.action
       %subscribe-all
     =/  input  +.action
-    :_  state  ~[(subscribe-to:do /calendars ship.input %ucal /calendars)]
+    :_  state  ~[(subscribe-to /calendars ship.input %ucal /calendars)]
   ::
       %subscribe-specific
     =/  input  +.action
     =/  pax=path  [%events %bycal calendar-code.input ~]
-    :_  state  ~[(subscribe-to:do pax ship.input %ucal pax)]
+    :_  state  ~[(subscribe-to pax ship.input %ucal pax)]
   ::
       %unsubscribe-all
     =/  input  +.action
-    :_  state  ~[(unsubscribe-from:do /calendars ship.input %ucal /calendars)]
+    :_  state
+    ~[(unsubscribe-from [%unsubscribe /calendars] ship.input %ucal)]
   ::
       %unsubscribe-specific
     =/  input  +.action
     =/  pax=path  [%events %bycal calendar-code.input ~]
-    :_  state  ~[(unsubscribe-from:do pax ship.input %ucal pax)]
-::
-:: period of time, properly ordered
-::
-++  period
-  |=  [a=@da b=@da]
-  ^-  [@da @da]
-  ?:  (lth b a)
-    [b a]
-  [a b]
-::
-++  give
-  |*  [=mark =noun]
-  ^-  (list card)
-  [%give %fact ~ mark !>(noun)]~
-::
-++  give-single
-  |*  [=mark =noun]
-  ^-  card
-  [%give %fact ~ mark !>(noun)]
+    :_  state  ~[(unsubscribe-from [%unsubscribe pax] ship.input %ucal)]
+  ==
 ::  produces a %watch pass to the specified agent on the specified ship.
 ::  the wire is specified to be the supplied prefix with the target ship
 ::  appended to the end.
