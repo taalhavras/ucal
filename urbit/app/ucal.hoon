@@ -74,6 +74,7 @@
       ==
     ::
         %ucal-action
+      ~&  [%ucal-action mark vase]
       =^  cards  state  (poke-ucal-action:uc !<(action:ucal vase))
       [cards this]
     ==
@@ -214,7 +215,9 @@
         now.bowl                                        :: last modified
       ==
     ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
-    :-  [%give %fact ~[/calendars] %ucal-update %calendar-added new]~
+    =/  paths=(list path)  ~[/calendars]
+    =/  c=card  [%give %fact paths %ucal-update %calendar-added new]
+    :-  ~[c]
     %=  state
       cals  (~(put by cals.state) calendar-code.input new)
     ==
@@ -231,7 +234,7 @@
         created.old
         now.bowl
       ==
-    :-  [%give %fact ~[/calnedars] %ucal-update %calendar-changed new]~
+    :-  ~[[%give %fact ~[/calendars] %ucal-update %calendar-changed new]]
     state(cals (~(put by cals.state) calendar-code.input new))
     ::
       %delete-calendar

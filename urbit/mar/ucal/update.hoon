@@ -1,14 +1,14 @@
 ::  ucal: update to subscription
 ::
 /-  *ucal
-|_  =initial
+|_  =update
 ++  grow
-|%
-++  noun  initial
---
+  |%
+  ++  noun  update
+  --
 ::
 ++  grab
-|%
-++  noun  ^initial
---
+  |%
+  ++  noun  ^update
+  --
 --

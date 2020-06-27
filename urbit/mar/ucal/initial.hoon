@@ -3,12 +3,12 @@
 /-  *ucal
 |_  =initial
 ++  grow
-|%
-++  noun  initial
---
+  |%
+  ++  noun  initial
+  --
 ::
 ++  grab
-|%
-++  noun  ^initial
---
+  |%
+  ++  noun  ^initial
+  --
 --
