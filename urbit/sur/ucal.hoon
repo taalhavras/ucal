@@ -16,12 +16,11 @@
 ::
 +$  event
   $:  owner=@p
-      calendar=@tas
+      calendar=calendar-code
       =event-code                                       :: internal name, unique
-                                                        :: TODO are codes unique across calendars?
       title=@t                                          :: external name
       start=@da
-      end=@da
+      end=dur
       description=(unit @t)
       date-created=@da
       last-modified=@da
@@ -66,8 +65,8 @@
       ::
       $:  %update-event
           =calendar-code
-          title=(unit @t)
           =event-code
+          title=(unit @t)
           start=(unit @da)
           end=(unit dur)
           description=(unit (unit @t))
