@@ -216,7 +216,10 @@
       ==
     ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
     =/  paths=(list path)  ~[/calendars]
-    =/  c=card  [%give %fact paths %ucal-update %calendar-added new]
+    =/  u=update:ucal  [%calendar-added new]
+    =/  v=vase  !>(u)
+    =/  cag=cage  [%ucal-update v]
+    =/  c=card  [%give %fact paths cag]
     :-  ~[c]
     %=  state
       cals  (~(put by cals.state) calendar-code.input new)
@@ -231,10 +234,11 @@
         calendar-code.old
         (fall title.input title.old)
         (fall timezone.input timezone.old)
-        created.old
+        date-created.old
         now.bowl
       ==
-    :-  ~[[%give %fact ~[/calendars] %ucal-update %calendar-changed new]]
+    =/  cag=cage  [%ucal-update !>(`update:ucal`[%calendar-changed new])]
+    :-  ~[[%give %fact ~[/calendars] cag]]
     state(cals (~(put by cals.state) calendar-code.input new))
     ::
       %delete-calendar
@@ -245,7 +249,8 @@
     ::  kick from /events/bycal/calendar-code
     ::  give fact to /calendars
     =/  cal-update=card
-        [%give %fact ~[/calendars] %ucal-update %calendar-removed code]
+        =/  removed=update:ucal  [%calendar-removed code]
+        [%give %fact ~[/calendars] %ucal-update !>(removed)]
     =/  kick-subs=card
         [%give %kick ~[(snoc `path`/events/bycal code)] ~]
     :-  ~[cal-update kick-subs]
@@ -279,10 +284,49 @@
       ==
     ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
     =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
-    :-  [%give %fact paths %ucal-update %event-added new]~
+    :-  [%give %fact paths %ucal-update !>(`update:ucal`[%event-added new])]~
     %=  state
       events  (~(add ja events.state) calendar-code.input new)
     ==
+    ::
+      %update-event
+    =/  input  +.action
+    ::  TODO get specific event
+    =/  cal-code  calendar-code.input
+    =/  event-code  event-code.input
+    =/  [new-events=(list event) new=event]
+        =/  cur-events  (~(get ja events.state) cal-code)
+        =|  acc=(list event)
+        |-
+        ?~  cur-events
+          !!
+        =/  cur=event  i.cur-events
+        ?.  =(event-code.input event-code.cur)
+          $(acc [cur acc], cur-events t.cur-events)
+        =/  new=event
+            %:
+              event
+              owner.cur
+              calendar.cur
+              event-code.cur
+              (fall title.input title.cur)
+              (fall start.input start.cur)
+              (fall end.input end.cur)
+              (fall description.input description.cur)
+              date-created.cur
+              now.bowl
+              rsvps.cur
+            ==
+        =/  res=(list event)  [new t.cur-events]
+        |-
+        ?~  acc
+          [res new]
+        $(res [i.acc res], acc t.acc)
+    =/  u=update:ucal  [%event-changed new]
+    =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
+    :-
+    ~[[%give %fact ~[pax] %ucal-update !>(u)]]
+    state(events (~(put by events.state) calendar-code.input new-events))
     ::
       %delete-event
     =/  cal-code  calendar-code.+.action
@@ -293,15 +337,9 @@
     ?~  gone
       [~ state] :: deleting nonexistant event
     ?>  =((lent gone) 1)
+    =/  u=update:ucal  [%event-removed event-code]
     :-
-      :~
-        %give
-        %fact
-        ~[(snoc `path`/events/bycal cal-code)]
-        %ucal-update
-        %event-removed
-        event-code
-      ==
+    ~[[%give %fact ~[(snoc `path`/events/bycal cal-code)] %ucal-update !>(u)]]
     state(events (~(put by events.state) cal-code kept))
     ::
       %change-rsvp
@@ -322,15 +360,10 @@
         ?~  acc
           [res new]
         $(res [i.acc res], acc t.acc)
+    =/  u=update:ucal  [%event-changed new]
+    =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
     :-
-      :~
-        %give
-        %fact
-        ~[(snoc `path`/events/bycal calendar-code.input)]
-        %ucal-update
-        %event-changed
-        new
-      ==
+    ~[[%give %fact ~[pax] %ucal-update !>(u)]]
     state(events (~(put by events.state) calendar-code.input new-events))
     ::
       %import-from-ics
