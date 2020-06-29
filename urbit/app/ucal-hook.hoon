@@ -79,22 +79,48 @@
     ~&  [%on-agent wire]
     ?+  wire  (on-agent:def wire sign)
         [%calendars @tas ~]
+      =/  from=ship  (slav %p i.t.wire)
       ?+  -.sign  `this
           %watch-ack
         ?~  p.sign
           `this
         ((slog [leaf+"negative watch-ack for calendars" u.p.sign]) `this)
+        ::
+          %fact
+        =/  u=update:ucal  !<  update:ucal  q.cage.sign
+        ~&  [%from from]
+        ?+  u  `this  ::  TODO shouldn't get to this case, maybe error?
+                      ::  but that causes a type error?
+            %calendar-added
+          ~&  [%cal-added calendar.u]
+          `this
+          ::
+            %calendar-changed
+          ~&  [%cal-changed calendar.u]
+          `this
+          ::
+            %calendar-removed
+          ~&  [%cal-removed calendar-code.u]
+          `this
+        ==
       ==
     ::
         [%events %bycal @tas ~]
+      =/  from=ship  (slav %p i.t.t.wire)
       ?+  -.sign  `this
           %watch-ack
         ?~  p.sign
           `this
         ((slog [leaf+"negative watch-ack for events" u.p.sign]) `this)
+        ::
+          %fact
+        =/  e=event  !<  event  q.cage.sign
+        ~&  [%event e]
+        ~&  [%from from]
+        `this
       ==
     ::
-        [%unsubscribe %calendars ~]
+        [%unsubscribe %calendars @tas ~]
       ?+  -.sign  `this
           %kick
         ~&  %calendars-kick-rec

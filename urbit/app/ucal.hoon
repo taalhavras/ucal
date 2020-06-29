@@ -74,7 +74,6 @@
       ==
     ::
         %ucal-action
-      ~&  [%ucal-action mark vase]
       =^  cards  state  (poke-ucal-action:uc !<(action:ucal vase))
       [cards this]
     ==
