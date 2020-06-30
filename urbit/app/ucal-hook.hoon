@@ -111,8 +111,8 @@
         ==
       ==
     ::
-        [%events %bycal @tas ~]
-      =/  from=ship  (slav %p i.t.t.wire)
+        [%events %bycal @tas @tas ~]
+      =/  from=ship  (slav %p i.t.t.t.wire)
       ?+  -.sign  `this
           %watch-ack
         ?~  p.sign
@@ -151,7 +151,7 @@
         `this
       ==
     ::
-        [%unsubscribe %events %bycal @tas ~]
+        [%unsubscribe %events %bycal @tas @tas ~]
       ?+  -.sign  `this
           %kick
         ~&  [%events-kick-rec t.t.t.wire]
