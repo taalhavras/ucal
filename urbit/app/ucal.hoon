@@ -58,7 +58,7 @@
   ++  on-poke
     |=  [=mark =vase]
     ^-  (quip card _this)
-    ?+    mark  (on-poke:def mark vase)
+    ?+    mark  `this
         %noun
       ?>  (team:title our.bowl src.bowl)
       ::
@@ -181,7 +181,7 @@
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  (snag 0 path)
-  (~(get by events.state) code)
+  `(~(get ja events.state) code)
 ::
 ++  get-calendars
   |.
@@ -209,7 +209,7 @@
         our.bowl                                        :: ship
         calendar-code.input                             :: unique code
         title.input                                     :: title
-        timezone.input                                  :: timezone
+        (fall timezone.input 'utc')                     :: timezone
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
@@ -227,12 +227,18 @@
       %update-calendar
     =/  input  +.action
     =/  old=cal  (~(got by cals.state) calendar-code.input)
+    =/  new-tz=timezone:ucal
+        ?~  timezone.input
+          timezone.old
+        ?~  u.timezone.input
+          'utc'
+        u.u.timezone.input
     =/  new=cal
       %:  cal
         owner.old
         calendar-code.old
         (fall title.input title.old)
-        (fall timezone.input timezone.old)
+        new-tz
         date-created.old
         now.bowl
       ==
@@ -261,14 +267,7 @@
       %create-event
     :: TODO: Move to helper core
     =/  input  +.action
-    =/  end=@da
-      ?-    -.end.input
-          %end
-        +.end.input
-          %span
-        (add +.end.input start.input)
-      ==
-    =/  p  (period start.input end)
+    =/  p  (period-from-dur start.input end.input)
     =/  new=event
       %:  event
         our.bowl
@@ -280,6 +279,7 @@
         description.input
         now.bowl                                        :: created
         now.bowl                                        :: last modified
+        ~
       ==
     ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
     =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
@@ -302,6 +302,11 @@
         =/  cur=event  i.cur-events
         ?.  =(event-code.input event-code.cur)
           $(acc [cur acc], cur-events t.cur-events)
+        =/  p=[@da @da]
+            =/  new-start  (fall start.input start.cur)
+            ?~  end.input
+              (period new-start end.cur)
+            (period-from-dur new-start u.end.input)
         =/  new=event
             %:
               event
@@ -309,8 +314,8 @@
               calendar.cur
               event-code.cur
               (fall title.input title.cur)
-              (fall start.input start.cur)
-              (fall end.input end.cur)
+              -.p
+              +.p
               (fall description.input description.cur)
               date-created.cur
               now.bowl
@@ -378,6 +383,18 @@
   ?:  (lth b a)
     [b a]
   [a b]
+::
+::  period of time from absolute start and dur, properly ordered
+::
+++  period-from-dur
+  |=  [start=@da =dur:ucal]
+  ^-  [@da @da]
+  =/  end=@da
+      ?-    -.dur
+        %end  +.dur
+        %span  (add +.dur start)
+      ==
+  (period start end)
 ::
 ++  give
   |*  [=mark =noun]

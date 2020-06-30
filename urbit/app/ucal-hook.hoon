@@ -77,7 +77,7 @@
     |=  [=wire sign=sign:agent:gall]
     ^-  (quip card _this)
     ~&  [%on-agent wire]
-    ?+  wire  (on-agent:def wire sign)
+    ?+  wire  `this
         [%calendars @tas ~]
       =/  from=ship  (slav %p i.t.wire)
       ?+  -.sign  `this
@@ -87,21 +87,27 @@
         ((slog [leaf+"negative watch-ack for calendars" u.p.sign]) `this)
         ::
           %fact
-        =/  u=update:ucal  !<  update:ucal  q.cage.sign
-        ~&  [%from from]
-        ?+  u  `this  ::  TODO shouldn't get to this case, maybe error?
-                      ::  but that causes a type error?
-            %calendar-added
-          ~&  [%cal-added calendar.u]
-          `this
+        ~&  [%fact-from from]
+        ?+  p.cage.sign  !!
+            %ucal-update
+          =/  u=update:ucal  !<  update:ucal  q.cage.sign
+          ?:  ?=([%calendar-added *] u)
+            ~&  [%cal-added calendar.u]
+            `this
+          ?:  ?=([%calendar-changed *] u)
+            ~&  [%cal-changed calendar.u]
+            `this
+          ?:  ?=([%calendar-removed *] u)
+            ~&  [%cal-removed calendar-code.u]
+            `this
+          !!
           ::
-            %calendar-changed
-          ~&  [%cal-changed calendar.u]
-          `this
-          ::
-            %calendar-removed
-          ~&  [%cal-removed calendar-code.u]
-          `this
+            %ucal-initial
+          =/  =initial:ucal  !<  initial:ucal  q.cage.sign
+          ?:  ?=([%calendars *] initial)
+            ~&  [%cal-initial calendars.initial]
+            `this
+          !!
         ==
       ==
     ::
@@ -114,10 +120,28 @@
         ((slog [leaf+"negative watch-ack for events" u.p.sign]) `this)
         ::
           %fact
-        =/  e=event  !<  event  q.cage.sign
-        ~&  [%event e]
-        ~&  [%from from]
-        `this
+        ~&  [%fact-from from]
+        ?+  p.cage.sign  !!
+            %ucal-update
+          =/  u=update:ucal  !<  update:ucal  q.cage.sign
+          ?:  ?=([%event-added *] u)
+            ~&  [%event-added event.u]
+            `this
+          ?:  ?=([%event-changed *] u)
+            ~&  [%event-changed event.u]
+            `this
+          ?:  ?=([%event-removed *] u)
+            ~&  [%event-removed event-code.u]
+            `this
+          !!
+          ::
+            %ucal-initial
+          =/  =initial:ucal  !<  initial:ucal  q.cage.sign
+          ?:  ?=([%events-bycal *] initial)
+            ~&  [%events-initial events.initial]
+            `this
+          !!
+        ==
       ==
     ::
         [%unsubscribe %calendars @tas ~]

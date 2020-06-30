@@ -20,7 +20,7 @@
       =event-code                                       :: internal name, unique
       title=@t                                          :: external name
       start=@da
-      end=dur
+      end=@da                                           :: converted from dur
       description=(unit @t)
       date-created=@da
       last-modified=@da
