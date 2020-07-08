@@ -377,7 +377,7 @@
 ::
 :: period of time, properly ordered
 ::
-++  period
+++  normalize-period
   |=  [a=@da b=@da]
   ^-  [@da @da]
   ?:  (lth b a)
