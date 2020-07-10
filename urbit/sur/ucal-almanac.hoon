@@ -45,26 +45,30 @@
   ::
   ++  update-calendar
     |=  [patch=calendar-patch now=@da]
-    ^-  almanac
-    =/  cal=calendar  (~(got by cals.alma) calendar-code.patch)
+    ^-  [(unit calendar) almanac]
+    =/  cal=(unit calendar)  (~(get by cals.alma) calendar-code.patch)
+    ?~  cal
+      [~ alma]
     =/  new=calendar
-        %=  cal
-          owner  (fall owner.patch owner.cal)
-          title  (fall title.patch title.cal)
-          timezone (fall timezone.patch timezone.cal)
+        %=  u.cal
+          owner  (fall owner.patch owner.u.cal)
+          title  (fall title.patch title.u.cal)
+          timezone (fall timezone.patch timezone.u.cal)
           last-modified now
         ==
+    :-
+      `new
     %=  alma
       cals  (~(put by cals.alma) calendar-code.patch new)
     ==
   ::
   ++  update-event
     |=  [patch=event-patch now=@da]
-    ^-  almanac
+    ^-  [(unit event) almanac]
     =/  [to-update=(unit event) rest=events]
         (remove-event event-code.patch (~(get ja events.alma)))
     ?~  to-update
-      alma
+      [~ alma]
     =/  cur=event  u.to-update
     =/  new-event=event
         %=  cur
@@ -75,6 +79,8 @@
           description  (fall description.patch description.cur)
           last-modified  now
         ==
+    :-
+      `new-event
     %=  alma
       events  (~(put by events.alma) calendar.patch (insort rest new-event))
     ==
