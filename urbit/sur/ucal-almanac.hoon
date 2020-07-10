@@ -11,15 +11,18 @@
 ::
 ++  al
   |_  alma=almanac
+  ::
   ++  add-event
     |=  =event
     ^-  almanac
     =/  =events  (~(get ja events.alma) calendar-code.event)
     alma(events (~(put by events.alma) calendar-code.event (insort events event)))
+  ::
   ++  add-calendar
     |=  =calendar
     ^-  almanac
     alma(cals (~(put by cals.alma) calendar-code.calendar calendar))
+  ::
   ++  delete-calendar
     |=  code=calendar-code
     ^-  almanac
@@ -27,6 +30,7 @@
       cals  (~(del by cals.alma) code)
       events  (~(del by events.alma) code)
     ==
+  ::
   ++  delete-event
     |=  [e-code=event-code c-code=calendar-code]
     ^-  almanac
@@ -38,8 +42,7 @@
     %=  alma
       events  (~(put by events) c-code new-events)
     ==
-  ::  TODO for the update arms we want the unit-ified version
-  ::  of a calendar and an event
+  ::
   ++  update-calendar
     |=  [patch=calendar-patch now=@da]
     ^-  almanac
@@ -73,7 +76,7 @@
           last-modified  now
         ==
     %=  alma
-      events  (~(put by events.alma) calendar.patch (insort new-event rest))
+      events  (~(put by events.alma) calendar.patch (insort rest new-event))
     ==
   ::  +insort: adds a given event to a list, maintaining
   ::  reverse-chronological order by start time.
@@ -118,20 +121,24 @@
     =/  n=@  (lent match)
     ?:  =(n 0)
       [~ rest]
-    ?:  =(n 1)
-      [`(snag 0 match) rest]
-    !!
+    ?>  =(n 1)
+    [`(snag 0 match) rest]
   ::
   ++  get-calendar
     |=  code=calendar-code
     ^-  (unit calendar)
-    (~(got by))
-    !!
+    (~(get by cals.alma) code)
   ::
   ++  get-event
     |=  [=calendar-code =event-code]
     ^-  (unit event)
-    =/  events=(list event)  (~(get ja events.alma) calendar-code)
-
-    !!
+    =/  =events  (~(get ja events.alma) calendar-code)
+    =/  match=^events
+        %+  skim
+          |=(e=event =(code event-code.e))
+        events
+    ?~  match
+      ~
+    ?>  =((lent match) 1)
+    `(snag 0 match)
 ==
