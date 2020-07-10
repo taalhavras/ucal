@@ -1,18 +1,30 @@
-|%
+/-  *resource
 ::
+|%
+::  $calendars: a mapping from calendar-ids to calendars
+::
++$  calendars  (map resource calendar)
+::  $calendar: a container for events
+::
+::    TODO:
++$  calendar
+  $:  name=@t
+      created=@da
+      events=(list event)                :: reverse chronological / newest first
+      eras=(list era)                    :: reverse chronological / newest first
+  ==
 +$  timezone  @t              :: TODO: enumerated list of all possible timezones
-+$  title     @t
-+$  uid       @uvH
 +$  event-type  $?(%projected %concrete)      :: potential as result of era, or real
 +$  source      $?(%invite %era)
 +$  ref         [ship=@p =source =code]             :: a reference to another entity
-::
 ::  A location has a written address that may or may not resolve to an actual
 ::  set of geographic coordinates.
 ::
++$  coordinate  $:(lat=@rd lon=@rd)
+::
 +$  location
   $:  address=@t
-      geo=(unit [lat=@rd lon=@rd])
+      geo=(unit coordinate)
   ==
 ::
 ::  Details about the event.
@@ -81,12 +93,4 @@
 ::
 ::  Calendar
 ::
-+$  calendar
-  $:  owner=@p
-      =uid
-      =title
-      date-created=@da
-      events=(list event)                :: reverse chronological / newest first
-      eras=(list era)                    :: reverse chronological / newest first
-  ==
 --
