@@ -6,7 +6,7 @@
 /-  ucal
 /+  default-agent
 ::
-::: local types
+::: local type
 ::
 |%
 :: aliases
@@ -19,7 +19,7 @@
 ::
 +$  state-zero
   $:  cals=(map calendar-code cal)
-      events=(jar event-code event)
+      events=(jar calendar-code event)
   ==
 ::
 +$  versioned-state

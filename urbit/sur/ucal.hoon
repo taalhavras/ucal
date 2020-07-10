@@ -14,6 +14,13 @@
       last-modified=@da
   ==
 ::
++$  calendar-patch
+  $:  owner=(unit @p)
+      =calendar-code
+      title=(unit @t)
+      timezone=(unit timezone)
+  ==
+::
 +$  event
   $:  owner=@p
       calendar=calendar-code
@@ -25,6 +32,23 @@
       date-created=@da
       last-modified=@da
       rsvps=(map @p rsvp-status)
+  ==
+::
++$  event-patch
+  $:  owner=(unit @p)
+      calendar=calendar-code
+      =event-code
+      title=(unit @t)
+      start=(unit @da)
+      end=(unit dur)
+      description=(unit (unit @t))
+  ==
+::
++$  rsvp-change
+  $:  =calendar-code
+      =event-code
+      who=@p
+      status=rsvp-status
   ==
 ::
 +$  calendars  (list calendar)
