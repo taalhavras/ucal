@@ -48,7 +48,8 @@
   $:  =calendar-code
       =event-code
       who=@p
-      status=rsvp-status
+      :: if ~, then uninvite the @p
+      status=(unit rsvp-status)
   ==
 ::
 +$  calendars  (list calendar)
@@ -97,10 +98,7 @@
       :: - cancel event?
       :: - change rsvp
       $:  %change-rsvp
-          =calendar-code
-          =event-code
-          who=@p
-          status=rsvp-status
+          =rsvp-change
       ==
       :: - import calendar from file
       $:  %import-from-ics

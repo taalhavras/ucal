@@ -294,27 +294,15 @@
     ::
       %change-rsvp
     =/  input  +.action
-    ::  update event with rsvp, maintains list order
-    =/  [new-events=(list event) new=event]
-        =/  cur-events  (~(get ja events.state) calendar-code.input)
-        =|  acc=(list event)
-        |-
-        ?~  cur-events
-          !!
-        =/  cur=event  i.cur-events
-        ?.  =(event-code.input event-code.cur)
-          $(acc [cur acc], cur-events t.cur-events)
-        =/  new=event  cur(rsvps (~(put by rsvps.cur) who.input status.input))
-        =/  res=(list event)  [new t.cur-events]
-        |-
-        ?~  acc
-          [res new]
-        $(res [i.acc res], acc t.acc)
-    =/  u=update:ucal  [%event-changed new]
+    =/  [new-event=(unit event) new-alma=almanac]
+        (~(update-rsvp al alma.state) input)
+    ?~  new-event
+      `state
+    =/  u=update:ucal  [%event-changed u.new-event]
     =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
-    state(events (~(put by events.state) calendar-code.input new-events))
+    state(alma new-alma)
     ::
       %import-from-ics
     ::  TODO implement

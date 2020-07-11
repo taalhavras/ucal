@@ -95,6 +95,27 @@
     %=  alma
       events  (~(put by events.alma) calendar.patch (insort rest new-event))
     ==
+  ::
+  ++  update-rsvp
+    |=  rsvp=rsvp-change
+    ^-  [(unit event) almanac]
+    =/  old=events  (get-events calendar-code.rsvp)
+    =/  [new-event=(unit event) new=events]
+        %+  reel  old
+        |=  [cur=event acc=[(unit event) events]]
+        ^-  events
+        ?.  =(event-code.cur event-code.rsvp)
+          [-.acc cur +.acc]
+        ::  found target, update rsvps
+        =/  new-event=event
+            ?~  status.rsvp
+              cur(rsvps (~(del by rsvps.cur) who.rsvp))
+            cur(rsvps (~(put by rsvps.cur) who.rsvp u.status.rsvp))
+        [`new-event new-event +.acc]
+      ?~  new-event
+        [~ alma]
+      :-  new-event
+      alma(events (~(put by events.alma) calendar-code.rsvp new))
   ::  +insort: adds a given event to a list, maintaining
   ::  reverse-chronological order by start time.
   ::
