@@ -12,16 +12,16 @@
 ++  al
   |_  alma=almanac
   ::
+  ++  add-calendar
+    |=  =calendar
+    ^-  almanac
+    alma(cals (~(put by cals.alma) calendar-code.calendar calendar))
+  ::
   ++  add-event
     |=  =event
     ^-  almanac
     =/  =events  (~(get ja events.alma) calendar-code.event)
     alma(events (~(put by events.alma) calendar-code.event (insort events event)))
-  ::
-  ++  add-calendar
-    |=  =calendar
-    ^-  almanac
-    alma(cals (~(put by cals.alma) calendar-code.calendar calendar))
   ::
   ++  delete-calendar
     |=  code=calendar-code
@@ -49,11 +49,17 @@
     =/  cal=(unit calendar)  (~(get by cals.alma) calendar-code.patch)
     ?~  cal
       [~ alma]
+    =/  new-tz=timezone
+        ?~  timezone.patch
+          timezone.u.cal
+        ?~  u.timezone.patch
+          'utc'
+        u.u.timezone.patch
     =/  new=calendar
         %=  u.cal
           owner  (fall owner.patch owner.u.cal)
           title  (fall title.patch title.u.cal)
-          timezone (fall timezone.patch timezone.u.cal)
+          timezone  new-tz
           last-modified now
         ==
     :-
@@ -70,12 +76,17 @@
     ?~  to-update
       [~ alma]
     =/  cur=event  u.to-update
+    =/  p=[@da @da]
+        =/  new-start  (fall start.patch start.cur)
+        ?~  end.patch
+          (period new-start end.cur)
+        (period-from-dur new-start u.end.patch)
     =/  new-event=event
         %=  cur
           owner  (fall owner.patch owner.cur)
           title  (fall title.patch title.cur)
-          start  (fall start.patch start.cur)
-          end  (fall end.patch end.cur)
+          start  -.p
+          end  +.p
           description  (fall description.patch description.cur)
           last-modified  now
         ==
@@ -130,10 +141,21 @@
     ?>  =(n 1)
     [`(snag 0 match) rest]
   ::
+  ++  get-calendars
+    |.
+    ^-  (list calendar)
+    (turn ~(tap by cals.alma) tail)
+  ::
   ++  get-calendar
     |=  code=calendar-code
     ^-  (unit calendar)
     (~(get by cals.alma) code)
+  ::
+  ++  get-events
+    |=  code=calendar-code
+    ::  TODO do we want this to produce a unit list or a list?
+    ^-  events
+    (~(get ja events.alma) code)
   ::
   ++  get-event
     |=  [=calendar-code =event-code]
@@ -147,4 +169,25 @@
       ~
     ?>  =((lent match) 1)
     `(snag 0 match)
+::
+:: period of time, properly ordered
+::
+++  period
+  |=  [a=@da b=@da]
+  ^-  [@da @da]
+  ?:  (lth b a)
+    [b a]
+  [a b]
+::
+::  period of time from absolute start and dur, properly ordered
+::
+++  period-from-dur
+  |=  [start=@da =dur:ucal]
+  ^-  [@da @da]
+  =/  end=@da
+      ?-    -.dur
+        %end  +.dur
+        %span  (add +.dur start)
+      ==
+  (period start end)
 ==

@@ -18,7 +18,7 @@
   $:  owner=(unit @p)
       =calendar-code
       title=(unit @t)
-      timezone=(unit timezone)
+      timezone=(unit (unit timezone))
   ==
 ::
 +$  event
@@ -69,9 +69,7 @@
       ==
       ::
       $:  %update-calendar
-          =calendar-code
-          title=(unit @t)
-          timezone=(unit (unit timezone))
+          patch=calendar-patch
       ==
       ::
       $:  %delete-calendar
@@ -88,12 +86,7 @@
       ==
       ::
       $:  %update-event
-          =calendar-code
-          =event-code
-          title=(unit @t)
-          start=(unit @da)
-          end=(unit dur)
-          description=(unit (unit @t))
+          patch=event-patch
       ==
       ::
       :: - delete event
@@ -109,8 +102,6 @@
           who=@p
           status=rsvp-status
       ==
-      :: - modify event
-      :: - modify calendar
       :: - import calendar from file
       $:  %import-from-ics
           =path
