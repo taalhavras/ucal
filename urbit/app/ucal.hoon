@@ -91,7 +91,7 @@
         [%calendars ~]
       %+  give  %ucal-initial
       ^-  initial:ucal
-      [%calendars (get-calendars:uc)]
+      [%calendars (~(get-calendars al alma.state))]
     ::
         [%events %bycal *]
       %+  give  %ucal-initial
@@ -113,10 +113,10 @@
         :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
         :: /x/a/b as our path, while with %gy we get /x/a/b/c
         [%y %calendars ~]
-      ``noun+!>((get-calendars:uc))
+      ``noun+!>((~(get-calendars al alma.state)))
     ::
         [%y %events ~]
-      ``noun+!>((get-events:uc))
+      ``noun+!>((~(get-events al alma.state)))
     ::
         [%y %calendars *]
       =/  res  (get-calendar:uc t.t.path)
@@ -149,29 +149,17 @@
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  (snag 0 path)
-  (~(get-calendar al state) code)
+  (~(get-calendar al alma.state) code)
 ::
 ++  get-specific-event
   |=  =path
   ^-  (unit event)
   ~&  [%specific-event-path path]
-  ?.  =((lent path) 1)
+  ?.  =((lent path) 2)
     ~
-  =/  code=event-code  (snag 0 path)
-  ::  TODO I guess we could flatten, but seems expensive
-  =/  events=(list (list event))
-      %+  turn  ~(tap by events.state)
-      tail
-  |-
-  ?~  events
-    ~
-  =/  l=(list event)  i.events
-  |-
-  ?~  l
-    ^$(events t.events)
-  ?:  =(event-code.i.l code)
-    `i.l
-  $(l t.l)
+  =/  =calendar-code  (snag 0 path)
+  =/  =event-code  (snag 1 path)
+  (~(get-event al alma.state) calendar-code event-code)
 ::
 ++  get-events-bycal
   |=  =path
@@ -181,17 +169,6 @@
     ~
   =/  code=calendar-code  (snag 0 path)
   (~(get-events-bycal al alma.state) code)
-::
-++  get-calendars
-  |.
-  ^-  calendars
-  %+  turn  ~(tap by cals.state)
-  tail
-::
-++  get-events
-  |.
-  ^-  events:ucal
-  (~(get-events al alma.state))
 ::
 ::  Handler for '%ucal-action' pokes
 ::
