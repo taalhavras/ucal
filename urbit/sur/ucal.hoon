@@ -23,7 +23,7 @@
 ::
 +$  event
   $:  owner=@p
-      calendar=calendar-code
+      =calendar-code
       =event-code                                       :: internal name, unique
       title=@t                                          :: external name
       start=@da
@@ -36,7 +36,7 @@
 ::
 +$  event-patch
   $:  owner=(unit @p)
-      calendar=calendar-code
+      =calendar-code
       =event-code
       title=(unit @t)
       start=(unit @da)

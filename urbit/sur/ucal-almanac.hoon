@@ -40,7 +40,7 @@
     ?~  removed
       alma
     %=  alma
-      events  (~(put by events) c-code new-events)
+      events  (~(put by events.alma) c-code new-events)
     ==
   ::
   ++  update-calendar
@@ -60,7 +60,7 @@
           owner  (fall owner.patch owner.u.cal)
           title  (fall title.patch title.u.cal)
           timezone  new-tz
-          last-modified now
+          last-modified  now
         ==
     :-
       `new
@@ -72,7 +72,9 @@
     |=  [patch=event-patch now=@da]
     ^-  [(unit event) almanac]
     =/  [to-update=(unit event) rest=events]
-        (remove-event event-code.patch (~(get ja events.alma)))
+        %+  remove-event
+          event-code.patch
+        (~(get ja events.alma) calendar-code.patch)
     ?~  to-update
       [~ alma]
     =/  cur=event  u.to-update
@@ -93,17 +95,19 @@
     :-
       `new-event
     %=  alma
-      events  (~(put by events.alma) calendar.patch (insort rest new-event))
+      events  (~(put by events.alma) calendar-code.patch (insort rest new-event))
     ==
   ::
   ++  update-rsvp
     |=  rsvp=rsvp-change
     ^-  [(unit event) almanac]
-    =/  old=events  (get-events calendar-code.rsvp)
+    =/  old=(unit events)  (get-events-bycal calendar-code.rsvp)
+    ?~  old
+      [~ alma]
     =/  [new-event=(unit event) new=events]
-        %+  reel  old
+        %+  reel  u.old
         |=  [cur=event acc=[(unit event) events]]
-        ^-  events
+        ^-  [(unit event) events]
         ?.  =(event-code.cur event-code.rsvp)
           [-.acc cur +.acc]
         ::  found target, update rsvps
@@ -120,7 +124,7 @@
   ::  reverse-chronological order by start time.
   ::
   ++  insort
-    |=  =events =event
+    |=  [=events =event]
     ^-  ^events
     =|  acc=^events
     |-
@@ -131,7 +135,6 @@
       $(events t.events, acc [i.events acc])
     ::  now our order should be (flop acc) then event then events
     (weld (flop acc) [event events])
-  ==
   ::  +remove-event: remove an event from a list, returns cell of removed
   ::  event (if present) and remainder of list.
   ::
@@ -153,9 +156,8 @@
     ::        [l |]
     ::      [[cur l] &]
     =/  [match=^events rest=^events]
-        %+  skid
-          |=(e=event =(code event-code.e))
-        events
+        %+  skid  events
+        |=(e=event =(code event-code.e))
     =/  n=@  (lent match)
     ?:  =(n 0)
       [~ rest]
@@ -173,23 +175,30 @@
     (~(get by cals.alma) code)
   ::
   ++  get-events
+    |.
+    ^-  events
+    %-  zing
+    (turn ~(tap by events.alma) tail)
+  ::
+  ++  get-events-bycal
     |=  code=calendar-code
     ::  TODO do we want this to produce a unit list or a list?
-    ^-  events
-    (~(get ja events.alma) code)
+    ::  use ja for list and by for unit list
+    ^-  (unit events)
+    (~(get by events.alma) code)
   ::
   ++  get-event
     |=  [=calendar-code =event-code]
     ^-  (unit event)
     =/  =events  (~(get ja events.alma) calendar-code)
     =/  match=^events
-        %+  skim
-          |=(e=event =(code event-code.e))
-        events
+        %+  skim  events
+        |=(e=event =(event-code event-code.e))
     ?~  match
       ~
     ?>  =((lent match) 1)
-    `(snag 0 match)
+    `i.match
+  --
 ::
 :: period of time, properly ordered
 ::
@@ -203,7 +212,7 @@
 ::  period of time from absolute start and dur, properly ordered
 ::
 ++  period-from-dur
-  |=  [start=@da =dur:ucal]
+  |=  [start=@da =dur]
   ^-  [@da @da]
   =/  end=@da
       ?-    -.dur
@@ -211,4 +220,4 @@
         %span  (add +.dur start)
       ==
   (period start end)
-==
+--

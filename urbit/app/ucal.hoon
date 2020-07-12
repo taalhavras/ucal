@@ -180,7 +180,7 @@
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  (snag 0 path)
-  ``(~(get-events al state) code)
+  (~(get-events-bycal al alma.state) code)
 ::
 ++  get-calendars
   |.
@@ -191,8 +191,7 @@
 ++  get-events
   |.
   ^-  events:ucal
-  %-  zing  ::  flattens list
-  (turn ~(tap by events.state) tail)
+  (~(get-events al alma.state))
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -211,7 +210,7 @@
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
+    ?>  =(~ (~(get-calendar al alma.state) calendar-code.input)) :: error if exists
     =/  paths=(list path)  ~[/calendars]
     =/  u=update:ucal  [%calendar-added new]
     =/  v=vase  !>(u)
@@ -235,7 +234,7 @@
     ::
       %delete-calendar
     =/  code  calendar-code.+.action
-    ?>  (~(has by cals.state) code)
+    ?<  =(~ (~(get-calendar al alma.state) code))
     ::  produce cards
     ::  kick from /events/bycal/calendar-code
     ::  give fact to /calendars
@@ -265,7 +264,8 @@
         now.bowl                                        :: last modified
         ~
       ==
-    ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
+    :: calendar must exist
+    ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
     :-  [%give %fact paths %ucal-update !>(`update:ucal`[%event-added new])]~
     %=  state
@@ -279,7 +279,7 @@
     ?~  new-event
       `state  :: nonexistent update
     =/  u=update:ucal  [%event-changed u.new-event]
-    =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
+    =/  pax=path  (snoc `path`/events/bycal calendar-code.patch.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
     state(alma new-alma)
@@ -299,7 +299,7 @@
     ?~  new-event
       `state
     =/  u=update:ucal  [%event-changed u.new-event]
-    =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
+    =/  pax=path  (snoc `path`/events/bycal calendar-code.rsvp-change.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
     state(alma new-alma)
