@@ -1,4 +1,5 @@
 /-  *ucal
+/+  ucal-util
 |%
 ::  $almanac: organizes multiple calendars and events
 ::
@@ -81,8 +82,8 @@
     =/  p=[@da @da]
         =/  new-start  (fall start.patch start.cur)
         ?~  end.patch
-          (period new-start end.cur)
-        (period-from-dur new-start u.end.patch)
+          (period:ucal-util new-start end.cur)
+        (period-from-dur:ucal-util new-start u.end.patch)
     =/  new-event=event
         %=  cur
           owner  (fall owner.patch owner.cur)
@@ -199,25 +200,4 @@
     ?>  =((lent match) 1)
     `i.match
   --
-::
-:: period of time, properly ordered
-::
-++  period
-  |=  [a=@da b=@da]
-  ^-  [@da @da]
-  ?:  (lth b a)
-    [b a]
-  [a b]
-::
-::  period of time from absolute start and dur, properly ordered
-::
-++  period-from-dur
-  |=  [start=@da =dur]
-  ^-  [@da @da]
-  =/  end=@da
-      ?-    -.dur
-        %end  +.dur
-        %span  (add +.dur start)
-      ==
-  (period start end)
 --

@@ -4,7 +4,7 @@
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
 /-  ucal, *ucal-almanac
-/+  default-agent
+/+  default-agent, ucal-util
 ::
 ::: local type
 ::
@@ -227,7 +227,7 @@
     ::
       %create-event
     =/  input  +.action
-    =/  p  (period-from-dur start.input end.input)
+    =/  p  (period-from-dur:ucal-util start.input end.input)
     =/  new=event
       %:  event
         our.bowl
