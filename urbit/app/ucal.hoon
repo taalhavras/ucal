@@ -3,8 +3,8 @@
 :: - poke
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
-/-  ucal, *ucal-almanac
-/+  default-agent, ucal-util
+/-  ucal, ucal-almanac
+/+  default-agent, ucal-util, alma-door=ucal-almanac
 ::
 ::: local type
 ::
@@ -16,6 +16,8 @@
 +$  event  event:ucal
 +$  calendar-code  calendar-code:ucal
 +$  event-code  event-code:ucal
++$  almanac  almanac:ucal-almanac
+++  al  al:alma-door
 ::
 +$  state-zero
   $:  alma=almanac
