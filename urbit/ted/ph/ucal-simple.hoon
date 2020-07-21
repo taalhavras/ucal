@@ -6,7 +6,6 @@
 |=  args=vase
 =/  m  (strand ,vase)
 ;<  ~  bind:m  start-simple
-;<  bol=bowl:spider  bind:m  get-bowl
 ::  start two fake ships, ~zod and ~nel
 ;<  ~  bind:m  (raw-ship ~zod ~)
 ::  ;<  ~  bind:m  (raw-ship ~nel ~)
@@ -19,8 +18,7 @@
 =/  a1=action:ucal  [%create-calendar %a 'First Cal' ~]
 ;<  ~  bind:m  (ucal-poke ~zod a1)
 ::  now verify it has the right properties
-;<  res=vase  bind:m  (validate-cal ~zod bol `calendar-code:ucal`%a 'First Cal' ~)
-::  ;<  res=flag  bind:m  (validate-cal ~zod bol (tail a1))
+;<  res=vase  bind:m  (validate-cal ~zod `calendar-code:ucal`%a 'First Cal' ~)
 ~&  [%validation-result-is !<(flag res)]
 ;<  ~  bind:m  end-simple
 (pure:m *vase)
@@ -53,21 +51,26 @@
   (pure:m *vase)
 ::
 ++  validate-cal
-  |=  [on=@p =bowl:spider code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
+  |=  [on=@p code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  >  [%validating-cal on code]
-  =/  pax=path  [%gy (scot %p on) %ucal (scot %da now.bowl) %calendars code ~]
-  ::  =/  scry-path=tape  <pax>
-  ::  =/  scry-command=tape
-  ::      ".^(calendar:ucal %gy {scry-path})"
-  =/  cal=calendar:ucal  (scry-aqua:ph-util calendar:ucal on now.bowl pax)
+  ;<  bol=bowl:spider  bind:m  get-bowl
+  ::  /j/~zod/rift/now/target-ship becomes the below
+  ::  /i/(scot %p her)/j/(scot %p her)/rift/(scot %da now.bowl)/(scot %p who)/noun
+  ::  in our case, the path is /gy/~zod/ucal/now/calendars/a
+  ::  this then becomes /i/~zod/gy/~zod/ucal/now/calendars/a/noun
+  =/  pax=path  [%i (scot %p on) %gy (scot %p on) %ucal (scot %da now.bol) %calendars code %noun ~]
+  ~&  >  [%scrying-on pax]
+  ::  scry-aqua produces unit
+  =/  cal  %-  need
+      ;;((unit calendar:ucal) (scry-aqua:ph-util noun on now.bol pax))
   ~&  >  [%got-cal cal]
   %-  pure:m
   !>
   ?&
     =(calendar-code.cal code)
     =(title.cal title)
-    =(timezone.cal tz)
+    =(timezone.cal (fall tz 'utc'))
   ==
 --
