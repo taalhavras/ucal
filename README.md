@@ -1,37 +1,31 @@
 # Urbit Calendar
 
-## Parser TODOs
+## Current Roadmap
+These are the current big tasks to undertake
 
-1. (DONE) Parsing for recurrence rules (rrule, rdate, exdate).
-   These are the most important properties that haven't yet
-   been parsed.
-2. Parsing for optional ical component properties. See
-   [the rfc](https://tools.ietf.org/html/rfc5545#section-3.3.4)
-   for more info. Since we want the ical part of this to handle
-   all possibilities for the rfc when it comes to VEVENTS (ucal
-   will cut this down to what we're really interested in), we should
-   support all possible properties here. This will be somewhat tedious,
-   but shouldn't be too tricky
-3. Using properties where appropriate. For example, dtstart has
-   an optional tzid property that we currently don't look for or store.
-   there are a fair number of these, so it'll be a lot of RFC reading.
-4. (DONE) In this vein, we should probably take distinguish DATE and DATE-TIME.
-   I (raghu) am gonna just do this on a separate branch and then merge
-   it since it's a pretty large change. there will be a unified type
-   (ical-time or some such) with both date and date-time in it. This will
-   change pretty much every place urbit's date type is used in the code.
-5. For some properties that can be dates or date-times, there is probably
-   a way to enforce that they're all either one or the other. This would
-   more closely mirror what the ical spec actually says and would be a nice
-   way of having the type system reflect that validation.
-   Stuff like exdate is easy (define a new type that's either a list of
-   ical-date or ical-datetime), but things like dtstart/dtend might be more
-   tricky? Would probably need a separate type for both of them, either
-   two ical-dates or ical-datetimes. This might not be an immediate concern,
-   but is definitely something we want IMO.
+1. pH testing
+2. almanac update to use ordered map, dovetails with gall agent enrichment to support date-range queries for events
+3. hook development
+4. data model + recurring events
 
-## General TODOs
+With regards to how they should be prioritized, I think finalizing the data model is probably the most important thing and should be prioritized first. Once that's done, the hook and almanac updates can proceed independently.
 
-1. ucal spec - how does it differ from ical, what operations will we support, etc.
-2. (DONE) It'd be nice to have a mark for ics files so they don't have to be stored as
-   ".txt" files in urbit.
+### pH Testing
+branch: aqua-testing
+
+We want tests to verify calendar/event creation, destruction, and updating. There should also be tests for rsvping, event permissions, etc. once the hook is in more robust shape.
+
+### almanac update
+branch: none yet
+
+The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here.
+
+### hook development
+branch: none yet
+
+The current "hook" doesn't really fulfill the standards of a "hook" according to the [userspace development guidelines](https://docs.google.com/document/d/1hS_UuResG1S4j49_H-aSshoTOROKBnGoJAaRgOipf54/edit?ts=5d533e42). A fully fleshed out hook would communicate with hooks on other ships and would also have some sort of permissions system informing who can see what events and who can edit them.
+
+### data model + recurring events
+branch: josh/data-model
+
+This branch contains some improvements/tweaks to the data model (event/calendar representation) but it's not fully fleshed out yet. Continuing this work would mean fleshing out what recurrence rules are as well (and how closely they'd mirror our current representation of ics recurrence rules). The bigger issue though is how to model recurring events in our calendars. This ties into the almanac update so work on these two tasks could be done together and it might be worth exploring prior literature (i.e. other languages' implementations of calendaring) to see how they've solved this problem.
