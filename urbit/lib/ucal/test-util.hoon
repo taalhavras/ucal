@@ -57,21 +57,45 @@
   ^-  form:m
   ;<  bol=bowl:spider  bind:m  get-bowl
   =/  ev=event:ucal
-      (scry-ucal on bol event:ucal ~[%events calendar-code event-code])
+      (scry-ucal on bol event:ucal ~[%events %specific calendar-code event-code])
   (pure:m !>((v ev)))
 ::
 ++  cal-basic-properties-match
-  |=  [cal=calendar:ucal code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
+  |=  [cal=calendar:ucal owner=@p code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
   ^-  flag
   ?&
+    =(owner.cal owner)
     =(calendar-code.cal code)
     =(title.cal title)
     =(timezone.cal (fall tz 'utc'))
   ==
 ::
 ++  validate-cal-basic-properties
-  |=  [on=@p code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
+  |=  [on=@p owner=@p code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
   =/  validator
-      (bake (curr cal-basic-properties-match [code title tz]) calendar:ucal)
+      (bake (curr cal-basic-properties-match [owner code title tz]) calendar:ucal)
   (validate-cal on code validator)
+::
+++  event-basic-properties-match
+  |=  [ev=event:ucal owner=@p =calendar-code:ucal =event-code:ucal title=@t start=@da end=@da description=(unit @t)]
+  ^-  flag
+  ?&
+    =(owner.ev owner)
+    =(calendar-code.ev calendar-code)
+    =(event-code.ev event-code)
+    =(title.ev title)
+    =(start.ev start)
+    =(end.ev end)
+    =(description.ev description)
+  ==
+::
+++  validate-event-basic-properties
+  |=  [on=@p owner=@p =calendar-code:ucal =event-code:ucal title=@t start=@da end=@da description=(unit @t)]
+  =/  validator
+      %+  bake
+        %+  curr
+          event-basic-properties-match
+        [owner calendar-code event-code title start end description]
+      event:ucal
+  (validate-event on calendar-code event-code validator)
 --
