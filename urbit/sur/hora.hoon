@@ -40,7 +40,7 @@
 ::
 +$  moment
   $%  [%days day=(list @da)]                           :: all day
-      [%block anchor=@da span=@dr]                      :: anchor & relative end
+      [%block anchor=@da span=@dr]                     :: anchor & relative end
       [%period start=@da end=@da]                      :: definite start and end
   ==
 ::
@@ -48,7 +48,41 @@
 ::  An era is our equivalent of a recurrence rule. Start and end define when the
 ::  recurrence starts and when it ends, if at all.
 ::
-+$  rule  @                                             :: TODO
+::  TODO
++$  rule
+  $:
+    type=rule-type
+    interval=$~(@ 1)
+    ::  TODO model the actual recurrences
+    $%  [%daily]
+        ::  FIXME problem is these must all be timezone aware, so events
+        ::  must track I guess.
+        [%weekly (set weekday)]
+        ::  gcal offers nth day of the month or nth weekday of the month here
+        [%monthly]
+        ::  yearly on the specified date - unclear how to handle leap cases but
+        ::  maybe we just add ~y1 or something.
+        [%yearly on=@da]
+    ==
+  ==
+::
++$  rule-type
+  $%  [%until last=@da]
+      [%instances num=@ud]
+      ::  don't think this one needs anything?
+      [%infinite]
+  ==
+::
++$  weekday
+  $?
+    %mon
+    %tue
+    %wed
+    %thu
+    %fri
+    %sat
+    %sun
+  ==
 ::
 +$  when
   $%  [%moment =moment]
@@ -87,9 +121,6 @@
       sent-at=@da
 ::
 +$  invites  (map @p invite)
-::
-+$  calendars  (list calendar)
-+$  events     (list event)
 ::
 ::  Calendar
 ::
