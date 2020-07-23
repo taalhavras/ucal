@@ -1,17 +1,21 @@
-/-  *resource
+::  /-  *resource
 ::
 |%
 ::  $calendars: a mapping from calendar-ids to calendars
 ::
-+$  calendars  (map resource calendar)
+::  +$  calendars  (map resource calendar)
 ::  $calendar: a container for events
+::  FIXME these stub definitions might need to be updated
+::  to fit with "resource"
++$  uid  @tas
++$  code  uid
 ::
 ::    TODO:
 +$  calendar
   $:  name=@t
       created=@da
       events=(list event)                :: reverse chronological / newest first
-      eras=(list era)                    :: reverse chronological / newest first
+      ::  eras=(list era)                    :: reverse chronological / newest first
   ==
 +$  timezone  @t              :: TODO: enumerated list of all possible timezones
 +$  event-type  $?(%projected %concrete)      :: potential as result of era, or real
@@ -30,7 +34,7 @@
 ::  Details about the event.
 ::
 +$  detail
-  $:  =title
+  $:  title=@t
       desc=(unit @t)
       loc=(unit location)
   ==
@@ -52,7 +56,7 @@
 +$  rule
   $:
     type=rule-type
-    interval=$~(@ 1)
+    interval=$~(1 @)
     ::  TODO model the actual recurrences
     $%  [%daily]
         ::  FIXME problem is these must all be timezone aware, so events
@@ -119,6 +123,7 @@
       optional=?
       rsvp=(unit rsvp)
       sent-at=@da
+  ==
 ::
 +$  invites  (map @p invite)
 ::

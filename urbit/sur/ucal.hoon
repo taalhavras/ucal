@@ -101,6 +101,7 @@
       optional=?
       rsvp=(unit rsvp)
       sent-at=@da
+  ==
 ::
 +$  invites  (map @p invite)
 ::
