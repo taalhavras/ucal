@@ -94,17 +94,18 @@
             %on
           =/  d=date  (yore start)
           =/  day=@ud  d.t.d
+          ::  this is done to avoid overflow issues when
+          ::  incrementing the month below. i.e. if we went from
+          ::  jan 31st to "feb 31st", we'd actually have march 3rd
+          ::  which would mess up future calculations when adding
+          ::  the interval to the month.
+          =/  d=date  d(t.d 1)
           |-
-          =/  new-month=@ud  (add m.d interval)
-          =/  new-year=@ud
-              ?:  (gth new-month 12)
-                +(y.d)
-              y.d
-          =/  new-d=date  d(m new-month, y new-year)
+          =/  new-d=date  (yore (year d(m (add m.d interval))))
           =/  new-month-days=@ud
               %+  snag
-                (dec new-month)
-              ?:  (yelp new-year)
+                (dec m.new-d)
+              ?:  (yelp y.new-d)
                 moy:yo
               moh:yo
           ?:  (lte day new-month-days)
