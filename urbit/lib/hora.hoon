@@ -86,7 +86,7 @@
 ::
 ::  FIXME should this take a range to verify the event doesn't go too far
 ::  into the future?
-++  successor-moment
+++  successor-in-range
   =<
   |=  [start=@da end=@da m=moment =era]
   ^-  (unit moment)
@@ -107,7 +107,7 @@
     ::  using 7 days as the increment, but will then need
     ::  some offset logic to handle different days
     =/  increment=@dr  (mul ~d7 interval.era)
-    =/  coef=@ud  (get-coeff start m-start increment)
+    =/  coeff=@ud  (get-coeff start m-start increment)
     =/  new-start=@da  (add m-start (mul coeff increment))
     =/  new-start-day=weekday  (get-weekday new-start)
     =/  new-start-idx=@ud  (~(got by idx-by-weekday) new-start-day)
@@ -141,7 +141,16 @@
   ?:  ?=([%monthly *] rrule.era)
     !!
   ?:  ?=([%yearly] rrule.era)
-    !!
+    ::  TODO as implemented, yearly recurring events on feb 29th get
+    ::  moved to march 1st - do we want to support different behavior?
+    =/  start-date=date  (yore start)
+    =/  m-start-date=date  (yore m-start)
+    =/  coeff=@ud  (get-coeff y.start-date y.m-start-date interval.era)
+    =/  new-year=@ud  (add y.m-start-date (mul coeff interval.era))
+    =/  new-start=@da  (year m-start-date(y new-year))
+    ?.  (validator new-start)
+      ~
+    `(move-moment-start m new-start)
   !!
   |%
   ::  +get-coeff: given a > b, finds the lowest k such that b + kc >= a
