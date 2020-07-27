@@ -19,6 +19,16 @@
   %+  turn
     ~(tap by weekdays-by-idx)
   |=([idx=@ud w=weekday] [w idx])
+::  +days-in-month: number of days in a specified month of a specified year
+::
+++  days-in-month
+  |=  [m=@ud y=@ud]
+  ^-  @ud
+  %+  snag
+    (dec m)
+  ?:  (yelp y)
+    moy:yo
+  moh:yo
 ::  +ranges-overlap: checks if [a, b) and [c, d) overlap.
 ::
 ++  ranges-overlap
@@ -139,6 +149,74 @@
       ~
     `(move-moment-start m u.final-start)
   ?:  ?=([%monthly *] rrule.era)
+    =/  month-diff=@ud  (months-between start m-start)
+    =/  coeff=@ud  (get-coeff month-diff 0 interval.era)
+    =/  month-delta=@ud  (mul coeff interval.era)
+    =/  m-start-date=date  (yore m-start)
+    ?:  ?=([%on] form.rrule.era)
+      =|  i=@ud
+      |-
+      =/  [year-delta=@ud month-delta=@ud]  (dvr (add month-delta i) 12)
+      =/  new-month=@ud  (add d.m-start-date month-delta)
+      =/  new-year=@ud  (add y.m-start-date year-delts)
+      ?:  (lte d.t.m-start-date (days-in-month new-month new-year))
+        =/  new-start=@da  (year m-start-date(m new-month, y new-year))
+        ?.  (validator new-start)
+          ~
+        `(move-moment-start m new-start)
+      ::  TODO I think this is guaranteed to terminate, but I haven't
+      ::  proved that yet. But I think addition under modulo is cyclic
+      ::  so we'll eventually get back to the original or another
+      ::  satisfying month.
+      $(i (add i interval.era))
+    ?:  ?=([%weekday *] form.rrule.era)
+      ::  get current weekday
+      =/  cur=weekday  (get-weekday m-start)
+      =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
+      =/  [year-delta=@ud month-delta=@ud]  (dvr month-delta 12)
+      =/  new-month=@ud  (add d.m-start-date month-delta)
+      =/  new-year=@ud  (add y.m-start-date year-delts)
+      =/  new-date=date  m-start-date(m new-month, year new-year, d.t 1)
+      =/  base-da=@da
+          =/  b=@da  (year new-date)
+          =/  b-day=weekday  (get-weekday b)
+          =/  b-idx=@ud  (~(got by idx-by-weekday) b-day)
+          %+  add
+            b
+          %+  mul
+            ~d1
+          ?:  (gte cur-idx b-idx)
+            (sub cur-idx b-idx)
+          (sub (add cur-idx 7) b-idx)
+      =/  new-start=@da
+          ?-  instance.form.rrule.era
+              %first
+            base-da
+          ::
+              %second
+            (add base-da ~d7)
+          ::
+              %third
+            (add base-da ~d14)
+          ::
+              %fourth
+            (add base-da ~d21)
+          ::
+              %last
+            =/  fourth=@da  (add base-da ~d21)
+            ::  now check if a fifth fits within
+            ::  the bounds of this month
+            =/  f-date=date  (yore fourth)
+            ::  if adding a week onto fourth fits in the month, we have five
+            ::  of this weekday in the month and should produce the fifth.
+            ?:  (lte (add d.t.f-date 7) (days-in-month m.f-date y.f-date))
+              (add fourth ~d7)
+            fourth
+          ==
+      ?>  =(cur (get-weekday new-start))
+      ?.  (validator new-start)
+        ~
+      `(move-moment-start m new-start)
     !!
   ?:  ?=([%yearly] rrule.era)
     ::  TODO as implemented, yearly recurring events on feb 29th get
@@ -153,6 +231,15 @@
     `(move-moment-start m new-start)
   !!
   |%
+  ::  given two dates such that a > b, get the number of months between them
+  ::
+  ++  months-between
+    |=  [a=@da b=@da]
+    ^-  @ud
+    ?>  (gth a b)
+    =/  d1=date  (yore a)
+    =/  d2=date  (yore b)
+    (sub (add m.d1 (mul (sub y.d1 y.d2) 12)) m.d2)
   ::  +get-coeff: given a > b, finds the lowest k such that b + kc >= a
   ::
   ::  TODO should this be wet or dry?
@@ -200,12 +287,7 @@
           =/  d=date  d(t.d 1)
           |-
           =/  new-d=date  (yore (year d(m (add m.d interval))))
-          =/  new-month-days=@ud
-              %+  snag
-                (dec m.new-d)
-              ?:  (yelp y.new-d)
-                moy:yo
-              moh:yo
+          =/  new-month-days=@ud  (days-in-month m.new-d y.new-d)
           ?:  (lte day new-month-days)
             (year new-d(d.t day))
           $(d new-d)

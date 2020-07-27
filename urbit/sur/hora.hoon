@@ -70,7 +70,7 @@
 +$  monthly
   $%
     [%on]
-    [%weekday day=weekday week=?(%first %second %third %fourth %last)]
+    [%weekday instance=?(%first %second %third %fourth %last)]
   ==
 ::
 +$  rrule
