@@ -164,20 +164,6 @@
     ?:  =(rem 0)
       quot
     +(quot)
-  ::  FIXME don't really wanna use @dr for some of these, so maybe produce
-  ::  a date and don't do the interval stuff here?
-  ++  get-delta
-    |=  [=rrule target=@da]
-    ^-  @dr
-    ?:  ?=([%daily] rrule)
-      ~d1
-    ?:  ?=([%weekly *] rrule)
-      ~d7
-    ?:  ?=([%monthly *] rrule)
-      !!
-    ?:  ?=([%yearly] rrule)
-      !!
-    !!
   --
 ::  +advance-moment: given a moment and a recurrence rule, produce the next moment
 ::

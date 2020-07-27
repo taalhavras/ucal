@@ -64,7 +64,15 @@
 ::  An era is our equivalent of a recurrence rule. Start and end define when the
 ::  recurrence starts and when it ends, if at all.
 ::
-::  TODO
+::  $monthly: data needed for monthly recurrences.
+::  either on a specific date (i.e. 27th) or on the nth weekday of a month
+::
++$  monthly
+  $%
+    [%on]
+    [%weekday day=weekday week=?(%first %second %third %fourth %last)]
+  ==
+::
 +$  rrule
   ::  TODO model the actual recurrences
   $%  [%daily]
@@ -84,9 +92,7 @@
       ::  months that don't include the current day.
       ::  maybe we should just make include a signed day part of this or something?
       ::  like you can say 23rd day OR 7th day from end...
-      $:  %monthly
-        form=$?(%on %weekday)
-      ==
+      [%monthly form=monthly]
       ::  yearly on the specified date - unclear how to handle leap cases but
       ::  maybe we just add ~d365 and then add one more if we're leap year? or
       ::  actually its add one more when we move past a leap day.
