@@ -46,6 +46,20 @@
     :-  start.moment.event
     end.moment.event
   !!
+::  +move-moment-start: create a new moment with the same duration as the
+::  input but with the new start date.
+::
+++  move-moment-start
+  |=  [m=moment new-start=@da]
+  ^-  moment
+  ?:  ?=([%days *] m)
+    [%days new-start n.m]
+  ?:  ?=([%block *] m)
+    [%block new-start span.m]
+  ?:  ?=([%period *] m)
+    =/  delta=@dr  (sub end.m start.m)
+    [%period new-start (add new-start delta)]
+  !!
 ::  +next-weekday: given the current weekday, produces the next weekday in days
 ::  that's after it as well as the number of days away it is.
 ++  next-weekday
@@ -67,6 +81,95 @@
   ?:  (lte next-idx cur-idx)
     (sub (add next-idx 7) cur-idx)
   (sub next-idx cur-idx)
+::  +successor-moment: finds moment with start time >= start using
+::  interval and rrule. produces unit if no such moment exists
+::
+::  FIXME should this take a range to verify the event doesn't go too far
+::  into the future?
+++  successor-moment
+  =<
+  |=  [start=@da end=@da m=moment =era]
+  ^-  (unit moment)
+  =/  validator  (bake (cury date-in-range [start end]) @da)
+  =/  [m-start=@da m-end=@da]  (moment-to-range m)
+  ?:  (gte m-start end)
+    ~
+  ?:  (gte m-start start)
+    `m
+  ?:  ?=([%daily] rrule.era)
+    =/  increment=@dr  (mul ~d1 interval.era)
+    =/  coeff=@ud  (get-coeff start m-start increment)
+    =/  new-start=@da  (add m-start (mul coeff increment))
+    ?.  (validator new-start)
+      ~
+    `(move-moment-start m new-start)
+  ?:  ?=([%weekly *] rrule.era)
+    ::  using 7 days as the increment, but will then need
+    ::  some offset logic to handle different days
+    =/  increment=@dr  (mul ~d7 interval.era)
+    =/  coef=@ud  (get-coeff start m-start increment)
+    =/  new-start=@da  (add m-start (mul coeff increment))
+    =/  new-start-day=weekday  (get-weekday new-start)
+    =/  new-start-idx=@ud  (~(got by idx-by-weekday) new-start-day)
+    ::  now check all days in the weekly rule to see if any
+    ::  are in range. we get the negative delta for each
+    =/  days=(list weekday)  ~(tap in days.rrule.era)
+    =/  final-start=(unit @da)
+        =|  acc=(unit @da)
+        |-
+        ?~  days
+          acc
+        =/  cur=weekday  i.days
+        =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
+        ::  we're only interested in days on or before new-start-day
+        ::  so we treat all days as such.
+        =/  day-diff=@dr
+            %+  mul
+              ~d1
+            ?:  (lte cur-idx new-start-idx)
+              (sub new-start-idx cur-idx)
+            (sub (add new-start-idx 7) cur-idx)
+        =/  adjusted-start=@da  (sub new-start day-diff)
+        ?.  (validator adjusted-start)
+          $(days t.days)
+        ?~  acc
+          $(acc `adjusted-start, days t.days)
+        $(acc (some `@da`(min adjusted-start u.acc)), days t.days)
+    ?~  final-start
+      ~
+    `(move-moment-start m u.final-start)
+  ?:  ?=([%monthly *] rrule.era)
+    !!
+  ?:  ?=([%yearly] rrule.era)
+    !!
+  !!
+  |%
+  ::  +get-coeff: given a > b, finds the lowest k such that b + kc >= a
+  ::
+  ::  TODO should this be wet or dry?
+  ++  get-coeff
+    |*  [a=@ b=@ c=@]
+    ?>  (gth a b)
+    =/  delta=@  (sub a b)
+    =/  [quot=@ rem=@]  (dvr delta c)
+    ?:  =(rem 0)
+      quot
+    +(quot)
+  ::  FIXME don't really wanna use @dr for some of these, so maybe produce
+  ::  a date and don't do the interval stuff here?
+  ++  get-delta
+    |=  [=rrule target=@da]
+    ^-  @dr
+    ?:  ?=([%daily] rrule)
+      ~d1
+    ?:  ?=([%weekly *] rrule)
+      ~d7
+    ?:  ?=([%monthly *] rrule)
+      !!
+    ?:  ?=([%yearly] rrule)
+      !!
+    !!
+  --
 ::  +advance-moment: given a moment and a recurrence rule, produce the next moment
 ::
 ++  advance-moment
@@ -109,7 +212,7 @@
                 moy:yo
               moh:yo
           ?:  (lte day new-month-days)
-            new-d(d.t day)
+            (year new-d(d.t day))
           $(d new-d)
           ::
             %weekday  !!
