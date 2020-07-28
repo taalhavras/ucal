@@ -68,7 +68,6 @@
       [12 4]
     ==
   --
-
 ::  +days-in-month: number of days in a specified month of a specified year
 ::
 ++  days-in-month
@@ -141,7 +140,7 @@
   ?:  (lte next-idx cur-idx)
     (sub (add next-idx 7) cur-idx)
   (sub next-idx cur-idx)
-::  +successor-moment: finds moment with start time >= start and < end using
+::  +successor-in-range: finds moment with start time >= start and < end using
 ::  interval and rrule. produces unit if no such moment exists
 ::
 ++  successor-in-range
@@ -349,32 +348,44 @@
         (year d(y (add y.d interval)))
       !!
   (move-moment-start m new-start)
+::
+++  starting-in-range
+  |=  [start=@da end=@da m=moment =era]
+  ^-  (list moment)
+  =/  successor=(unit moment)  (successor-in-range start end m era)
+  ?~  successor
+    ~
+  =/  cur=moment  u.successor
+  =/  acc=(list moment)  ~[cur]
+  |-
+  =/  next=moment  (advance-moment cur interval.era rrule.era)
+  =/  [n-start=@da n-end=@da]
+  ?:  (lth n-start end)
+    $(acc [next acc], cur next)
+  acc
+::
+++  overlapping-in-range
+  |=  [start=@da end=@da m=moment =era]
+  ^-  (list moment)
+  =/  [m-start=@da m-end=@da]  (moment-to-range m)
+  ?:  (ranges-overlap start end m-start m-end)
+    :-  m
+    (starting-in-range start end (advance-moment m interval.era rrule.era))
+  (starting-in-range start end m era)
 ::  +events-in-range: given a recurring event and a range, produce a list of
-::  all materialized events starting OVERLAPPING WITH the range [start, end)
+::  all events starting OVERLAPPING WITH the range [start, end)
 ::
 ++  events-in-range
-  =<
-  |=  [=event start=@da end=@da]
+  |=  [e=event start=@da end=@da]
   ^-  (list event)
   ?>  (lte start end)
-  =/  [event-start=@da event-end=@da]
-      (moment-to-range moment.event)
-  ::  early bailout, event starts after range
-  ?:  (lte end event-start)
+  ?~  era.e
+    =/  [event-start=@da event-end=@da]
+        (moment-to-range moment.e)
+    ?:  (ranges-overlap start end event-start event-end)
+      ~[e]
     ~
-  =/  acc=(list event)
-      ?:  (ranges-overlap start end event-start event-end)
-        ~[event]
-      ~
-  ::  need an era? or just produce acc?
-  ?~  era.event
-    acc
-  ::  now we case the era-type to see if we are in bounds
-  =/  a  ~
-  ::  now we want to find the delta? or I guess we can just
-  ::  have specific logic for each case.
-  !!
-  ::  helper core
-  |%
-  --
+  %+  turn
+    (overlapping-in-range start end moment.e u.era.e)
+  |=(m=moment e(moment m))
 --
