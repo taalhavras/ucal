@@ -157,7 +157,7 @@
     =/  increment=@dr  (mul ~d1 interval.era)
     =/  coeff=@ud  (get-coeff start m-start increment)
     =/  new-start=@da  (add m-start (mul coeff increment))
-    ?.  (validator new-start)
+    ?.  &((validator new-start) (check-within-era new-start coeff type.era))
       ~
     `(move-moment-start m new-start)
   ?:  ?=([%weekly *] rrule.era)
@@ -273,12 +273,31 @@
     =/  coeff=@ud  (get-coeff y.start-date y.m-start-date interval.era)
     =/  new-year=@ud  (add y.m-start-date (mul coeff interval.era))
     =/  new-start=@da  (year m-start-date(y new-year))
-    ?.  (validator new-start)
+    ?.  &((validator new-start) (check-within-era new-start coeff type.era))
       ~
     `(move-moment-start m new-start)
   !!
   |%
-  ::  given two dates such that a > b, get the number of months between them
+  ::  +check-within-era: check if a new starting @da for a moment
+  ::  generated as a successor falls in the era.
+  ::
+  ++  check-within-era
+    |=  [cur-start=@da coeff=@ud =era-type]
+    ^-  flag
+    ?:  ?=([%until *] era-type)
+      ::  TODO do we need to pass the era's start to do overlap
+      ::  checks here? given that we don't care about end overlap
+      ::  in this function I'm thinking no.
+      (lth cur-start end.era-type)
+    ?:  ?=([%instances *] era-type)
+      ::  coeff incremented since the original moment is
+      ::  an instance at coeff 0.
+      (lte +(coeff) num.era-type)
+    ?:  ?=([%infinite] era-type)
+      &
+    !!
+  ::  +months-between: given two dates such that a > b,
+  ::  get the number of months between them
   ::
   ++  months-between
     |=  [a=@da b=@da]
