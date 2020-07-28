@@ -19,6 +19,56 @@
   %+  turn
     ~(tap by weekdays-by-idx)
   |=([idx=@ud w=weekday] [w idx])
+::  +get-weekday: gets weekday that a given date falls on.
+::  implementation of sakamoto's method
+::
+++  get-weekday
+  =<
+  |=  da=@da
+  ^-  weekday
+  =/  =date  (yore da)
+  =/  y=@ud  y.date
+  =/  m=@ud  m.date
+  =/  d=@ud  d.t.date
+  ::  produces 0 for sunday, 1 for monday, etc.
+  =/  idx=@ud
+      =/  y=@ud
+          ?:  (lth m 3)
+            (dec y)
+          y
+      %+  mod
+        %+  sub
+          ;:
+            add
+            y
+            (div y 4)
+            (div y 400)
+            (~(got by month-table) m)
+            d
+          ==
+        (div y 100)
+      7
+  (~(got by weekdays-by-idx) idx)
+  |%
+  ++  month-table
+    ^-  (map @ud @ud)
+    %-  ~(gas by *(map @ud @ud))
+    :~
+      [1 0]
+      [2 3]
+      [3 2]
+      [4 5]
+      [5 0]
+      [6 3]
+      [7 5]
+      [8 1]
+      [9 4]
+      [10 6]
+      [11 2]
+      [12 4]
+    ==
+  --
+
 ::  +days-in-month: number of days in a specified month of a specified year
 ::
 ++  days-in-month
@@ -91,11 +141,9 @@
   ?:  (lte next-idx cur-idx)
     (sub (add next-idx 7) cur-idx)
   (sub next-idx cur-idx)
-::  +successor-moment: finds moment with start time >= start using
+::  +successor-moment: finds moment with start time >= start and < end using
 ::  interval and rrule. produces unit if no such moment exists
 ::
-::  FIXME should this take a range to verify the event doesn't go too far
-::  into the future?
 ++  successor-in-range
   =<
   |=  [start=@da end=@da m=moment =era]
@@ -300,13 +348,7 @@
         =/  d=date  (yore start)
         (year d(y (add y.d interval)))
       !!
-  ?:  ?=([%days *] m)
-    [%days new-start n.m]
-  ?:  ?=([%block *] m)
-    [%block new-start span.m]
-  ?:  ?=([%period *] m)
-    [%period new-start (add new-start (sub end.m start.m))]
-  !!
+  (move-moment-start m new-start)
 ::  +events-in-range: given a recurring event and a range, produce a list of
 ::  all materialized events starting OVERLAPPING WITH the range [start, end)
 ::
@@ -334,53 +376,5 @@
   !!
   ::  helper core
   |%
-  --
-::  +get-weekday: gets weekday that a given date falls on.
-::  implementation of sakamoto's method
-::
-++  get-weekday
-  =<
-  |=  da=@da
-  ^-  weekday
-  =/  =date  (yore da)
-  =/  y=@ud  y.date
-  =/  m=@ud  m.date
-  =/  d=@ud  d.t.date
-  ::  produces 0 for sunday, 1 for monday, etc.
-  =/  idx=@ud
-      =/  y=@ud
-          ?:  (lth m 3)
-            (dec y)
-          y
-      %+  mod
-        %+  sub
-          ;:  add
-            y
-            (div y 4)
-            (div y 400)
-            (~(got by month-table) m)
-            d
-          ==
-        (div y 100)
-      7
-  (~(got by weekdays-by-idx) idx)
-  |%
-  ++  month-table
-    ^-  (map @ud @ud)
-    %-  ~(gas by *(map @ud @ud))
-    :~
-      [1 0]
-      [2 3]
-      [3 2]
-      [4 5]
-      [5 0]
-      [6 3]
-      [7 5]
-      [8 1]
-      [9 4]
-      [10 6]
-      [11 2]
-      [12 4]
-    ==
   --
 --
