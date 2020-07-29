@@ -205,10 +205,12 @@
       |-
       =/  [year-delta=@ud month-delta=@ud]  (dvr (add month-delta i) 12)
       =/  new-month=@ud  (add d.m-start-date month-delta)
-      =/  new-year=@ud  (add y.m-start-date year-delts)
+      =/  new-year=@ud  (add y.m-start-date year-delta)
       ?:  (lte d.t.m-start-date (days-in-month new-month new-year))
         =/  new-start=@da  (year m-start-date(m new-month, y new-year))
-        ?.  (validator new-start)
+        =/  instances=@ud
+            (months-containing new-start m-start d.t.m-start-date interval.era)
+        ?.  &((validator new-start) (check-within-era new-start instances type.era))
           ~
         `(move-moment-start m new-start)
       ::  TODO I think this is guaranteed to terminate, but I haven't
@@ -261,7 +263,7 @@
             fourth
           ==
       ?>  =(cur (get-weekday new-start))
-      ?.  (validator new-start)
+      ?.  &((validator new-start) (check-within-era new-start coeff type.era))
         ~
       `(move-moment-start m new-start)
     !!
@@ -296,6 +298,40 @@
     ?:  ?=([%infinite] era-type)
       &
     !!
+  ::  +months-containing: given two dates such that a > b,
+  ::  count the number of times interval months are added to b until
+  ::  it's geq a AND contains the specified day. If we add interval
+  ::  and the resulting month doesn't contain day, then it isn't
+  ::  counted.
+  ::
+  ::  FIXME is there a way to make this constant time?
+  ::  FIXME rename?
+  ++  months-containing
+    |=  [a=@da b=@da day=@ud interval=@ud]
+    ^-  @ud
+    ?>  (gth a b)
+    ?:  (lte day 28)
+      (get-coeff (months-between a b) 0 interval)
+    =/  d1=date
+        =/  d=date  (yore a)
+        d(d.t 1, h.t 0, m.t 0, s.t 0, f.t ~)
+    =/  d2=date
+        =/  d=date  (yore b)
+        d(d.t 1, h.t 0, m.t 0, s.t 0, f.t ~)
+    =|  acc=@ud
+    ::  increment d2 until it's geq d1, counting how many intervals
+    ::  were needed
+    |-
+    ::  check if years equal and month geq OR year greater
+    ?:  |((gth y.d2 y.d1) &(=(y.d2 y.d1) (gte m.d2 m.d1)))
+      acc
+    =/  [year-delta=@ud new-month=@ud]  (dvr (add interval m.d2) 12)
+    =/  new-year=@ud  (add y.d2 year-delta)
+    =/  new-acc=@ud
+        ?:  (gte (days-in-month new-month new-year) day)
+          +(acc)
+        acc
+    $(acc new-acc, d2 d2(m new-month, y new-year))
   ::  +months-between: given two dates such that a > b,
   ::  get the number of months between them
   ::
