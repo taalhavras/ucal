@@ -84,7 +84,7 @@
   |=  [target=weekday m=@ud y=@ud instance=weekday-instance]
   ^-  @da
   =|  d=date
-  =/  d=date  d(y y, m m, d 1)
+  =/  d=date  d(y y, m m, d.t 1)
   =/  da=@da  (year d)
   =/  start=weekday  (get-weekday da)
   ::  number of days to advance start of month by to get
@@ -163,17 +163,17 @@
 ::  +moment-to-range: gets concrete @da bounds for a moment
 ::
 ++  moment-to-range
-  |=  =moment
+  |=  m=moment
   ^-  [@da @da]
-  ?:  ?=([%days *] moment.event)
-    :-  start.moment.event
-    (add (mul ~d1 n.moment.event) start.moment.event)
-  ?:  ?=([%block *] moment.event)
-    :-  anchor.moment.event
-    (add anchor.moment.event span.moment.event)
-  ?:  ?=([%period *] moment.event)
-    :-  start.moment.event
-    end.moment.event
+  ?:  ?=([%days *] m)
+    :-  start.m
+    (add (mul ~d1 n.m) start.m)
+  ?:  ?=([%block *] m)
+    :-  anchor.m
+    (add anchor.m span.m)
+  ?:  ?=([%period *] m)
+    :-  start.m
+    end.m
   !!
 ::  +move-moment-start: create a new moment with the same duration as the
 ::  input but with the new start date.
@@ -191,15 +191,16 @@
   !!
 ::  +next-weekday: given the current weekday, produces the next weekday in days
 ::  that's after it as well as the number of days away it is.
+::
 ++  next-weekday
   |=  [cur=weekday days=(set weekday)]
   ^-  [weekday @ud]
   ?>  (~(has in days) cur)
-  =/  cur-idx=@ud  (~(get by idx-by-weekday) cur)
+  =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
   =/  [next-weekday=weekday next-idx=@ud]
       |-
-      =/  n=@ud  (mod (inc cur-idx) 7)
-      =/  w=weekday  (~(get by weekdays-by-idx) n)
+      =/  n=@ud  (mod +(cur-idx) 7)
+      =/  w=weekday  (~(got by weekdays-by-idx) n)
       ?:  (~(has in days) w)
         [w n]
       $(cur-idx n)
@@ -223,7 +224,7 @@
   ?:  (gte m-start end)
     ~
   ?:  (gte m-start start)
-    `m
+    `[m 0]
   ?:  ?=([%daily] rrule.era)
     =/  increment=@dr  (mul ~d1 interval.era)
     =/  coeff=@ud  (get-coeff start m-start increment)
@@ -279,7 +280,7 @@
       =|  i=@ud
       |-
       =/  [year-delta=@ud month-delta=@ud]  (dvr (add month-delta i) 12)
-      =/  new-month=@ud  (add d.m-start-date month-delta)
+      =/  new-month=@ud  (add m.m-start-date month-delta)
       =/  new-year=@ud  (add y.m-start-date year-delta)
       ?:  (lte d.t.m-start-date (days-in-month new-month new-year))
         =/  new-start=@da  (year m-start-date(m new-month, y new-year))
@@ -298,7 +299,7 @@
       =/  cur=weekday  (get-weekday m-start)
       =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
       =/  [year-delta=@ud month-delta=@ud]  (dvr month-delta 12)
-      =/  new-month=@ud  (add d.m-start-date month-delta)
+      =/  new-month=@ud  (add m.m-start-date month-delta)
       =/  new-year=@ud  (add y.m-start-date year-delta)
       =/  new-start=@da
           (nth-weekday cur new-month new-year instance.form.rrule.era)
@@ -426,7 +427,7 @@
         =/  cur=weekday  (get-weekday start)
         =/  [next=weekday d=@ud]  (next-weekday cur days.rrule)
         =/  [cur-idx=@ud next-idx=@ud]
-            [(~(get by idx-by-weekdays) cur) (~(get by idx-by-weekdays) next)]
+            [(~(got by idx-by-weekday) cur) (~(got by idx-by-weekday) next)]
         ::  check to see if we've advanced by a week. if so, we
         ::  also want to account for this shift (using interval)
         ?:  (lte next-idx cur-idx)
@@ -435,13 +436,13 @@
       ?:  ?=([%monthly *] rrule)
         =/  d=date  (advance-months (yore start) interval)
         ?-  form.rrule
-            %on
+            [%on]
           |-
           ?:  (lte d.t.d (days-in-month m.d y.d))
             (year d)
           $(d (advance-months d interval))
         ::
-            %weekday
+            [%weekday *]
           (nth-weekday (get-weekday start) m.d y.d instance.form.rrule)
         ==
       ?:  ?=([%yearly] rrule)
@@ -459,11 +460,11 @@
   ?~  successor
     ~
   =/  cur=moment  -:u.successor
-  =/  count=@ud  +:u.succssor
+  =/  count=@ud  +:u.successor
   =/  acc=(list moment)  ~[cur]
   |-
   =/  next=moment  (advance-moment cur interval.era rrule.era)
-  =/  [n-start=@da n-end=@da]
+  =/  [n-start=@da n-end=@da]  (moment-to-range next)
   ?:  &((check-within-era n-start count type.era) (lth n-start end))
     $(acc [next acc], cur next, count +(count))
   acc
