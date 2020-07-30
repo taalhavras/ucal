@@ -78,6 +78,58 @@
   ?:  (yelp y)
     moy:yo
   moh:yo
+::  +nth-weekday: gets nth weekday in target month
+::
+++  nth-weekday
+  |=  [target=weekday m=@ud y=@ud instance=weekday-instance]
+  ^-  @da
+  =|  d=date
+  =/  d=date  d(y y, m m, d 1)
+  =/  da=@da  (year d)
+  =/  start=weekday  (get-weekday da)
+  ::  number of days to advance start of month by to get
+  ::  to first instance of target
+  =/  day-diff=@dr
+      %+  mul
+        ~d1
+      =/  start-idx=@ud  (~(got by idx-by-weekday) start)
+      =/  target-idx=@ud  (~(got by idx-by-weekday) target)
+      ?:  (gte target-idx start-idx)
+        (sub target-idx start-idx)
+      (sub (add 7 target-idx) start-idx)
+  =/  base=@da  (add da day-diff)
+  ?-  instance
+      %first
+    base
+  ::
+      %second
+    (add base ~d7)
+  ::
+      %third
+    (add base ~d14)
+  ::
+      %fourth
+    (add base ~d21)
+  ::
+      %last
+    =/  fourth=@da  (add base ~d21)
+    ::  now check if a fifth fits within
+    ::  the bounds of this month
+    =/  f-date=date  (yore fourth)
+    ::  if adding a week onto fourth fits in the month, we have five
+    ::  of this weekday in the month and should produce the fifth.
+    ?:  (lte (add d.t.f-date 7) (days-in-month m.f-date y.f-date))
+      (add fourth ~d7)
+    fourth
+  ==
+::  +advance-months: advance a given date by n months. doesn't validate
+::  whether or not the day is in the given month.
+::
+++  advance-months
+  |=  [d=date n=@ud]
+  ^-  date
+  =/  [year-delta=@ud new-month=@ud]  (dvr n 12)
+  d(m new-month, y (add y.d year-delta))
 ::  +ranges-overlap: checks if [a, b) and [c, d) overlap.
 ::
 ++  ranges-overlap
@@ -228,44 +280,9 @@
       =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
       =/  [year-delta=@ud month-delta=@ud]  (dvr month-delta 12)
       =/  new-month=@ud  (add d.m-start-date month-delta)
-      =/  new-year=@ud  (add y.m-start-date year-delts)
-      =/  new-date=date  m-start-date(m new-month, year new-year, d.t 1)
-      =/  base-da=@da
-          =/  b=@da  (year new-date)
-          =/  b-day=weekday  (get-weekday b)
-          =/  b-idx=@ud  (~(got by idx-by-weekday) b-day)
-          %+  add
-            b
-          %+  mul
-            ~d1
-          ?:  (gte cur-idx b-idx)
-            (sub cur-idx b-idx)
-          (sub (add cur-idx 7) b-idx)
+      =/  new-year=@ud  (add y.m-start-date year-delta)
       =/  new-start=@da
-          ?-  instance.form.rrule.era
-              %first
-            base-da
-          ::
-              %second
-            (add base-da ~d7)
-          ::
-              %third
-            (add base-da ~d14)
-          ::
-              %fourth
-            (add base-da ~d21)
-          ::
-              %last
-            =/  fourth=@da  (add base-da ~d21)
-            ::  now check if a fifth fits within
-            ::  the bounds of this month
-            =/  f-date=date  (yore fourth)
-            ::  if adding a week onto fourth fits in the month, we have five
-            ::  of this weekday in the month and should produce the fifth.
-            ?:  (lte (add d.t.f-date 7) (days-in-month m.f-date y.f-date))
-              (add fourth ~d7)
-            fourth
-          ==
+          (nth-weekday cur new-month new-year instance.form.rrule.era)
       ?>  =(cur (get-weekday new-start))
       ?.  &((validator new-start) (check-within-era new-start coeff type.era))
         ~
@@ -415,24 +432,16 @@
           ;:(add start d (mul ~d7 (dec interval)))
         (add start d)
       ?:  ?=([%monthly *] rrule)
+        =/  d=date  (advance-months (yore start) interval)
         ?-  form.rrule
             %on
-          =/  d=date  (yore start)
-          =/  day=@ud  d.t.d
-          ::  this is done to avoid overflow issues when
-          ::  incrementing the month below. i.e. if we went from
-          ::  jan 31st to "feb 31st", we'd actually have march 3rd
-          ::  which would mess up future calculations when adding
-          ::  the interval to the month.
-          =/  d=date  d(t.d 1)
           |-
-          =/  new-d=date  (yore (year d(m (add m.d interval))))
-          =/  new-month-days=@ud  (days-in-month m.new-d y.new-d)
-          ?:  (lte day new-month-days)
-            (year new-d(d.t day))
-          $(d new-d)
-          ::
-            %weekday  !!
+          ?:  (lte d.t.d (days-in-month m.d y.d))
+            (year d)
+          $(d (advance-months d interval))
+        ::
+            %weekday
+          (nth-weekday (get-weekday start) m.d y.d instance.form.rrule)
         ==
       ?:  ?=([%yearly] rrule)
         ::  this handles leap year cases more cleanly than

@@ -64,13 +64,16 @@
 ::  An era is our equivalent of a recurrence rule. Start and end define when the
 ::  recurrence starts and when it ends, if at all.
 ::
+::  $weekday-instance: instances of a weekday possible in a month
+::
++$  weekday-instance  ?(%first %second %third %fourth %last)
 ::  $monthly: data needed for monthly recurrences.
 ::  either on a specific date (i.e. 27th) or on the nth weekday of a month
 ::
 +$  monthly
   $%
     [%on]
-    [%weekday instance=?(%first %second %third %fourth %last)]
+    [%weekday instance=weekday-instance]
   ==
 ::
 +$  rrule
