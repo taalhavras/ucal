@@ -5,9 +5,13 @@
 ::  Testing arms
 ::
 |%
+::  TODO how to handle constants? declare at top of testing arms?
+::  have as separate arms? what makes the most sense?
+::
 ++  test-hora-daily-recurrence
   =/  daily=rrule  [%daily ~]
   =/  until=era-type  [%until ~2020.5.1]
+  =/  s1=@da  ~2030.4.9..04.30.00
   ;:  weld
     %+  expect-eq
       !>  (advance-moment `moment`[%days ~2019.1.1 1] 1 daily)
@@ -15,17 +19,8 @@
     %+  expect-eq
       !>  (advance-moment `moment`[%block ~2019.3.24 ~h4] 10 daily)
       !>  `moment`[%block ~2019.4.3 ~h4]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%period s1 (add s1 ~m30)] 3 daily)
+      !>  `moment`[%period (add s1 ~d3) ;:(add s1 ~d3 ~m30)]
   ==
-::  ::
-::  ++  test-hora-fake
-::    =/  a=@  100
-::    ~&  %in-test-test
-::    ;:  weld
-::      %+  expect-eq
-::        !>  a
-::        !>  100
-::      %+  expect-eq
-::        !>  a
-::        !>  99
-::    ==
 --
