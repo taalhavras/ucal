@@ -77,7 +77,10 @@
   ==
 ::
 +$  rrule
-  ::  TODO model the actual recurrences
+  ::  TODO for some reason, we needed the default to not be
+  ::  [%daily] or [%yearly] for the code to run don't know why...
+  $~
+    [%weekly ~]
   $%  [%daily]
       ::  FIXME problem is these must all be timezone aware, so events
       ::  must track I guess. actually, maybe we can just assume all
