@@ -6,7 +6,7 @@
 ::
 |%
 ++  test-hora-daily-recurrence
-  =/  daily=rrule  [%daily]
+  =/  daily=rrule  [%daily ~]
   =/  until=era-type  [%until ~2020.5.1]
   ;:  weld
     %+  expect-eq

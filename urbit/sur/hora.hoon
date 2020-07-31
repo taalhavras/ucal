@@ -72,16 +72,12 @@
 ::
 +$  monthly
   $%
-    [%on]
+    [%on ~]
     [%weekday instance=weekday-instance]
   ==
 ::
 +$  rrule
-  ::  TODO for some reason, we needed the default to not be
-  ::  [%daily] or [%yearly] for the code to run don't know why...
-  $~
-    [%weekly ~]
-  $%  [%daily]
+  $%  [%daily ~]
       ::  FIXME problem is these must all be timezone aware, so events
       ::  must track I guess. actually, maybe we can just assume all
       ::  times are local and do offsets at the top level calendar.
@@ -102,13 +98,13 @@
       ::  yearly on the specified date - unclear how to handle leap cases but
       ::  maybe we just add ~d365 and then add one more if we're leap year? or
       ::  actually its add one more when we move past a leap day.
-      [%yearly]
+      [%yearly ~]
   ==
 ::
 +$  era-type
   $%  [%until end=@da]
       [%instances num=@ud]
-      [%infinite]
+      [%infinite ~]
   ==
 ::
 +$  era

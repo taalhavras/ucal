@@ -137,7 +137,7 @@
     ::  coeff incremented since the original moment is
     ::  an instance at coeff 0.
     (lte +(coeff) num.era-type)
-  ?:  ?=([%infinite] era-type)
+  ?:  ?=([%infinite *] era-type)
     &
   !!
 ::  +advance-months: advance a given date by n months. doesn't validate
@@ -225,7 +225,7 @@
     ~
   ?:  (gte m-start start)
     `[m 0]
-  ?:  ?=([%daily] rrule.era)
+  ?:  ?=([%daily *] rrule.era)
     =/  increment=@dr  (mul ~d1 interval.era)
     =/  coeff=@ud  (get-coeff start m-start increment)
     =/  new-start=@da  (add m-start (mul coeff increment))
@@ -276,7 +276,7 @@
     =/  coeff=@ud  (get-coeff month-diff 0 interval.era)
     =/  month-delta=@ud  (mul coeff interval.era)
     =/  m-start-date=date  (yore m-start)
-    ?:  ?=([%on] form.rrule.era)
+    ?:  ?=([%on *] form.rrule.era)
       =|  i=@ud
       |-
       =/  [year-delta=@ud month-delta=@ud]  (dvr (add month-delta i) 12)
@@ -308,7 +308,7 @@
         ~
       `[(move-moment-start m new-start) coeff]
     !!
-  ?:  ?=([%yearly] rrule.era)
+  ?:  ?=([%yearly *] rrule.era)
     ::  TODO as implemented, yearly recurring events on feb 29th get
     ::  moved to march 1st - do we want to support different behavior?
     =/  start-date=date  (yore start)
@@ -421,7 +421,7 @@
   ::  get new range, then case m to figure out what flavor
   ::  of moment we should produce.
   =/  new-start=@da
-      ?:  ?=([%daily] rrule)
+      ?:  ?=([%daily *] rrule)
         (add start (mul ~d1 interval))
       ?:  ?=([%weekly *] rrule)
         =/  cur=weekday  (get-weekday start)
@@ -436,7 +436,7 @@
       ?:  ?=([%monthly *] rrule)
         =/  d=date  (advance-months (yore start) interval)
         ?-  form.rrule
-            [%on]
+            [%on *]
           |-
           ?:  (lte d.t.d (days-in-month m.d y.d))
             (year d)
@@ -445,7 +445,7 @@
             [%weekday *]
           (nth-weekday (get-weekday start) m.d y.d instance.form.rrule)
         ==
-      ?:  ?=([%yearly] rrule)
+      ?:  ?=([%yearly *] rrule)
         ::  this handles leap year cases more cleanly than
         ::  just adding ~d365 times interval.
         =/  d=date  (yore start)
