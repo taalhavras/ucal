@@ -108,7 +108,7 @@
         `era`[`era-type`[%infinite ~] 1 daily]
       ==
       !>  `(list moment)`~[[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]]
-    ::  TODO hit end of interval
+    ::  hit end of interval
     %+  expect-eq
     !>
     %-  to-set
@@ -125,8 +125,57 @@
       [%block ~2019.3.5..06.15.00 ~h1]
       [%block ~2019.3.7..06.15.00 ~h1]
     ==
-    ::  TODO hit end of era (both)
-    ::  TODO case where first event overlaps but doesn't start in range
+    ::  hit end of era (instances)
+    %+  expect-eq
+    !>
+    %-  to-set
+    %:  starting-in-range
+      ~2018.4.17
+      ~2019.4.17
+      `moment`[%days ~2018.4.19 1]
+      `era`[`era-type`[%instances 4] 2 daily]
+    ==
+    !>
+    %-  to-set
+    :~
+      [%days ~2018.4.19 1]
+      [%days ~2018.4.21 1]
+      [%days ~2018.4.23 1]
+      [%days ~2018.4.25 1]
+    ==
+    ::  hit end of era (time)
+    %+  expect-eq
+    !>
+    %-  to-set
+    %:  starting-in-range
+      ~2018.4.17
+      ~2019.4.17
+      `moment`[%days ~2018.4.19 1]
+      `era`[[%until ~2018.4.23] 2 daily]
+    ==
+    !>
+    %-  to-set
+    :~
+      [%days ~2018.4.19 1]
+      [%days ~2018.4.21 1]
+    ==
+    ::  case where first event overlaps but doesn't start in range
+    %+  expect-eq
+    !>
+    %-  to-set
+    %:  starting-in-range
+      ~2016.11.22
+      ~2017.7.12
+      `moment`[%days ~2016.11.21 2]
+      `era`[[%instances 4] 7 daily]
+    ==
+    !>
+    %-  to-set
+    :~
+      [%days ~2016.11.28 2]
+      [%days ~2016.12.5 2]
+      [%days ~2016.12.12 2]
+    ==
   ==
 ::
 ++  test-hora-weekly-recurrence  !!

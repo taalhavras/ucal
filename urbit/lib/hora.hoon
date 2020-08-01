@@ -465,8 +465,9 @@
   |-
   =/  next=moment  (advance-moment cur interval.era rrule.era)
   =/  [n-start=@da n-end=@da]  (moment-to-range next)
-  ?:  &((check-within-era n-start count type.era) (lth n-start end))
-    $(acc [next acc], cur next, count +(count))
+  =/  n-count=@ud  +(count)
+  ?:  &((check-within-era n-start n-count type.era) (lth n-start end))
+    $(acc [next acc], cur next, count n-count)
   acc
 ::
 ::  TODO for this and starting-in-range do we want to produce moments in
