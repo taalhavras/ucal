@@ -8,11 +8,18 @@
 ::  TODO how to handle constants? declare at top of testing arms?
 ::  have as separate arms? what makes the most sense?
 ::
+::  failure val for successor-in-range, used for expect-eq
+++  successor-fail  !>  *(unit [moment @ud])
+::
+++  to-set
+  |=  l=(list moment)
+  ^-  (set moment)
+  (~(gas in *(set moment)) l)
+::
 ++  test-hora-daily-recurrence
   =/  daily=rrule  [%daily ~]
   =/  until=era-type  [%until ~2020.5.1]
   =/  s1=@da  ~2030.4.9..04.30.00
-  =/  successor-fail  !>  *(unit [moment @ud])
   ;:  weld
     ::  advance-moment tests
     %+  expect-eq
@@ -67,8 +74,18 @@
         `era`[`era-type`[%instances 4] 5 daily]
       ==
       !>  [`moment`[%block ~2020.2.3..20.00.00 ~h1] 3]
-    ::
+    ::  no events generate within the target range
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.11.3
+        ~2020.11.10
+        `moment`[%days ~2020.9.3 3]
+        `era`[`era-type`[%infinite ~] 100 daily]
+      ==
+      successor-fail
     ::  general cases
+    ::  TODO add more
     %+  expect-eq
       !>
       %-  need
@@ -79,6 +96,37 @@
         `era`[`era-type`[%until ~2020.4.9] 10 daily]
       ==
       !>  [`moment`[%days ~2020.1.2 1] 3]
+    ::  starting-in-range tests
+    ::
+    ::  first instance is the only thing in range
+    %+  expect-eq
+      !>
+      %:  starting-in-range
+        ~2019.3.3..06.00.00
+        ~2019.3.3..07.00.00
+        `moment`[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]
+        `era`[`era-type`[%infinite ~] 1 daily]
+      ==
+      !>  `(list moment)`~[[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]]
+    ::  TODO hit end of interval
+    %+  expect-eq
+    !>
+    %-  to-set
+    %:  starting-in-range
+      ~2019.3.3..06.00.00
+      ~2019.3.8..07.00.00
+      `moment`[%block ~2019.3.3..06.15.00 ~h1]
+      `era`[`era-type`[%infinite ~] 2 daily]
+    ==
+    !>
+    %-  to-set
+    :~
+      [%block ~2019.3.3..06.15.00 ~h1]
+      [%block ~2019.3.5..06.15.00 ~h1]
+      [%block ~2019.3.7..06.15.00 ~h1]
+    ==
+    ::  TODO hit end of era (both)
+    ::  TODO case where first event overlaps but doesn't start in range
   ==
 ::
 ++  test-hora-weekly-recurrence  !!

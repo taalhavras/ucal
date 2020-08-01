@@ -469,6 +469,9 @@
     $(acc [next acc], cur next, count +(count))
   acc
 ::
+::  TODO for this and starting-in-range do we want to produce moments in
+::  a particular order? currently it's oldest-first but we could reverse?
+::  leave to the caller? produce a set?
 ++  overlapping-in-range
   |=  [start=@da end=@da m=moment =era]
   ^-  (list moment)
