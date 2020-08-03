@@ -10,6 +10,8 @@
 ::
 ::  failure val for successor-in-range, used for expect-eq
 ++  successor-fail  !>  *(unit [moment @ud])
+::  constant for daily rules
+++  daily  `rrule`[%daily ~]
 ::
 ++  to-set
   |=  l=(list moment)
@@ -17,7 +19,71 @@
   (~(gas in *(set moment)) l)
 ::
 ++  test-hora-daily-recurrence
-  =/  daily=rrule  [%daily ~]
+  =>
+  |%
+  ::  list of params and results that starting-in-range and overlapping-in-range
+  ::  should produce the same results for.
+  ++  starting-no-overlap
+    ^-  (list [[@da @da moment era] (set moment)])
+    :~
+      ::  first instance is the only thing in range
+      :-
+        :*
+          ~2019.3.3..06.00.00
+          ~2019.3.3..07.00.00
+          `moment`[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]
+          `era`[`era-type`[%infinite ~] 1 daily]
+        ==
+      (~(put in *(set moment)) [%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00])
+      ::  hit end of interval
+      :-
+        :*
+          ~2019.3.3..06.00.00
+          ~2019.3.8..07.00.00
+          `moment`[%block ~2019.3.3..06.15.00 ~h1]
+          `era`[`era-type`[%infinite ~] 2 daily]
+        ==
+      %-  to-set
+      :~
+        [%block ~2019.3.3..06.15.00 ~h1]
+        [%block ~2019.3.5..06.15.00 ~h1]
+        [%block ~2019.3.7..06.15.00 ~h1]
+      ==
+      ::  hit end of era (instances)
+      :-
+        :*
+          ~2018.4.17
+          ~2019.4.17
+          `moment`[%days ~2018.4.19 1]
+          `era`[`era-type`[%instances 4] 2 daily]
+        ==
+      %-  to-set
+      :~
+        [%days ~2018.4.19 1]
+        [%days ~2018.4.21 1]
+        [%days ~2018.4.23 1]
+        [%days ~2018.4.25 1]
+      ==
+      ::  hit end of era (time)
+      :-
+        :*
+          ~2018.4.17
+          ~2019.4.17
+          `moment`[%days ~2018.4.19 1]
+          `era`[[%until ~2018.4.23] 2 daily]
+        ==
+      %-  to-set
+      :~
+        [%days ~2018.4.19 1]
+        [%days ~2018.4.21 1]
+      ==
+    ==
+  ::  list of parms and results that {starting, overlapping}-in-range produce different
+  ::  results for.
+  ++  starting-overlap
+    ^-  (list [[@da @da moment era] (set moment)])
+    !!
+  --
   =/  until=era-type  [%until ~2020.5.1]
   =/  s1=@da  ~2030.4.9..04.30.00
   ;:  weld
@@ -98,67 +164,14 @@
       !>  [`moment`[%days ~2020.1.2 1] 3]
     ::  starting-in-range tests
     ::
-    ::  first instance is the only thing in range
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=(set moment)]
     %+  expect-eq
-      !>
-      %:  starting-in-range
-        ~2019.3.3..06.00.00
-        ~2019.3.3..07.00.00
-        `moment`[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]
-        `era`[`era-type`[%infinite ~] 1 daily]
-      ==
-      !>  `(list moment)`~[[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]]
-    ::  hit end of interval
-    %+  expect-eq
-    !>
-    %-  to-set
-    %:  starting-in-range
-      ~2019.3.3..06.00.00
-      ~2019.3.8..07.00.00
-      `moment`[%block ~2019.3.3..06.15.00 ~h1]
-      `era`[`era-type`[%infinite ~] 2 daily]
-    ==
-    !>
-    %-  to-set
-    :~
-      [%block ~2019.3.3..06.15.00 ~h1]
-      [%block ~2019.3.5..06.15.00 ~h1]
-      [%block ~2019.3.7..06.15.00 ~h1]
-    ==
-    ::  hit end of era (instances)
-    %+  expect-eq
-    !>
-    %-  to-set
-    %:  starting-in-range
-      ~2018.4.17
-      ~2019.4.17
-      `moment`[%days ~2018.4.19 1]
-      `era`[`era-type`[%instances 4] 2 daily]
-    ==
-    !>
-    %-  to-set
-    :~
-      [%days ~2018.4.19 1]
-      [%days ~2018.4.21 1]
-      [%days ~2018.4.23 1]
-      [%days ~2018.4.25 1]
-    ==
-    ::  hit end of era (time)
-    %+  expect-eq
-    !>
-    %-  to-set
-    %:  starting-in-range
-      ~2018.4.17
-      ~2019.4.17
-      `moment`[%days ~2018.4.19 1]
-      `era`[[%until ~2018.4.23] 2 daily]
-    ==
-    !>
-    %-  to-set
-    :~
-      [%days ~2018.4.19 1]
-      [%days ~2018.4.21 1]
-    ==
+      !>  (to-set (starting-in-range start end m era))
+      !>  res
     ::  case where first event overlaps but doesn't start in range
     %+  expect-eq
     !>
@@ -176,6 +189,15 @@
       [%days ~2016.12.5 2]
       [%days ~2016.12.12 2]
     ==
+    ::  TODO repeat earlier tests of starting-in-range with overlapping-in-range
+    ^-  tang
+    %-  zing
+      %+  turn
+    starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=(set moment)]
+    %+  expect-eq
+      !>  (to-set (overlapping-in-range start end m era))
+      !>  res
   ==
 ::
 ++  test-hora-weekly-recurrence  !!
