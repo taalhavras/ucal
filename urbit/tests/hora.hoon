@@ -301,11 +301,55 @@
     %+  expect-eq
       !>  (advance-moment `moment`[%days ~2020.9.6 1] 2 all-days)
       !>  `moment`[%days ~2020.9.7 1]
+    ::  successor in range tests
+    ::
+    ::  era ends before target range
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.8.1
+        ~2020.8.31
+        `moment`[%days ~2020.7.23 1]
+        `era`[[%until ~2020.7.30] 1 tth]
+      ==
+      successor-fail
+    ::  moment starts after target range
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.8.1
+        ~2020.8.31
+        `moment`[%days ~2020.9.1 1]
+        `era`[[%infinite ~] 1 tth]
+      ==
+      successor-fail
+    ::  too many applications of rule
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.8.18
+        ~2020.8.31
+        `moment`[%days ~2020.8.3 1]
+        `era`[[%instances 5] 1 mwf]
+      ==
+      successor-fail
+    ::  no events in target range
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.8.4
+        ~2020.8.5
+        `moment`[%days ~2020.8.3 1]
+        `era`[[%infinite ~] 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])]]
+      ==
+      successor-fail
+    ::  TODO {starting, overlapping}-in-range tests
   ==
 ::
 ++  test-hora-monthly-recurrence  !!
 ::
 ++  test-hora-yearly-recurrence  !!
 ::
+::  TODO do we want this separately? I think so...
 ++  test-hora-leap-years  !!
 --
