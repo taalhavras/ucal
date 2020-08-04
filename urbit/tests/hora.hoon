@@ -13,11 +13,6 @@
 ::  constant for daily rules
 ++  daily  `rrule`[%daily ~]
 ::
-++  to-set
-  |=  l=(list moment)
-  ^-  (set moment)
-  (~(gas in *(set moment)) l)
-::
 ++  test-hora-daily-recurrence
   =>
   |%
@@ -45,7 +40,8 @@
           `era`[`era-type`[%infinite ~] 2 daily]
         ==
       !>
-      %-  to-set
+      %-  silt
+      ^-  (list moment)
       :~
         [%block ~2019.3.3..06.15.00 ~h1]
         [%block ~2019.3.5..06.15.00 ~h1]
@@ -60,7 +56,8 @@
           `era`[`era-type`[%instances 4] 2 daily]
         ==
       !>
-      %-  to-set
+      %-  silt
+      ^-  (list moment)
       :~
         [%days ~2018.4.19 1]
         [%days ~2018.4.21 1]
@@ -76,7 +73,8 @@
           `era`[[%until ~2018.4.23] 2 daily]
         ==
       !>
-      %-  to-set
+      %-  silt
+      ^-  (list moment)
       :~
         [%days ~2018.4.19 1]
         [%days ~2018.4.21 1]
@@ -169,12 +167,13 @@
       starting-no-overlap
     |=  [[start=@da end=@da m=moment =era] res=vase]
     %+  expect-eq
-      !>  (to-set (starting-in-range start end m era))
+      !>  (silt (starting-in-range start end m era))
       res
     ::  case where first event overlaps but doesn't start in range
     %+  expect-eq
     !>
-    %-  to-set
+    %-  silt
+    ^-  (list moment)
     %:  starting-in-range
       ~2016.11.22
       ~2017.7.12
@@ -182,7 +181,8 @@
       `era`[[%instances 4] 7 daily]
     ==
     !>
-    %-  to-set
+    %-  silt
+    ^-  (list moment)
     :~
       [%days ~2016.11.28 2]
       [%days ~2016.12.5 2]
@@ -195,12 +195,13 @@
     starting-no-overlap
     |=  [[start=@da end=@da m=moment =era] res=vase]
     %+  expect-eq
-      !>  (to-set (overlapping-in-range start end m era))
+      !>  (silt (overlapping-in-range start end m era))
       res
     ::  first event overlaps, so we include it
     %+  expect-eq
     !>
-    %-  to-set
+    %-  silt
+    ^-  (list moment)
     %:  overlapping-in-range
       ~2016.11.22
       ~2017.7.12
@@ -208,7 +209,8 @@
       `era`[[%instances 4] 7 daily]
     ==
     !>
-    %-  to-set
+    %-  silt
+    ^-  (list moment)
     :~
       [%days ~2016.11.21 2]
       [%days ~2016.11.28 2]
@@ -220,13 +222,14 @@
 ++  test-hora-weekly-recurrence
   =>
   |%
-  ++  mwf  `rrule`[%weekly (~(gas in *(set weekday)) ~[%mon %wed %fri])]
-  ++  tth  `rrule`[%weekly (~(gas in *(set weekday)) ~[%tue %thu])]
-  ++  weekend  `rrule`[%weekly (~(gas in *(set weekday)) ~[%sat %sun])]
+  ++  mwf  `rrule`[%weekly (silt `(list weekday)`~[%mon %wed %fri])]
+  ++  tth  `rrule`[%weekly (silt `(list weekday)`~[%tue %thu])]
+  ++  weekend  `rrule`[%weekly (silt `(list weekday)`~[%sat %sun])]
   ++  all-days
     ^-  rrule
     :-  %weekly
-    %-  ~(gas in *(set weekday))
+    %-  silt
+    ^-  (list weekday)
     ~[%mon %tue %wed %thu %fri %sat %sun]
   --
   ;:  weld
@@ -343,6 +346,17 @@
         `era`[[%infinite ~] 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])]]
       ==
       successor-fail
+    ::  general cases
+    ::  TODO add more?
+    ::  %+  expect-eq
+    ::    !>
+    ::    %:  successor-in-range
+    ::    ==
+    ::    !>
+    ::    %-  silt
+    ::    ^-  (list moment)
+    ::    :~
+    ::    ==
     ::  TODO {starting, overlapping}-in-range tests
   ==
 ::
