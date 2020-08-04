@@ -217,7 +217,19 @@
     ==
   ==
 ::
-++  test-hora-weekly-recurrence  !!
+++  test-hora-weekly-recurrence
+  =>
+  |%
+  ++  mwf  `(set weekday)`(~(gas in *(set weekday)) ~[%mon %wed %fri])
+  ++  tth  `(set weekday)`(~(gas in *(set weekday)) ~[%tue %thu])
+  ++  weekend  `(set weekday)`(~(gas in *(set weekday)) ~[%sat %sun])
+  --
+  ;:  weld
+    ::  advance moment tests
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.3 1] 1 `rrule`[%weekly mwf])
+      !>  `moment`[%days ~2020.8.5 1]
+  ==
 ::
 ++  test-hora-monthly-recurrence  !!
 ::

@@ -426,13 +426,14 @@
       ?:  ?=([%weekly *] rrule)
         =/  cur=weekday  (get-weekday start)
         =/  [next=weekday d=@ud]  (next-weekday cur days.rrule)
+        =/  diff=@dr  (mul d ~d1)
         =/  [cur-idx=@ud next-idx=@ud]
             [(~(got by idx-by-weekday) cur) (~(got by idx-by-weekday) next)]
         ::  check to see if we've advanced by a week. if so, we
         ::  also want to account for this shift (using interval)
         ?:  (lte next-idx cur-idx)
-          ;:(add start d (mul ~d7 (dec interval)))
-        (add start d)
+          ;:(add start diff (mul ~d7 (dec interval)))
+        (add start diff)
       ?:  ?=([%monthly *] rrule)
         =/  d=date  (advance-months (yore start) interval)
         ?-  form.rrule
