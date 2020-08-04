@@ -220,15 +220,87 @@
 ++  test-hora-weekly-recurrence
   =>
   |%
-  ++  mwf  `(set weekday)`(~(gas in *(set weekday)) ~[%mon %wed %fri])
-  ++  tth  `(set weekday)`(~(gas in *(set weekday)) ~[%tue %thu])
-  ++  weekend  `(set weekday)`(~(gas in *(set weekday)) ~[%sat %sun])
+  ++  mwf  `rrule`[%weekly (~(gas in *(set weekday)) ~[%mon %wed %fri])]
+  ++  tth  `rrule`[%weekly (~(gas in *(set weekday)) ~[%tue %thu])]
+  ++  weekend  `rrule`[%weekly (~(gas in *(set weekday)) ~[%sat %sun])]
+  ++  all-days
+    ^-  rrule
+    :-  %weekly
+    %-  ~(gas in *(set weekday))
+    ~[%mon %tue %wed %thu %fri %sat %sun]
   --
   ;:  weld
     ::  advance moment tests
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.3 1] 1 `rrule`[%weekly mwf])
+      !>  (advance-moment `moment`[%days ~2020.8.3 1] 1 mwf)
       !>  `moment`[%days ~2020.8.5 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.4 2] 1 tth)
+      !>  `moment`[%days ~2020.8.6 2]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.6 2] 1 tth)
+      !>  `moment`[%days ~2020.8.11 2]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.4 2] 2 tth)
+      !>  `moment`[%days ~2020.8.6 2]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.6 2] 2 tth)
+      !>  `moment`[%days ~2020.8.18 2]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%block ~2020.8.8..06.30.00 ~h2] 1 weekend)
+      !>  `moment`[%block ~2020.8.9..06.30.00 ~h2]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.30 1] 1 all-days)
+      !>  `moment`[%days ~2020.8.31 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.31 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.1 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.1 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.2 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.2 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.3 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.3 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.4 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.4 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.5 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.5 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.6 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.6 1] 1 all-days)
+      !>  `moment`[%days ~2020.9.7 1]
+    ::  two week intervals
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.30 1] 2 all-days)
+      !>  `moment`[%days ~2020.8.31 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.8.31 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.1 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.1 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.2 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.2 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.3 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.3 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.4 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.4 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.5 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.5 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.13 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.13 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.14 1]
+    %+  expect-eq
+      !>  (advance-moment `moment`[%days ~2020.9.6 1] 2 all-days)
+      !>  `moment`[%days ~2020.9.7 1]
   ==
 ::
 ++  test-hora-monthly-recurrence  !!
