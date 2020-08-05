@@ -384,13 +384,12 @@
     ::  check if years equal and month geq OR year greater
     ?:  |((gth y.d2 y.d1) &(=(y.d2 y.d1) (gte m.d2 m.d1)))
       acc
-    =/  [year-delta=@ud new-month=@ud]  (dvr (add interval m.d2) 12)
-    =/  new-year=@ud  (add y.d2 year-delta)
+    =/  new-date=date  (advance-months d2 interval)
     =/  new-acc=@ud
-        ?:  (gte (days-in-month new-month new-year) day)
+        ?:  (gte (days-in-month m.new-date y.new-date) day)
           +(acc)
         acc
-    $(acc new-acc, d2 d2(m new-month, y new-year))
+    $(acc new-acc, d2 new-date)
   ::  +months-between: given two dates such that a > b,
   ::  get the number of months between them
   ::
