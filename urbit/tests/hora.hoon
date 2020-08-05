@@ -234,6 +234,33 @@
   ++  starting-no-overlap
     ^-  (list [[@da @da moment era] vase])
     :~
+      ::  nothing in query range
+      :-
+        :*
+          ~2020.8.11
+          ~2020.8.14
+          `moment`[%days ~2020.8.8 1]
+          `era`[[%infinite ~] 1 weekend]
+        ==
+      !>  *(set moment)
+      ::  nothing in era (time)
+      :-
+        :*
+          ~2020.8.20
+          ~2020.8.31
+          `moment`[%days ~2020.8.5 1]
+          `era`[[%until ~2020.8.15] 1 mwf]
+        ==
+      !>  *(set moment)
+      ::  nothing in era (instances)
+      :-
+        :*
+          ~2020.8.24
+          ~2020.8.31
+          `moment`[%block ~2020.8.3..14.00.00 ~h2]
+          `era`[[%instances 8] 1 mwf]
+        ==
+      !>  *(set moment)
       ::  first instance is the only thing in range
       :-
         :*
@@ -460,6 +487,22 @@
     %+  expect-eq
       !>  (silt (overlapping-in-range start end m era))
       res
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.8.4..12.00.00
+        ~2020.8.8..18.00.00
+        `moment`[%block ~2020.8.4..10.00.00 ~h3]
+        `era`[[%infinite ~] 1 tth]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%block ~2020.8.4..10.00.00 ~h3]
+        [%block ~2020.8.6..10.00.00 ~h3]
+      ==
   ==
 ::
 ++  test-hora-monthly-recurrence  !!
@@ -468,4 +511,6 @@
 ::
 ::  TODO do we want this separately? I think so...
 ++  test-hora-leap-years  !!
+::  test queries on ranges that start/end at the same times as events
+++  test-event-boundaries  !!
 --
