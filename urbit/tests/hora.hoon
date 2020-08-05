@@ -231,6 +231,80 @@
     %-  silt
     ^-  (list weekday)
     ~[%mon %tue %wed %thu %fri %sat %sun]
+  ++  starting-no-overlap
+    ^-  (list [[@da @da moment era] vase])
+    :~
+      ::  first instance is the only thing in range
+      :-
+        :*
+          ~2020.8.4
+          ~2020.8.6
+          `moment`[%block ~2020.8.5..18.00.00 ~h1.m30]
+          `era`[[%infinite ~] 1 mwf]
+        ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) [%block ~2020.8.5..18.00.00 ~h1.m30])
+      ::  only one instance falls in the range
+      :-
+        :*
+          ~2020.8.4
+          ~2020.8.6
+          `moment`[%block ~2020.8.3..18.00.00 ~h1.m30]
+          `era`[[%infinite ~] 1 mwf]
+        ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) [%block ~2020.8.5..18.00.00 ~h1.m30])
+      ::  hit end of query range
+      :-
+        :*
+          ~2020.8.16
+          ~2020.8.22
+          `moment`[%days ~2020.8.3 1]
+          `era`[[%infinite ~] 1 mwf]
+        ==
+      !>  ^-  (set moment)
+      %-  silt
+      `(list moment)`~[[%days ~2020.8.17 1] [%days ~2020.8.19 1] [%days ~2020.8.21 1]]
+      ::  hit end of era (instances)
+      :-
+        :*
+          ~2020.8.1
+          ~2020.9.7
+          `moment`[%days ~2020.8.1 1]
+          `era`[[%instances 4] 1 [%weekly (~(put in *(set weekday)) %sat)]]
+        ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.8.1 1]
+        [%days ~2020.8.8 1]
+        [%days ~2020.8.15 1]
+        [%days ~2020.8.22 1]
+      ==
+      ::  hit end of era (time)
+      :-
+        :*
+          ~2020.8.1
+          ~2020.8.31
+          `moment`[%days ~2020.8.4 1]
+          `era`[[%until ~2020.8.13] 1 tth]
+        ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.8.4 1]
+        [%days ~2020.8.6 1]
+        [%days ~2020.8.11 1]
+      ==
+      ::  interval greater than 1
+      ::  :-
+      ::    :*
+      ::    ==
+      ::  !>  ^-  (set moment)
+      ::  !!
+    ==
   --
   ;:  weld
     ::  advance moment tests
@@ -348,16 +422,44 @@
       successor-fail
     ::  general cases
     ::  TODO add more?
-    ::  %+  expect-eq
-    ::    !>
-    ::    %:  successor-in-range
-    ::    ==
-    ::    !>
-    ::    %-  silt
-    ::    ^-  (list moment)
-    ::    :~
-    ::    ==
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2020.8.12
+        ~2020.8.26
+        `moment`[%block ~2020.8.13..12.00.00 ~h2]
+        `era`[[%infinite ~] 1 tth]
+      ==
+      !>  [`moment`[%block ~2020.8.13..12.00.00 ~h2] 0]
+    ::  last instance falls in range
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2020.8.21
+        ~2020.8.31
+        `moment`[%block ~2020.8.1..04.00.00 ~m30]
+        `era`[[%instances 7] 1 weekend]
+      ==
+      !>  [`moment`[%block ~2020.8.22..04.00.00 ~m30] 6]
     ::  TODO {starting, overlapping}-in-range tests
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=vase]
+    %+  expect-eq
+      !>  (silt (starting-in-range start end m era))
+      res
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=vase]
+    %+  expect-eq
+      !>  (silt (overlapping-in-range start end m era))
+      res
   ==
 ::
 ++  test-hora-monthly-recurrence  !!
