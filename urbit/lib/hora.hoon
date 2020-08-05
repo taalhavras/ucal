@@ -146,7 +146,11 @@
 ++  advance-months
   |=  [d=date n=@ud]
   ^-  date
-  =/  [year-delta=@ud new-month=@ud]  (dvr n 12)
+  ::  dates represent months 1-12, not 0-11
+  ::  so we must account for this offset
+  =/  [year-delta=@ud new-month=@ud]
+      =/  res=[@ud @ud]  (dvr (add (dec m.d) n) 12)
+      [-.res +(+.res)]
   d(m new-month, y (add y.d year-delta))
 ::  +ranges-overlap: checks if [a, b) and [c, d) overlap.
 ::
@@ -279,11 +283,9 @@
     ?:  ?=([%on *] form.rrule.era)
       =|  i=@ud
       |-
-      =/  [year-delta=@ud month-delta=@ud]  (dvr (add month-delta i) 12)
-      =/  new-month=@ud  (add m.m-start-date month-delta)
-      =/  new-year=@ud  (add y.m-start-date year-delta)
-      ?:  (lte d.t.m-start-date (days-in-month new-month new-year))
-        =/  new-start=@da  (year m-start-date(m new-month, y new-year))
+      =/  new-start-date=date  (advance-months m-start-date (add month-delta i))
+      =/  new-start=@da  (year new-start-date)
+      ?:  (lte d.t.m-start-date (days-in-month m.new-start-date y.new-start-date))
         =/  count=@ud
             (monthly-increments new-start m-start d.t.m-start-date interval.era)
         ?.  &((validator new-start) (check-within-era new-start count type.era))
@@ -298,9 +300,9 @@
       ::  get current weekday
       =/  cur=weekday  (get-weekday m-start)
       =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
-      =/  [year-delta=@ud month-delta=@ud]  (dvr month-delta 12)
-      =/  new-month=@ud  (add m.m-start-date month-delta)
-      =/  new-year=@ud  (add y.m-start-date year-delta)
+      =/  [new-month=@ud new-year=@ud]
+          =/  d=date  (advance-months m-start-date month-delta)
+          [m.d y.d]
       =/  new-start=@da
           (nth-weekday cur new-month new-year instance.form.rrule.era)
       ?>  =(cur (get-weekday new-start))

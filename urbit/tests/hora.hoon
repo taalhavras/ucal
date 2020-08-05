@@ -505,7 +505,67 @@
       ==
   ==
 ::
-++  test-hora-monthly-recurrence  !!
+++  test-hora-monthly-recurrence
+  =>
+  |%
+  ++  on  `monthly`[%on ~]
+  ++  starting-no-overlap
+    ^-  (list [[@da @da moment era] vase])
+    :~
+      ::  nothing in query range
+      :-
+        :*
+          ~2015.2.23
+          ~2015.4.26
+          `moment`[%days ~2016.3.25 3]
+          `era`[[%infinite ~] 1 [%monthly on]]
+        ==
+      !>  *(set moment)
+      ::  nothing in era (time)
+      :-
+        :*
+          ~2019.1.23
+          ~2020.2.4
+          `moment`[%days ~2017.5.14 1]
+          `era`[[%until ~2019.1.1] 1 [%monthly on]]
+        ==
+      !>  *(set moment)
+      ::  nothing in era (instances)
+      :-
+        :*
+          ~2020.9.4
+          ~2020.12.2
+          `moment`[%days ~2014.10.9 1]
+          `era`[[%instances 20] 1 [%monthly on]]
+        ==
+      !>  *(set moment)
+      ::  first instance is the only thing in range
+      ::  only one instance falls in the range
+      ::  hit end of query range
+      ::  hit end of era (instances)
+      ::  hit end of era (time)
+    ==
+  --
+  ;:  weld
+    ::  {starting, overlapping}-in-range tests
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=vase]
+    %+  expect-eq
+      !>  (silt (starting-in-range start end m era))
+      res
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=vase]
+      %+  expect-eq
+      !>  (silt (overlapping-in-range start end m era))
+      res
+
+  ==
 ::
 ++  test-hora-yearly-recurrence  !!
 ::
