@@ -140,15 +140,6 @@
   ?:  ?=([%infinite *] era-type)
     &
   !!
-::  +reduce-era-instances: lowers the number of instances in an era by n
-::  if it's based on instances.
-::
-++  reduce-era-instances
-  |=  [e=era-type n=@ud]
-  ^-  era-type
-  ?:  ?=([%instances *] e)
-    e(num (sub num.e n))
-  e
 ::  +advance-months: advance a given date by n months. doesn't validate
 ::  whether or not the day is in the given month.
 ::
@@ -289,10 +280,17 @@
     =/  coeff=@ud  (get-coeff month-diff 0 interval.era)
     =/  month-delta=@ud  (mul coeff interval.era)
     =/  m-start-date=date  (yore m-start)
+    =/  [adjusted-start-date=date adjust=@ud]
+        ::  in this case m-start is an OVERLAP with our range
+        ::  but doesn't start in it. we should bump by one interval
+        ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
+          ?>  =(month-delta 0)
+          [(advance-months m-start-date interval.era) 1]
+        [(advance-months m-start-date month-delta) 0]
     ?:  ?=([%on *] form.rrule.era)
       =|  i=@ud
       |-
-      =/  new-start-date=date  (advance-months m-start-date (add month-delta i))
+      =/  new-start-date=date  (advance-months adjusted-start-date i)
       =/  new-start=@da  (year new-start-date)
       ?:  (lte d.t.m-start-date (days-in-month m.new-start-date y.new-start-date))
         =/  count=@ud
@@ -309,15 +307,16 @@
       ::  get current weekday
       =/  cur=weekday  (get-weekday m-start)
       =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
-      =/  [new-month=@ud new-year=@ud]
-          =/  d=date  (advance-months m-start-date month-delta)
-          [m.d y.d]
+      =/  [new-month=@ud new-year=@ud]  [m.adjusted-start-date y.adjusted-start-date]
+          ::  =/  d=date  (advance-months m-start-date month-delta)
+          ::  [m.d y.d]
       =/  new-start=@da
           (nth-weekday cur new-month new-year instance.form.rrule.era)
       ?>  =(cur (get-weekday new-start))
-      ?.  &((validator new-start) (check-within-era new-start coeff type.era))
+      =/  adj-coeff=@ud  (add coeff adjust)
+      ?.  &((validator new-start) (check-within-era new-start adj-coeff type.era))
         ~
-      `[(move-moment-start m new-start) coeff]
+      `[(move-moment-start m new-start) adj-coeff]
     !!
   ?:  ?=([%yearly *] rrule.era)
     ::  TODO as implemented, yearly recurring events on feb 29th get
@@ -493,14 +492,8 @@
   ::  in this case, the moment overlaps with the range even though
   ::  it doesn't start in it.
   ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
-    =/  et=era-type  (reduce-era-instances type.era 1)
     :-  m
-    %:  starting-in-range
-      start
-      end
-      (advance-moment m interval.era rrule.era)
-      era(type et)
-    ==
+    (starting-in-range start end m era)
   (starting-in-range start end m era)
 ::  +events-in-range: given a recurring event and a range, produce a list of
 ::  all events starting OVERLAPPING WITH the range [start, end)

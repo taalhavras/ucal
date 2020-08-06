@@ -667,6 +667,86 @@
         [%days ~2020.6.16 3]
         [%days ~2020.7.21 3]
       ==
+    ::  overlapping hits end of era (instances)
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.3.20
+        ~2020.5.21
+        `moment`[%days ~2020.3.17 4]
+        [[%instances 2] 1 [%monthly on]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.3.17 4]
+        [%days ~2020.4.17 4]
+      ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.3.20
+        ~2020.5.21
+        `moment`[%days ~2020.3.17 4]
+        [[%instances 3] 1 [%monthly on]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.3.17 4]
+        [%days ~2020.4.17 4]
+        [%days ~2020.5.17 4]
+      ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.3.20
+        ~2020.5.21
+        `moment`[%days ~2020.3.17 4]
+        [[%instances 1] 1 [%monthly on]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.3.17 4]
+      ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.11.4
+        ~2021.3.3
+        `moment`[%days ~2020.11.1 4]
+        `era`[[%instances 1] 1 [%monthly %weekday %first]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.11.1 4]
+      ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.5.20
+        ~2020.8.3
+        `moment`[%days ~2020.5.19 3]
+        `era`[[%instances 2] 1 [%monthly %weekday %third]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.5.19 3]
+        [%days ~2020.6.16 3]
+      ==
   ==
 ::
 ++  test-hora-yearly-recurrence  !!
