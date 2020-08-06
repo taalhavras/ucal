@@ -358,7 +358,7 @@
           +(acc)
         acc
     $(acc new-acc, indices-between t.indices-between)
-  ::  +monthly-increments: given two dates such that a > b,
+  ::  +monthly-increments: given two dates such that a >= b,
   ::  count the number of times interval months are added to b until
   ::  it's geq a AND contains the specified day. If we add interval
   ::  and the resulting month doesn't contain day, then it isn't
@@ -368,7 +368,7 @@
   ++  monthly-increments
     |=  [a=@da b=@da day=@ud interval=@ud]
     ^-  @ud
-    ?>  (gth a b)
+    ?>  (gte a b)
     ?:  (lte day 28)
       (get-coeff (months-between a b) 0 interval)
     =/  d1=date
@@ -390,22 +390,22 @@
           +(acc)
         acc
     $(acc new-acc, d2 new-date)
-  ::  +months-between: given two dates such that a > b,
+  ::  +months-between: given two dates such that a >= b,
   ::  get the number of months between them
   ::
   ++  months-between
     |=  [a=@da b=@da]
     ^-  @ud
-    ?>  (gth a b)
+    ?>  (gte a b)
     =/  d1=date  (yore a)
     =/  d2=date  (yore b)
     (sub (add m.d1 (mul (sub y.d1 y.d2) 12)) m.d2)
-  ::  +get-coeff: given a > b, finds the lowest k such that b + kc >= a
+  ::  +get-coeff: given a >= b, finds the lowest k such that b + kc >= a
   ::
   ::  TODO should this be wet or dry?
   ++  get-coeff
     |*  [a=@ b=@ c=@]
-    ?>  (gth a b)
+    ?>  (gte a b)
     =/  delta=@  (sub a b)
     =/  [quot=@ rem=@]  (dvr delta c)
     ?:  =(rem 0)

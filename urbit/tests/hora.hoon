@@ -564,7 +564,38 @@
       %+  expect-eq
       !>  (silt (overlapping-in-range start end m era))
       res
-
+    ::  just the overlapping event is present
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.3.4
+        ~2020.3.28
+        `moment`[%days ~2020.3.2 3]
+        `era`[[%infinite ~] 1 [%monthly on]]
+      ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) [%days ~2020.3.2 3])
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.3.4
+        ~2020.3.28
+        `moment`[%days ~2020.3.2 3]
+        `era`[[%infinite ~] 1 [%monthly [%weekday %first]]]
+      ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) [%days ~2020.3.2 3])
+    ::  overlapping and others present
+    ::  %+  expect-eq
+    ::    %:  overlapping-in-range
+    ::    ==
+    ::    !>  ^-  (set moment)
+    ::    %-  silt
+    ::    ^-  (list moment)
+    ::    :~
+    ::    ==
   ==
 ::
 ++  test-hora-yearly-recurrence  !!
