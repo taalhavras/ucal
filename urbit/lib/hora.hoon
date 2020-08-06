@@ -140,6 +140,15 @@
   ?:  ?=([%infinite *] era-type)
     &
   !!
+::  +reduce-era-instances: lowers the number of instances in an era by n
+::  if it's based on instances.
+::
+++  reduce-era-instances
+  |=  [e=era-type n=@ud]
+  ^-  era-type
+  ?:  ?=([%instances *] e)
+    e(num (sub num.e n))
+  e
 ::  +advance-months: advance a given date by n months. doesn't validate
 ::  whether or not the day is in the given month.
 ::
@@ -484,8 +493,14 @@
   ::  in this case, the moment overlaps with the range even though
   ::  it doesn't start in it.
   ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
+    =/  et=era-type  (reduce-era-instances type.era 1)
     :-  m
-    (starting-in-range start end m era)
+    %:  starting-in-range
+      start
+      end
+      (advance-moment m interval.era rrule.era)
+      era(type et)
+    ==
   (starting-in-range start end m era)
 ::  +events-in-range: given a recurring event and a range, produce a list of
 ::  all events starting OVERLAPPING WITH the range [start, end)

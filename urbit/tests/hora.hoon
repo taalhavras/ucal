@@ -650,6 +650,23 @@
         [%days ~2021.1.3 4]
         [%days ~2021.2.7 4]
       ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.5.20
+        ~2020.8.3
+        `moment`[%days ~2020.5.19 3]
+        `era`[infinite 1 [%monthly %weekday %third]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.5.19 3]
+        [%days ~2020.6.16 3]
+        [%days ~2020.7.21 3]
+      ==
   ==
 ::
 ++  test-hora-yearly-recurrence  !!
