@@ -12,6 +12,10 @@
 ++  successor-fail  !>  *(unit [moment @ud])
 ::  constant for daily rules
 ++  daily  `rrule`[%daily ~]
+::  constant for yearly rules
+++  yearly  `rrule`[%yearly ~]
+::  constant for infinite eras
+++  infinite  `era-type`[%infinite ~]
 ::
 ++  test-hora-daily-recurrence
   =>
@@ -27,7 +31,7 @@
           ~2019.3.3..06.00.00
           ~2019.3.3..07.00.00
           `moment`[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]
-          `era`[`era-type`[%infinite ~] 1 daily]
+          `era`[infinite 1 daily]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00])
@@ -37,7 +41,7 @@
           ~2019.3.3..06.00.00
           ~2019.3.8..07.00.00
           `moment`[%block ~2019.3.3..06.15.00 ~h1]
-          `era`[`era-type`[%infinite ~] 2 daily]
+          `era`[infinite 2 daily]
         ==
       !>
       %-  silt
@@ -94,8 +98,6 @@
     %+  expect-eq
       !>  (advance-moment `moment`[%period s1 (add s1 ~m30)] 3 daily)
       !>  `moment`[%period (add s1 ~d3) ;:(add s1 ~d3 ~m30)]
-    ::  TODO add tests using successor, {starting, overlapping}-in-range
-    ::
     ::  era ends before target range
     %+  expect-eq
       !>
@@ -113,7 +115,7 @@
         ~2017.5.23
         ~2019.8.4
         `moment`[%block ~2019.10.3..04.30.00 ~m30]
-        `era`[`era-type`[%infinite ~] 1 daily]
+        `era`[infinite 1 daily]
       ==
       successor-fail
     ::  requires too many applications of the rule
@@ -144,7 +146,7 @@
         ~2020.11.3
         ~2020.11.10
         `moment`[%days ~2020.9.3 3]
-        `era`[`era-type`[%infinite ~] 100 daily]
+        `era`[infinite 100 daily]
       ==
       successor-fail
     ::  general cases
@@ -240,7 +242,7 @@
           ~2020.8.11
           ~2020.8.14
           `moment`[%days ~2020.8.8 1]
-          `era`[[%infinite ~] 1 weekend]
+          `era`[infinite 1 weekend]
         ==
       !>  *(set moment)
       ::  nothing in era (time)
@@ -267,7 +269,7 @@
           ~2020.8.4
           ~2020.8.6
           `moment`[%block ~2020.8.5..18.00.00 ~h1.m30]
-          `era`[[%infinite ~] 1 mwf]
+          `era`[infinite 1 mwf]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%block ~2020.8.5..18.00.00 ~h1.m30])
@@ -277,7 +279,7 @@
           ~2020.8.4
           ~2020.8.6
           `moment`[%block ~2020.8.3..18.00.00 ~h1.m30]
-          `era`[[%infinite ~] 1 mwf]
+          `era`[infinite 1 mwf]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%block ~2020.8.5..18.00.00 ~h1.m30])
@@ -287,7 +289,7 @@
           ~2020.8.16
           ~2020.8.22
           `moment`[%days ~2020.8.3 1]
-          `era`[[%infinite ~] 1 mwf]
+          `era`[infinite 1 mwf]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -424,7 +426,7 @@
         ~2020.8.1
         ~2020.8.31
         `moment`[%days ~2020.9.1 1]
-        `era`[[%infinite ~] 1 tth]
+        `era`[infinite 1 tth]
       ==
       successor-fail
     ::  too many applications of rule
@@ -444,7 +446,7 @@
         ~2020.8.4
         ~2020.8.5
         `moment`[%days ~2020.8.3 1]
-        `era`[[%infinite ~] 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])]]
+        `era`[infinite 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])]]
       ==
       successor-fail
     ::  general cases
@@ -456,7 +458,7 @@
         ~2020.8.12
         ~2020.8.26
         `moment`[%block ~2020.8.13..12.00.00 ~h2]
-        `era`[[%infinite ~] 1 tth]
+        `era`[infinite 1 tth]
       ==
       !>  [`moment`[%block ~2020.8.13..12.00.00 ~h2] 0]
     ::  last instance falls in range
@@ -494,7 +496,7 @@
         ~2020.8.4..12.00.00
         ~2020.8.8..18.00.00
         `moment`[%block ~2020.8.4..10.00.00 ~h3]
-        `era`[[%infinite ~] 1 tth]
+        `era`[infinite 1 tth]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -518,7 +520,7 @@
           ~2015.2.23
           ~2015.4.26
           `moment`[%days ~2016.3.25 3]
-          `era`[[%infinite ~] 1 [%monthly on]]
+          `era`[infinite 1 [%monthly on]]
         ==
       !>  *(set moment)
       ::  nothing in era (time)
@@ -547,6 +549,31 @@
     ==
   --
   ;:  weld
+    ::  advance-moment tests
+    %+  expect-eq
+      !>  (advance-moment [%days ~2020.8.11 1] 1 [%monthly on])
+      !>  `moment`[%days ~2020.9.11 1]
+    %+  expect-eq
+      !>  (advance-moment [%days ~2020.8.11 1] 1 [%monthly %weekday %second])
+      !>  `moment`[%days ~2020.9.8 1]
+    ::  skips over months where day isn't present
+    %+  expect-eq
+      !>  (advance-moment [%days ~2020.1.31 1] 1 [%monthly on])
+      !>  `moment`[%days ~2020.3.31 1]
+    %+  expect-eq
+      !>  (advance-moment [%days ~2019.12.30 1] 2 [%monthly on])
+      !>  `moment`[%days ~2020.4.30 1]
+    %+  expect-eq
+      !>  (advance-moment [%days ~2019.12.31 1] 2 [%monthly on])
+      !>  `moment`[%days ~2020.8.31 1]
+    ::  difference between %fourth and %last
+    %+  expect-eq
+      !>  (advance-moment [%days ~2020.7.25 1] 1 [%monthly %weekday %fourth])
+      !>  `moment`[%days ~2020.8.22 1]
+    %+  expect-eq
+      !>  (advance-moment [%days ~2020.7.25 1] 1 [%monthly %weekday %last])
+      !>  `moment`[%days ~2020.8.29 1]
+    ::  TODO successor-in-range tests? worth?
     ::  {starting, overlapping}-in-range tests
     ^-  tang
     %-  zing
@@ -572,7 +599,7 @@
         ~2020.3.4
         ~2020.3.28
         `moment`[%days ~2020.3.2 3]
-        `era`[[%infinite ~] 1 [%monthly on]]
+        `era`[infinite 1 [%monthly on]]
       ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%days ~2020.3.2 3])
@@ -583,19 +610,46 @@
         ~2020.3.4
         ~2020.3.28
         `moment`[%days ~2020.3.2 3]
-        `era`[[%infinite ~] 1 [%monthly [%weekday %first]]]
+        `era`[infinite 1 [%monthly [%weekday %first]]]
       ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%days ~2020.3.2 3])
     ::  overlapping and others present
-    ::  %+  expect-eq
-    ::    %:  overlapping-in-range
-    ::    ==
-    ::    !>  ^-  (set moment)
-    ::    %-  silt
-    ::    ^-  (list moment)
-    ::    :~
-    ::    ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.5.20
+        ~2020.8.3
+        `moment`[%days ~2020.5.19 3]
+        `era`[infinite 1 [%monthly on]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.5.19 3]
+        [%days ~2020.6.19 3]
+        [%days ~2020.7.19 3]
+      ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.11.4
+        ~2021.3.3
+        `moment`[%days ~2020.11.1 4]
+        `era`[infinite 1 [%monthly %weekday %first]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.11.1 4]
+        [%days ~2020.12.6 4]
+        [%days ~2021.1.3 4]
+        [%days ~2021.2.7 4]
+      ==
   ==
 ::
 ++  test-hora-yearly-recurrence  !!
