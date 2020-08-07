@@ -149,6 +149,26 @@
         `era`[infinite 100 daily]
       ==
       successor-fail
+    ::  initial moment overlaps with target
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2020.2.3
+        ~2020.2.24
+        `moment`[%days ~2020.2.1 3]
+        `era`[[%instances 2] 10 daily]
+      ==
+      !>  [`moment`[%days ~2020.2.11 3] 1]
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.2.3
+        ~2020.2.24
+        `moment`[%days ~2020.2.1 3]
+        `era`[[%instances 1] 10 daily]
+      ==
+      successor-fail
     ::  general cases
     ::  TODO add more
     %+  expect-eq
@@ -449,6 +469,26 @@
         `era`[infinite 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])]]
       ==
       successor-fail
+    ::  initial moment overlaps with range
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.8.9..04.00.00
+        ~2020.8.25
+        `moment`[%block ~2020.8.8..23.00.00 ~h6]
+        `era`[[%instances 1] 1 [%weekly (silt `(list weekday)`~[%sat %tue])]]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2020.8.9..04.00.00
+        ~2020.8.25
+        `moment`[%block ~2020.8.8..23.00.00 ~h6]
+        `era`[[%instances 2] 1 [%weekly (silt `(list weekday)`~[%sat %tue])]]
+      ==
+      !>  [`moment`[%block ~2020.8.11..23.00.00 ~h6] 1]
     ::  general cases
     ::  TODO add more?
     %+  expect-eq
@@ -573,7 +613,15 @@
     %+  expect-eq
       !>  (advance-moment [%days ~2020.7.25 1] 1 [%monthly %weekday %last])
       !>  `moment`[%days ~2020.8.29 1]
-    ::  TODO successor-in-range tests? worth?
+    ::  TODO successor-in-range tests? worth? probably right?
+    ::  end of range
+    ::  end of era (instances)
+    ::  end of era (time)
+    ::  overlapping instance
+    ::  %+  expect-eq
+    ::    !>
+    ::    %-  need
+
     ::  {starting, overlapping}-in-range tests
     ^-  tang
     %-  zing
@@ -700,6 +748,23 @@
         [%days ~2020.3.17 4]
         [%days ~2020.4.17 4]
         [%days ~2020.5.17 4]
+      ==
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.1.31
+        ~2020.5.30
+        `moment`[%days ~2020.1.30 4]
+        [[%instances 3] 1 [%monthly on]]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.1.30 4]
+        [%days ~2020.3.30 4]
+        [%days ~2020.4.30 4]
       ==
     %+  expect-eq
       !>

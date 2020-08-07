@@ -351,10 +351,14 @@
       week-diff
     =/  target-idx=@ud  (~(got by idx-by-weekday) target)
     =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
+    ::  indices of days between target and cur, not including cur
     =/  indices-between=(list @ud)
         ?:  (gth target-idx cur-idx)
           (gulf +(cur-idx) target-idx)
         ?>  (lth target-idx cur-idx)
+        ::  special case for saturday
+        ?:  =(cur-idx 6)
+          (gulf 0 target-idx)
         (weld (gulf 0 target-idx) (gulf +(cur-idx) 6))
     ?>  (lth (lent indices-between) 7)
     =|  acc=@ud
