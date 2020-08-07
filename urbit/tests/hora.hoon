@@ -613,15 +613,103 @@
     %+  expect-eq
       !>  (advance-moment [%days ~2020.7.25 1] 1 [%monthly %weekday %last])
       !>  `moment`[%days ~2020.8.29 1]
-    ::  TODO successor-in-range tests? worth? probably right?
+    ::  successor-in-range tests
     ::  end of range
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.6.9
+        ~2020.7.4
+        `moment`[%days ~2020.6.7 1]
+        `era`[infinite 1 [%monthly on]]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.8.31
+        ~2020.9.30
+        `moment`[%days ~2020.8.29 1]
+        `era`[infinite 1 [%monthly %weekday %last]]
+      ==
+      successor-fail
     ::  end of era (instances)
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.9.1
+        ~2020.9.30
+        `moment`[%days ~2020.1.31 1]
+        `era`[[%instances 4] 1 [%monthly on]]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.6.1
+        ~2020.7.31
+        `moment`[%days ~2020.1.31 1]
+        `era`[[%instances 3] 1 [%monthly on]]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.3.1
+        ~2020.3.31
+        `moment`[%days ~2020.1.1 1]
+        `era`[[%instances 2] 1 [%monthly %weekday %first]]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.5.2
+        ~2020.12.4
+        `moment`[%days ~2020.1.8 1]
+        `era`[[%instances 4] 1 [%monthly %weekday %second]]
+      ==
+      successor-fail
     ::  end of era (time)
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.9.20
+        ~2020.12.3
+        `moment`[%days ~2020.2.25 1]
+        `era`[[%until ~2020.8.3] 1 [%monthly on]]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2020.9.20
+        ~2020.12.3
+        `moment`[%days ~2020.2.29 1]
+        `era`[[%until ~2020.8.3] 1 [%monthly %weekday %last]]
+      ==
+      successor-fail
     ::  overlapping instance
-    ::  %+  expect-eq
-    ::    !>
-    ::    %-  need
-
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2020.8.3
+        ~2021.4.2
+        `moment`[%block ~2020.8.2..23.00.00 ~h2]
+        `era`[[%instances 1] 1 [%monthly on]]
+      ==
+      !>  [`moment`[%block ~2020.8.2..23.00.00 ~h2] 0]
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2020.8.3
+        ~2021.4.2
+        `moment`[%block ~2020.8.2..23.00.00 ~h2]
+        `era`[[%instances 1] 1 [%monthly %weekday %first]]
+      ==
+      !>  [`moment`[%block ~2020.8.2..23.00.00 ~h2] 0]
     ::  {starting, overlapping}-in-range tests
     ^-  tang
     %-  zing
