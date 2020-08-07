@@ -596,6 +596,14 @@
     %+  expect-eq
       !>  (advance-moment [%days ~2020.8.11 1] 1 [%monthly %weekday %second])
       !>  `moment`[%days ~2020.9.8 1]
+    %+  expect-eq
+      !>
+      %:  advance-moment
+        `moment`[%block ~2020.1.1..10.00.00 ~m30]
+        1
+        `rrule`[%monthly %weekday %first]
+      ==
+      !>  `moment`[%block ~2020.2.5..10.00.00 ~m30]
     ::  skips over months where day isn't present
     %+  expect-eq
       !>  (advance-moment [%days ~2020.1.31 1] 1 [%monthly on])
@@ -692,24 +700,42 @@
     ::  overlapping instance
     %+  expect-eq
       !>
-      %-  need
       %:  successor-in-range
         ~2020.8.3
         ~2021.4.2
         `moment`[%block ~2020.8.2..23.00.00 ~h2]
         `era`[[%instances 1] 1 [%monthly on]]
       ==
-      !>  [`moment`[%block ~2020.8.2..23.00.00 ~h2] 0]
+      successor-fail
     %+  expect-eq
       !>
-      %-  need
       %:  successor-in-range
         ~2020.8.3
         ~2021.4.2
         `moment`[%block ~2020.8.2..23.00.00 ~h2]
         `era`[[%instances 1] 1 [%monthly %weekday %first]]
       ==
-      !>  [`moment`[%block ~2020.8.2..23.00.00 ~h2] 0]
+      successor-fail
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+      ~2020.8.3
+      ~2021.4.2
+      `moment`[%block ~2020.8.2..23.00.00 ~h2]
+      `era`[[%instances 2] 1 [%monthly on]]
+      ==
+      !>  [`moment`[%block ~2020.9.2..23.00.00 ~h2] 1]
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+      ~2020.8.3
+      ~2021.4.2
+      `moment`[%block ~2020.8.2..23.00.00 ~h2]
+      `era`[[%instances 2] 1 [%monthly %weekday %first]]
+      ==
+      !>  [`moment`[%block ~2020.9.6..23.00.00 ~h2] 1]
     ::  {starting, overlapping}-in-range tests
     ^-  tang
     %-  zing
@@ -902,7 +928,19 @@
       ==
   ==
 ::
-++  test-hora-yearly-recurrence  !!
+++  test-hora-yearly-recurrence
+  =>
+  |%
+  --
+  ;:  weld
+    ::  advance-moment tests
+    %+  expect-eq
+      !>  (advance-moment [%days ~2020.1.1 1] 1 yearly)
+      !>  `moment`[%days ~2021.1.1 1]
+    %+  expect-eq
+      !>  (advance-moment [%block ~2020.3.18..08.30.00 ~h2] 2 yearly)
+      !>  `moment`[%block ~2022.3.18..08.30.00 ~h2]
+  ==
 ::
 ::  TODO do we want this separately? I think so...
 ++  test-hora-leap-years  !!

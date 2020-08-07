@@ -78,14 +78,13 @@
   ?:  (yelp y)
     moy:yo
   moh:yo
-::  +nth-weekday: gets nth weekday in target month
+::  +nth-weekday: gets nth weekday in target month - keeps granularity at hour
+::  and below (only changes day)
 ::
 ++  nth-weekday
-  |=  [target=weekday m=@ud y=@ud instance=weekday-instance]
+  |=  [target=weekday d=date instance=weekday-instance]
   ^-  @da
-  =|  d=date
-  =/  d=date  d(y y, m m, d.t 1)
-  =/  da=@da  (year d)
+  =/  da=@da  (year d(d.t 1))
   =/  start=weekday  (get-weekday da)
   ::  number of days to advance start of month by to get
   ::  to first instance of target
@@ -307,11 +306,8 @@
       ::  get current weekday
       =/  cur=weekday  (get-weekday m-start)
       =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
-      =/  [new-month=@ud new-year=@ud]  [m.adjusted-start-date y.adjusted-start-date]
-          ::  =/  d=date  (advance-months m-start-date month-delta)
-          ::  [m.d y.d]
       =/  new-start=@da
-          (nth-weekday cur new-month new-year instance.form.rrule.era)
+          (nth-weekday cur adjusted-start-date instance.form.rrule.era)
       ?>  =(cur (get-weekday new-start))
       =/  adj-coeff=@ud  (add coeff adjust)
       ?.  &((validator new-start) (check-within-era new-start adj-coeff type.era))
@@ -457,7 +453,7 @@
           $(d (advance-months d interval))
         ::
             [%weekday *]
-          (nth-weekday (get-weekday start) m.d y.d instance.form.rrule)
+          (nth-weekday (get-weekday start) d instance.form.rrule)
         ==
       ?:  ?=([%yearly *] rrule)
         ::  this handles leap year cases more cleanly than
