@@ -321,7 +321,13 @@
     =/  m-start-date=date  (yore m-start)
     =/  coeff=@ud  (get-coeff y.start-date y.m-start-date interval.era)
     =/  new-year=@ud  (add y.m-start-date (mul coeff interval.era))
-    =/  new-start=@da  (year m-start-date(y new-year))
+    ::  now adjust if we're in the same year as start - if we don't
+    ::  we'll fail if the adjusted moment starts before start.
+    =/  [new-start=@da coeff=@ud]
+        =/  res=@da  (year m-start-date(y new-year))
+        ?:  (gth res start)
+          [res coeff]
+        [(year m-start-date(y (add new-year interval.era))) +(coeff)]
     ?.  &((validator new-start) (check-within-era new-start coeff type.era))
       ~
     `[(move-moment-start m new-start) coeff]

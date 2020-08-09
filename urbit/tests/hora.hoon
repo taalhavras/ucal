@@ -5,16 +5,17 @@
 ::  Testing arms
 ::
 |%
-::  TODO how to handle constants? declare at top of testing arms?
-::  have as separate arms? what makes the most sense?
-::
 ::  failure val for successor-in-range, used for expect-eq
+::
 ++  successor-fail  !>  *(unit [moment @ud])
 ::  constant for daily rules
+::
 ++  daily  `rrule`[%daily ~]
 ::  constant for yearly rules
+::
 ++  yearly  `rrule`[%yearly ~]
 ::  constant for infinite eras
+::
 ++  infinite  `era-type`[%infinite ~]
 ::
 ++  test-hora-daily-recurrence
@@ -931,6 +932,90 @@
 ++  test-hora-yearly-recurrence
   =>
   |%
+  ++  starting-no-overlap
+    ^-  (list [[@da @da moment era] vase])
+    :~
+      ::  first instance is the only thing in range
+      :-
+        :*
+          ~2020.6.1
+          ~2020.9.1
+          `moment`[%days ~2020.7.1..04.00.00 1]
+          `era`[infinite 1 yearly]
+        ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) `moment`[%days ~2020.7.1..04.00.00 1])
+      ::  last instance is the only thing in range
+      :-
+        :*
+          ~2020.1.1
+          ~2020.1.31
+          `moment`[%days ~2015.1.10 1]
+          `era`[[%instances 6] 1 yearly]
+        ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) `moment`[%days ~2020.1.10 1])
+      ::  only one instance falls in range
+      :-
+        :*
+          ~2019.9.4
+          ~2020.5.27
+          `moment`[%days ~2017.10.2..23.59.59 1]
+          `era`[infinite 2 yearly]
+        ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) `moment`[%days ~2019.10.2..23.59.59 1])
+      ::  hit end of interval
+      :-
+        :*
+          ~2016.1.1
+          ~2020.1.1
+          `moment`[%days ~2015.3.3 1]
+          `era`[infinite 1 yearly]
+        ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2016.3.3 1]
+        [%days ~2017.3.3 1]
+        [%days ~2018.3.3 1]
+        [%days ~2019.3.3 1]
+      ==
+      ::  hit end of era (instances)
+      :-
+        :*
+          ~2015.2.22
+          ~2020.4.23
+          `moment`[%days ~2015.3.3 1]
+          `era`[[%instances 3] 1 yearly]
+        ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2015.3.3 1]
+        [%days ~2016.3.3 1]
+        [%days ~2017.3.3 1]
+      ==
+      ::  hit end of era (time)
+      :-
+        :*
+          ~2014.8.22
+          ~2020.7.4
+          `moment`[%days ~2015.6.20 1]
+          `era`[[%until ~2019.4.2] 1 yearly]
+        ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2015.6.20 1]
+        [%days ~2016.6.20 1]
+        [%days ~2017.6.20 1]
+        [%days ~2018.6.20 1]
+      ==
+    ==
   --
   ;:  weld
     ::  advance-moment tests
@@ -940,10 +1025,67 @@
     %+  expect-eq
       !>  (advance-moment [%block ~2020.3.18..08.30.00 ~h2] 2 yearly)
       !>  `moment`[%block ~2022.3.18..08.30.00 ~h2]
+    %+  expect-eq
+      !>
+      (advance-moment [%period ~2020.2.24..05.00.00 ~2020.2.24..09.15.00] 1 yearly)
+      !>  `moment`[%period ~2021.2.24..05.00.00 ~2021.2.24..09.15.00]
+    ::  TODO successor-in-range tests
+    ::  initial moment overlaps
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2019.2.3
+        ~2020.12.21
+        `moment`[%days ~2019.2.2 2]
+        `era`[[%instances 1] 1 yearly]
+      ==
+      successor-fail
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2019.2.3
+        ~2020.12.21
+        `moment`[%days ~2019.2.2 2]
+        `era`[[%instances 2] 1 yearly]
+      ==
+      !>  [`moment`[%days ~2020.2.2 2] 1]
+    ::  {starting, overlapping}-in-range tests
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=vase]
+    %+  expect-eq
+      !>  (silt (starting-in-range start end m era))
+      res
+    ::
+    ^-  tang
+    %-  zing
+    %+  turn
+      starting-no-overlap
+    |=  [[start=@da end=@da m=moment =era] res=vase]
+    %+  expect-eq
+      !>  (silt (overlapping-in-range start end m era))
+      res
+    ::  TODO overlapping-in-range tests
   ==
 ::
 ::  TODO do we want this separately? I think so...
 ++  test-hora-leap-years  !!
 ::  test queries on ranges that start/end at the same times as events
 ++  test-event-boundaries  !!
+++  test-specifics
+  ;:  weld
+    %+  expect-eq
+    !>
+    %-  need
+    %:  successor-in-range
+      ~2019.2.3
+      ~2020.12.21
+      `moment`[%days ~2019.2.2 2]
+      `era`[[%instances 2] 1 yearly]
+    ==
+    !>  [`moment`[%days ~2020.2.2 2] 1]
+  ==
 --
