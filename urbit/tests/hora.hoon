@@ -14,6 +14,9 @@
 ::  constant for yearly rules
 ::
 ++  yearly  `rrule`[%yearly ~]
+::  constant for monthly rrules
+::
+++  on  `monthly`[%on ~]
 ::  constant for infinite eras
 ::
 ++  infinite  `era-type`[%infinite ~]
@@ -551,7 +554,6 @@
 ++  test-hora-monthly-recurrence
   =>
   |%
-  ++  on  `monthly`[%on ~]
   ++  starting-no-overlap
     ^-  (list [[@da @da moment era] vase])
     :~
@@ -582,8 +584,40 @@
           `era`[[%instances 20] 1 [%monthly on]]
         ==
       !>  *(set moment)
+      :-
+        :*
+          ~2020.9.4
+          ~2020.12.2
+          `moment`[%days ~2014.10.9 1]
+          `era`[[%instances 20] 1 [%monthly %weekday %second]]
+        ==
+      !>  *(set moment)
       ::  first instance is the only thing in range
+      :-
+        :*
+          ~2013.8.5
+          ~2014.3.2
+          `moment`[%days ~2014.1.29 1]
+          `era`[[%instances 10] 1 monthly+on]
+        ==
+      !>  (~(put in *(set moment)) `moment`[%days ~2014.1.29 1])
+      :-
+        :*
+          ~2013.8.5
+          ~2014.2.2
+          `moment`[%days ~2014.1.29 1]
+          `era`[[%instances 10] 1 [%monthly %weekday %last]]
+        ==
+      !>  (~(put in *(set moment)) `moment`[%days ~2014.1.29 1])
       ::  only one instance falls in the range
+      :-
+        :*
+          ~2014.2.2
+          ~2014.3.2
+          `moment`[%days ~2014.1.5 1]
+          `era`[[%instances 10] 1 monthly+on]
+        ==
+      !>  (~(put in *(set moment)) `moment`[%days ~2014.2.5 1])
       ::  hit end of query range
       ::  hit end of era (instances)
       ::  hit end of era (time)
@@ -1069,12 +1103,29 @@
       !>  (silt (overlapping-in-range start end m era))
       res
     ::  TODO overlapping-in-range tests
+    %+  expect-eq
+      !>
+      %-  silt
+      %:  overlapping-in-range
+        ~2020.4.2
+        ~2022.5.9
+        `moment`[%days ~2020.4.1 3]
+        `era`[infinite 1 yearly]
+      ==
+      !>  ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      :~
+        [%days ~2020.4.1 3]
+        [%days ~2021.4.1 3]
+        [%days ~2022.4.1 3]
+      ==
   ==
 ::
 ::  TODO do we want this separately? I think so...
-++  test-hora-leap-years  !!
+::  ++  test-hora-leap-years  !!
 ::  test queries on ranges that start/end at the same times as events
-++  test-event-boundaries  !!
+::  ++  test-event-boundaries  !!
 ++  test-specifics
   ;:  weld
     %+  expect-eq
