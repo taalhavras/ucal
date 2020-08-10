@@ -3,10 +3,10 @@
 :: - poke
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
-/-  ucal
-/+  default-agent
+/-  ucal, ucal-almanac
+/+  default-agent, ucal-util, alma-door=ucal-almanac
 ::
-::: local types
+::: local type
 ::
 |%
 :: aliases
@@ -16,10 +16,11 @@
 +$  event  event:ucal
 +$  calendar-code  calendar-code:ucal
 +$  event-code  event-code:ucal
++$  almanac  almanac:ucal-almanac
+++  al  al:alma-door
 ::
 +$  state-zero
-  $:  cals=(map calendar-code cal)
-      events=(jar event-code event)
+  $:  alma=almanac
   ==
 ::
 +$  versioned-state
@@ -92,7 +93,7 @@
         [%calendars ~]
       %+  give  %ucal-initial
       ^-  initial:ucal
-      [%calendars (get-calendars:uc)]
+      [%calendars (~(get-calendars al alma.state))]
     ::
         [%events %bycal *]
       %+  give  %ucal-initial
@@ -114,10 +115,10 @@
         :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
         :: /x/a/b as our path, while with %gy we get /x/a/b/c
         [%y %calendars ~]
-      ``noun+!>((get-calendars:uc))
+      ``noun+!>((~(get-calendars al alma.state)))
     ::
         [%y %events ~]
-      ``noun+!>((get-events:uc))
+      ``noun+!>((~(get-events al alma.state)))
     ::
         [%y %calendars *]
       =/  res  (get-calendar:uc t.t.path)
@@ -150,29 +151,17 @@
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  (snag 0 path)
-  (~(get by cals.state) code)
+  (~(get-calendar al alma.state) code)
 ::
 ++  get-specific-event
   |=  =path
   ^-  (unit event)
   ~&  [%specific-event-path path]
-  ?.  =((lent path) 1)
+  ?.  =((lent path) 2)
     ~
-  =/  code=event-code  (snag 0 path)
-  ::  TODO I guess we could flatten, but seems expensive
-  =/  events=(list (list event))
-      %+  turn  ~(tap by events.state)
-      tail
-  |-
-  ?~  events
-    ~
-  =/  l=(list event)  i.events
-  |-
-  ?~  l
-    ^$(events t.events)
-  ?:  =(event-code.i.l code)
-    `i.l
-  $(l t.l)
+  =/  =calendar-code  (snag 0 path)
+  =/  =event-code  (snag 1 path)
+  (~(get-event al alma.state) calendar-code event-code)
 ::
 ++  get-events-bycal
   |=  =path
@@ -181,19 +170,7 @@
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  (snag 0 path)
-  `(~(get ja events.state) code)
-::
-++  get-calendars
-  |.
-  ^-  calendars
-  %+  turn  ~(tap by cals.state)
-  tail
-::
-++  get-events
-  |.
-  ^-  events:ucal
-  %-  zing  ::  flattens list
-  (turn ~(tap by events.state) tail)
+  (~(get-events-bycal al alma.state) code)
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -202,7 +179,6 @@
   ^-  (quip card _state)
   ?-    -.action
       %create-calendar
-    :: TODO: Move to helper core
     =/  input  +.action
     =/  new=cal
       %:  cal                                           :: new calendar
@@ -213,7 +189,7 @@
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?<  (~(has by cals.state) calendar-code.input)      :: error if exists
+    ?>  =(~ (~(get-calendar al alma.state) calendar-code.input)) :: error if exists
     =/  paths=(list path)  ~[/calendars]
     =/  u=update:ucal  [%calendar-added new]
     =/  v=vase  !>(u)
@@ -221,36 +197,24 @@
     =/  c=card  [%give %fact paths cag]
     :-  ~[c]
     %=  state
-      cals  (~(put by cals.state) calendar-code.input new)
+      alma  (~(add-calendar al alma.state) new)
     ==
     ::
       %update-calendar
     =/  input  +.action
-    =/  old=cal  (~(got by cals.state) calendar-code.input)
-    =/  new-tz=timezone:ucal
-        ?~  timezone.input
-          timezone.old
-        ?~  u.timezone.input
-          'utc'
-        u.u.timezone.input
-    =/  new=cal
-      %:  cal
-        owner.old
-        calendar-code.old
-        (fall title.input title.old)
-        new-tz
-        date-created.old
-        now.bowl
-      ==
-    =/  cag=cage  [%ucal-update !>(`update:ucal`[%calendar-changed new])]
+    =/  [new-cal=(unit cal) new-alma=almanac]
+        (~(update-calendar al alma.state) input now.bowl)
+    ?~  new-cal
+      ::  nonexistant update
+      `state
+    =/  cag=cage  [%ucal-update !>(`update:ucal`[%calendar-changed u.new-cal])]
     :-  ~[[%give %fact ~[/calendars] cag]]
-    state(cals (~(put by cals.state) calendar-code.input new))
+    state(alma new-alma)
     ::
       %delete-calendar
-    :: TODO: Move to helper core
     =/  code  calendar-code.+.action
-    ?>  (~(has by cals.state) code)
-    ::  TODO: produce cards
+    ?<  =(~ (~(get-calendar al alma.state) code))
+    ::  produce cards
     ::  kick from /events/bycal/calendar-code
     ::  give fact to /calendars
     =/  cal-update=card
@@ -260,14 +224,12 @@
         [%give %kick ~[(snoc `path`/events/bycal code)] ~]
     :-  ~[cal-update kick-subs]
     %=  state
-      :: TODO: delete events
-      cals  (~(del by cals.state) code)
+      alma  (~(delete-calendar al alma.state) code)
     ==
     ::
       %create-event
-    :: TODO: Move to helper core
     =/  input  +.action
-    =/  p  (period-from-dur start.input end.input)
+    =/  p  (period-from-dur:ucal-util start.input end.input)
     =/  new=event
       %:  event
         our.bowl
@@ -281,98 +243,49 @@
         now.bowl                                        :: last modified
         ~
       ==
-    ?>  (~(has by cals.state) calendar-code.input)      :: calendar exists
+    :: calendar must exist
+    ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
     :-  [%give %fact paths %ucal-update !>(`update:ucal`[%event-added new])]~
     %=  state
-      events  (~(add ja events.state) calendar-code.input new)
+      alma  (~(add-event al alma.state) new)
     ==
     ::
       %update-event
     =/  input  +.action
-    ::  TODO get specific event
-    =/  cal-code  calendar-code.input
-    =/  event-code  event-code.input
-    =/  [new-events=(list event) new=event]
-        =/  cur-events  (~(get ja events.state) cal-code)
-        =|  acc=(list event)
-        |-
-        ?~  cur-events
-          !!
-        =/  cur=event  i.cur-events
-        ?.  =(event-code.input event-code.cur)
-          $(acc [cur acc], cur-events t.cur-events)
-        =/  p=[@da @da]
-            =/  new-start  (fall start.input start.cur)
-            ?~  end.input
-              (period new-start end.cur)
-            (period-from-dur new-start u.end.input)
-        =/  new=event
-            %:
-              event
-              owner.cur
-              calendar.cur
-              event-code.cur
-              (fall title.input title.cur)
-              -.p
-              +.p
-              (fall description.input description.cur)
-              date-created.cur
-              now.bowl
-              rsvps.cur
-            ==
-        =/  res=(list event)  [new t.cur-events]
-        |-
-        ?~  acc
-          [res new]
-        $(res [i.acc res], acc t.acc)
-    =/  u=update:ucal  [%event-changed new]
-    =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
+    =/  [new-event=(unit event) new-alma=almanac]
+        (~(update-event al alma.state) input now.bowl)
+    ?~  new-event
+      `state  :: nonexistent update
+    =/  u=update:ucal  [%event-changed u.new-event]
+    =/  pax=path  (snoc `path`/events/bycal calendar-code.patch.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
-    state(events (~(put by events.state) calendar-code.input new-events))
+    state(alma new-alma)
     ::
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  [gone=(list event) kept=(list event)]
-        %+  skid  (~(get ja events.state) cal-code)
-        |=(e=event =(event-code event-code.e))
-    ?~  gone
-      [~ state] :: deleting nonexistant event
-    ?>  =((lent gone) 1)
     =/  u=update:ucal  [%event-removed event-code]
     :-
     ~[[%give %fact ~[(snoc `path`/events/bycal cal-code)] %ucal-update !>(u)]]
-    state(events (~(put by events.state) cal-code kept))
+    state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
     =/  input  +.action
-    ::  update event with rsvp, maintains list order
-    =/  [new-events=(list event) new=event]
-        =/  cur-events  (~(get ja events.state) calendar-code.input)
-        =|  acc=(list event)
-        |-
-        ?~  cur-events
-          !!
-        =/  cur=event  i.cur-events
-        ?.  =(event-code.input event-code.cur)
-          $(acc [cur acc], cur-events t.cur-events)
-        =/  new=event  cur(rsvps (~(put by rsvps.cur) who.input status.input))
-        =/  res=(list event)  [new t.cur-events]
-        |-
-        ?~  acc
-          [res new]
-        $(res [i.acc res], acc t.acc)
-    =/  u=update:ucal  [%event-changed new]
-    =/  pax=path  (snoc `path`/events/bycal calendar-code.input)
+    =/  [new-event=(unit event) new-alma=almanac]
+        (~(update-rsvp al alma.state) input)
+    ?~  new-event
+      `state
+    =/  u=update:ucal  [%event-changed u.new-event]
+    =/  pax=path  (snoc `path`/events/bycal calendar-code.rsvp-change.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
-    state(events (~(put by events.state) calendar-code.input new-events))
+    state(alma new-alma)
     ::
       %import-from-ics
     ::  TODO implement
-    :-(~ state)
+    `state
   ==
 ::
 :: period of time, properly ordered

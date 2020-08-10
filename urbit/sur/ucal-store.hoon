@@ -1,5 +1,34 @@
-/-  *hora, *resource
+/-  *hora, *ucal
 |%
+::
+::
++$  calendar-patch
+  $:
+    owner=(unit @p)
+    =calendar-code
+    title=(unit @t)
+    timezone=(unit (unit timezone))
+  ==
+::
++$  event-patch
+  $:
+    =calendar-code
+    =event-code
+    title=(unit title)
+    desc=(unit (unit @t))
+    loc=(unit (unit location))
+    when=(unit moment)
+    description=(unit (unit @t))
+  ==
+::
++$  rsvp-change
+  $:
+    =calendar-code
+    =event-code
+    who=@p
+    :: if ~, then uninvite the @p
+    status=(unit rsvp)
+  ==
 ::
 +$  action
   $%  $:  %create-calendar
@@ -9,9 +38,7 @@
       ==
       ::
       $:  %update-calendar
-          =calendar-code
-          title=(unit @t)
-          timezone=(unit (unit timezone))
+          patch=calendar-patch
       ==
       ::
       $:  %delete-calendar
@@ -28,12 +55,7 @@
       ==
       ::
       $:  %update-event
-          =calendar-code
-          =event-code
-          title=(unit @t)
-          start=(unit @da)
-          end=(unit dur)
-          description=(unit (unit @t))
+          patch=event-patch
       ==
       ::
       :: - delete event
@@ -44,24 +66,20 @@
       :: - cancel event?
       :: - change rsvp
       $:  %change-rsvp
-          =calendar-code
-          =event-code
-          who=@p
-          status=rsvp-status
+          =rsvp-change
       ==
-      :: - modify event
-      :: - modify calendar
       :: - import calendar from file
       $:  %import-from-ics
           =path
       ==
   ==
+::
 ::  $initial: sent to subscribers on initial subscription
 ::
 +$  initial
   $%
-    [%calendars =calendars]
-    [%events-bycal =events]
+    [%calendars calendars=(list calendar)]
+    [%events-bycal events=(list event)]
   ==
 ::  $update: updates sent to subscribers
 ::
