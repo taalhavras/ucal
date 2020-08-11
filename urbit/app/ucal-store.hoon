@@ -3,7 +3,7 @@
 :: - poke
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
-/-  ucal, ucal-almanac
+/-  ucal, ucal-almanac, ucal-store
 /+  default-agent, ucal-util, alma-door=ucal-almanac
 ::
 ::: local type
@@ -12,7 +12,6 @@
 :: aliases
 +$  card   card:agent:gall
 +$  cal    calendar:ucal
-+$  calendars  calendars:ucal
 +$  event  event:ucal
 +$  calendar-code  calendar-code:ucal
 +$  event-code  event-code:ucal
@@ -75,7 +74,7 @@
       ==
     ::
         %ucal-action
-      =^  cards  state  (poke-ucal-action:uc !<(action:ucal vase))
+      =^  cards  state  (poke-ucal-action:uc !<(action:ucal-store vase))
       [cards this]
     ==
   ::
@@ -92,12 +91,12 @@
     ::
         [%calendars ~]
       %+  give  %ucal-initial
-      ^-  initial:ucal
+      ^-  initial:ucal-store
       [%calendars (~(get-calendars al alma.state))]
     ::
         [%events %bycal *]
       %+  give  %ucal-initial
-      ^-  initial:ucal
+      ^-  initial:ucal-store
       [%events-bycal (need (get-events-bycal:uc t.t.path))]
     ==
   ++  on-agent  on-agent:def
@@ -175,7 +174,7 @@
 ::  Handler for '%ucal-action' pokes
 ::
 ++  poke-ucal-action
-  |=  =action:ucal
+  |=  =action:ucal-store
   ^-  (quip card _state)
   ?-    -.action
       %create-calendar
@@ -191,7 +190,7 @@
       ==
     ?>  =(~ (~(get-calendar al alma.state) calendar-code.input)) :: error if exists
     =/  paths=(list path)  ~[/calendars]
-    =/  u=update:ucal  [%calendar-added new]
+    =/  u=update:ucal-store  [%calendar-added new]
     =/  v=vase  !>(u)
     =/  cag=cage  [%ucal-update v]
     =/  c=card  [%give %fact paths cag]
@@ -207,7 +206,7 @@
     ?~  new-cal
       ::  nonexistant update
       `state
-    =/  cag=cage  [%ucal-update !>(`update:ucal`[%calendar-changed u.new-cal])]
+    =/  cag=cage  [%ucal-update !>(`update:ucal-store`[%calendar-changed u.new-cal])]
     :-  ~[[%give %fact ~[/calendars] cag]]
     state(alma new-alma)
     ::
@@ -218,7 +217,7 @@
     ::  kick from /events/bycal/calendar-code
     ::  give fact to /calendars
     =/  cal-update=card
-        =/  removed=update:ucal  [%calendar-removed code]
+        =/  removed=update:ucal-store  [%calendar-removed code]
         [%give %fact ~[/calendars] %ucal-update !>(removed)]
     =/  kick-subs=card
         [%give %kick ~[(snoc `path`/events/bycal code)] ~]
@@ -229,24 +228,22 @@
     ::
       %create-event
     =/  input  +.action
-    =/  p  (period-from-dur:ucal-util start.input end.input)
+    =/  =about:ucal  [our.bowl now.bowl now.bowl %concrete]
     =/  new=event
       %:  event
-        our.bowl
-        calendar-code.input
         event-code.input                                :: TODO: generate
-        title.input
-        -.p                                             :: start
-        +.p                                             :: end
-        description.input
-        now.bowl                                        :: created
-        now.bowl                                        :: last modified
-        ~
+        calendar-code.input
+        about
+        detail.input
+        when.input
+        era.input
+        invites.input
+        %yes  :: organizer is attending own event by default
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
-    :-  [%give %fact paths %ucal-update !>(`update:ucal`[%event-added new])]~
+    :-  [%give %fact paths %ucal-update !>(`update:ucal-store`[%event-added new])]~
     %=  state
       alma  (~(add-event al alma.state) new)
     ==
@@ -257,7 +254,7 @@
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
       `state  :: nonexistent update
-    =/  u=update:ucal  [%event-changed u.new-event]
+    =/  u=update:ucal-store  [%event-changed u.new-event]
     =/  pax=path  (snoc `path`/events/bycal calendar-code.patch.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
@@ -266,7 +263,7 @@
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  u=update:ucal  [%event-removed event-code]
+    =/  u=update:ucal-store  [%event-removed event-code]
     :-
     ~[[%give %fact ~[(snoc `path`/events/bycal cal-code)] %ucal-update !>(u)]]
     state(alma (~(delete-event al alma.state) event-code cal-code))
@@ -277,7 +274,7 @@
         (~(update-rsvp al alma.state) input)
     ?~  new-event
       `state
-    =/  u=update:ucal  [%event-changed u.new-event]
+    =/  u=update:ucal-store  [%event-changed u.new-event]
     =/  pax=path  (snoc `path`/events/bycal calendar-code.rsvp-change.input)
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
@@ -287,6 +284,15 @@
     ::  TODO implement
     `state
   ==
+::
+:: period of time, properly ordered
+::
+++  normalize-period
+  |=  [a=@da b=@da]
+  ^-  [@da @da]
+  ?:  (lth b a)
+    [b a]
+  [a b]
 ::
 ++  give
   |*  [=mark =noun]

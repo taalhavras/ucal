@@ -1,126 +1,77 @@
-/+  ucal-components
+/+  ucal-components, hora
 |%
 :: TODO: enumerated list of all possible timezones
 +$  timezone  @t
++$  title     @t
 +$  event-code  @tas
 +$  calendar-code  @tas
 ::
 +$  calendar
   $:  owner=@p
       =calendar-code                                    :: internal name, unique
-      title=@t                                          :: external name
+      =title                                            :: external name
       =timezone
       date-created=@da
       last-modified=@da
   ==
 ::
-+$  calendar-patch
-  $:  owner=(unit @p)
-      =calendar-code
-      title=(unit @t)
-      timezone=(unit (unit timezone))
-  ==
-::
 +$  event
-  $:  owner=@p
-      =calendar-code
-      =event-code                                       :: internal name, unique
-      title=@t                                          :: external name
-      start=@da
-      end=@da                                           :: converted from dur
-      description=(unit @t)
+  $:
+    =event-code                                       :: unique id
+    =calendar-code
+    =about                                            :: metadata
+    =detail                                           :: title, desc, location
+    when=moment:hora
+    era=(unit era:hora)
+    =invites
+    =rsvp                                             :: organizer rsvp
+  ==
+:: $about: Information about the event, e.g. metadata.
+::
++$  about
+  $:  organizer=@p
       date-created=@da
-      last-modified=@da
-      rsvps=(map @p rsvp-status)
+      last-updated=@da
+      =event-type
+  ==
+::  events are 'projected' if they're based on an era and have not yet been
+::  reified. a concrete event is a reified event event in an era, or an event
+::  that is not part of an era.
+::  TODO not sure if we ever want %concrete even for a reified event. might
+::  just want a separate type for projected events that wraps an event.
+::
++$  event-type  $?(%projected %concrete)
+::  $detail: Details about the event itself.
+::
++$  detail
+  $:  =title
+      desc=(unit @t)
+      loc=(unit location)
   ==
 ::
-+$  event-patch
-  $:  owner=(unit @p)
-      =calendar-code
++$  coordinate  $:(lat=@rd lon=@rd)
+::  $location: A location has a written address that may or may not
+::  resolve to an actual set of geographic coordinates.
+::
++$  location
+  $:
+    address=@t
+    geo=(unit coordinate)
+  ==
+::
+::  Those that are invited to the event.
+::
++$  rsvp  $?(%yes %no %maybe)
+::
++$  invite
+  $:  who=@p
+      note=@t
       =event-code
-      title=(unit @t)
-      start=(unit @da)
-      end=(unit dur)
-      description=(unit (unit @t))
+      optional=?
+      ::  if ~, then the invited party hasn't responded
+      rsvp=(unit rsvp)
+      sent-at=@da
   ==
 ::
-+$  rsvp-change
-  $:  =calendar-code
-      =event-code
-      who=@p
-      :: if ~, then uninvite the @p
-      status=(unit rsvp-status)
-  ==
-::
-+$  calendars  (list calendar)
-+$  events  (list event)
-:: TODO:
-:: - rsvp
-+$  rsvp-status  $?(%yes %no %maybe %unanswered)
-::
-+$  dur                                               :: TODO: Is this worth it?
-  $%  [%end @da]
-      [%span @dr]
-  ==
-+$  action
-  $%  $:  %create-calendar
-          =calendar-code
-          title=@t
-          timezone=(unit timezone)                      :: optional, otherwise utc
-      ==
-      ::
-      $:  %update-calendar
-          patch=calendar-patch
-      ==
-      ::
-      $:  %delete-calendar
-          =calendar-code
-      ==
-      ::
-      $:  %create-event
-          =calendar-code
-          title=@t
-          =event-code
-          start=@da
-          end=dur
-          description=(unit @t)
-      ==
-      ::
-      $:  %update-event
-          patch=event-patch
-      ==
-      ::
-      :: - delete event
-      $:  %delete-event
-          =calendar-code
-          =event-code
-      ==
-      :: - cancel event?
-      :: - change rsvp
-      $:  %change-rsvp
-          =rsvp-change
-      ==
-      :: - import calendar from file
-      $:  %import-from-ics
-          =path
-      ==
-  ==
-::  $initial: sent to subscribers on initial subscription
-::
-+$  initial
-  $%
-    [%calendars =calendars]
-    [%events-bycal =events]
-  ==
-::  $update: updates sent to subscribers
-::
-+$  update
-  $%
-    [%calendar-added =calendar]
-    [%calendar-changed =calendar]
-    [%calendar-removed =calendar-code]
-    [%event-added =event]
-    [%event-changed =event]
-    [%event-removed =event-code]
-  ==
++$  invites  (map @p invite)
 --

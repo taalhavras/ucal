@@ -1,5 +1,5 @@
-/-  *ucal-almanac
-/+  ucal-util
+/-  *ucal-almanac, *ucal-store
+/+  hora
 |%
 ::  +al: door for almanac manipulation
 ::
@@ -14,7 +14,7 @@
   ++  add-event
     |=  =event
     ^-  almanac
-    =/  =events  (~(get ja events.alma) calendar-code.event)
+    =/  events=(list ^event)  (~(get ja events.alma) calendar-code.event)
     alma(events (~(put by events.alma) calendar-code.event (insort events event)))
   ::
   ++  delete-calendar
@@ -28,8 +28,8 @@
   ++  delete-event
     |=  [e-code=event-code c-code=calendar-code]
     ^-  almanac
-    =/  old-events=events  (~(get ja events.alma) c-code)
-    =/  [removed=(unit event) new-events=events]
+    =/  old-events=(list event)  (~(get ja events.alma) c-code)
+    =/  [removed=(unit event) new-events=(list event)]
         (remove-event e-code old-events)
     ?~  removed
       alma
@@ -65,50 +65,58 @@
   ++  update-event
     |=  [patch=event-patch now=@da]
     ^-  [(unit event) almanac]
-    =/  [to-update=(unit event) rest=events]
+    =/  [to-update=(unit event) rest=(list event)]
         %+  remove-event
           event-code.patch
         (~(get ja events.alma) calendar-code.patch)
     ?~  to-update
       [~ alma]
     =/  cur=event  u.to-update
-    =/  p=[@da @da]
-        =/  new-start  (fall start.patch start.cur)
-        ?~  end.patch
-          (period:ucal-util new-start end.cur)
-        (period-from-dur:ucal-util new-start u.end.patch)
+    =/  new-detail=detail
+      %=  detail.cur
+        title  (fall title.patch title.detail.cur)
+        desc  (fall desc.patch desc.detail.cur)
+        loc  (fall loc.patch loc.detail.cur)
+      ==
     =/  new-event=event
         %=  cur
-          owner  (fall owner.patch owner.cur)
-          title  (fall title.patch title.cur)
-          start  -.p
-          end  +.p
-          description  (fall description.patch description.cur)
-          last-modified  now
+          detail  new-detail
+          about  about.cur(last-updated now)
+          when  (fall when.patch when.cur)
+          era  (fall era.patch era.cur)
         ==
     :-
       `new-event
     %=  alma
       events  (~(put by events.alma) calendar-code.patch (insort rest new-event))
     ==
+  ::  +update-rsvp: used to handle ships responding to invites
   ::
   ++  update-rsvp
     |=  rsvp=rsvp-change
     ^-  [(unit event) almanac]
-    =/  old=(unit events)  (get-events-bycal calendar-code.rsvp)
+    =/  old=(unit (list event))  (get-events-bycal calendar-code.rsvp)
     ?~  old
       [~ alma]
-    =/  [new-event=(unit event) new=events]
+    =/  [new-event=(unit event) new=(list event)]
         %+  reel  u.old
-        |=  [cur=event acc=[(unit event) events]]
-        ^-  [(unit event) events]
+        |=  [cur=event acc=[(unit event) (list event)]]
+        ^-  [(unit event) (list event)]
         ?.  =(event-code.cur event-code.rsvp)
           [-.acc cur +.acc]
-        ::  found target, update rsvps
+        ::  found target, update invites
         =/  new-event=event
+            ::  first check if the change is for the host
+            ?:  =(who.rsvp organizer.about.cur)
+              ::  cannot uninvite organizer, so status can't be ~
+              cur(rsvp (need status.rsvp))
+            ::  using got, will crash if @p not invited
+            ::  TODO is that desired?
+            =/  inv=invite  (~(got by invites.cur) who.rsvp)
             ?~  status.rsvp
-              cur(rsvps (~(del by rsvps.cur) who.rsvp))
-            cur(rsvps (~(put by rsvps.cur) who.rsvp u.status.rsvp))
+              cur(invites (~(del by invites.cur) who.rsvp)) :: uninvite @p
+            =/  new-invite=invite  inv(rsvp status.rsvp)
+            cur(invites (~(put by invites.cur) who.rsvp new-invite))
         [`new-event new-event +.acc]
       ?~  new-event
         [~ alma]
@@ -118,14 +126,16 @@
   ::  reverse-chronological order by start time.
   ::
   ++  insort
-    |=  [=events =event]
-    ^-  ^events
-    =|  acc=^events
+    |=  [events=(list event) =event]
+    ^-  (list ^event)
+    =|  acc=(list ^event)
+    =/  [e-start=@da e-end=@da]  (moment-to-range:hora when.event)
     |-
     ?~  events
       ::  event is older than all previous ones, add to end
       (flop [event acc])
-    ?.  (gte start.event start.i.events)
+    =/  [start=@da end=@da]  (moment-to-range:hora when.i.events)
+    ?.  (gte e-start start)
       $(events t.events, acc [i.events acc])
     ::  now our order should be (flop acc) then event then events
     (weld (flop acc) [event events])
@@ -139,8 +149,8 @@
   ::  checking the flag... yeah this is prob not worth.
   ::
   ++  remove-event
-    |=  [code=event-code =events]
-    ^-  [(unit event) ^events]
+    |=  [code=event-code events=(list event)]
+    ^-  [(unit event) (list event)]
     ::  %-  head
     ::  %+  reel  events
     ::  |=  [cur=event acc=[l=events present=flag]]
@@ -149,7 +159,7 @@
     ::      ?:  =(event-code.cur code)
     ::        [l |]
     ::      [[cur l] &]
-    =/  [match=^events rest=^events]
+    =/  [match=(list event) rest=(list event)]
         %+  skid  events
         |=(e=event =(code event-code.e))
     =/  n=@  (lent match)
@@ -170,7 +180,7 @@
   ::
   ++  get-events
     |.
-    ^-  events
+    ^-  (list event)
     %-  zing
     (turn ~(tap by events.alma) tail)
   ::
@@ -178,14 +188,14 @@
     |=  code=calendar-code
     ::  TODO do we want this to produce a unit list or a list?
     ::  use ja for list and by for unit list
-    ^-  (unit events)
+    ^-  (unit (list event))
     (~(get by events.alma) code)
   ::
   ++  get-event
     |=  [=calendar-code =event-code]
     ^-  (unit event)
-    =/  =events  (~(get ja events.alma) calendar-code)
-    =/  match=^events
+    =/  events=(list event)  (~(get ja events.alma) calendar-code)
+    =/  match=(list event)
         %+  skim  events
         |=(e=event =(event-code event-code.e))
     ?~  match
