@@ -238,7 +238,7 @@
         when.input
         era.input
         invites.input
-        %yes  :: organizer is going to own event by default
+        %yes  :: organizer is attending own event by default
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
