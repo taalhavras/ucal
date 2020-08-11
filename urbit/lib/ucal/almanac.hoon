@@ -104,8 +104,12 @@
         ^-  [(unit event) (list event)]
         ?.  =(event-code.cur event-code.rsvp)
           [-.acc cur +.acc]
-        ::  found target, update rsvps
+        ::  found target, update invites
         =/  new-event=event
+            ::  first check if the change is for the host
+            ?:  =(who.rsvp organizer.about.cur)
+              ::  cannot uninvite organizer, so status can't be ~
+              cur(rsvp (need status.rsvp))
             ::  using got, will crash if @p not invited
             ::  TODO is that desired?
             =/  inv=invite  (~(got by invites.cur) who.rsvp)

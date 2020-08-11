@@ -26,7 +26,7 @@
     =invites
     =rsvp                                             :: organizer rsvp
   ==
-:: Information about the event, e.g. metadata.
+:: $about: Information about the event, e.g. metadata.
 ::
 +$  about
   $:  organizer=@p
@@ -37,19 +37,21 @@
 ::  events are 'projected' if they're based on an era and have not yet been
 ::  reified. a concrete event is a reified event event in an era, or an event
 ::  that is not part of an era.
+::  TODO not sure if we ever want %concrete even for a reified event. might
+::  just want a separate type for projected events that wraps an event.
 ::
 +$  event-type  $?(%projected %concrete)
-::  Details about the event itself.
+::  $detail: Details about the event itself.
 ::
 +$  detail
   $:  =title
       desc=(unit @t)
       loc=(unit location)
   ==
-::  A location has a written address that may or may not resolve to an actual
-::  set of geographic coordinates.
 ::
 +$  coordinate  $:(lat=@rd lon=@rd)
+::  $location: A location has a written address that may or may not
+::  resolve to an actual set of geographic coordinates.
 ::
 +$  location
   $:
