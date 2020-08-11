@@ -1,4 +1,4 @@
-/+  ucal-components
+/+  ucal-components, hora
 |%
 :: TODO: enumerated list of all possible timezones
 +$  timezone  @t
@@ -18,10 +18,11 @@
 +$  event
   $:
     =event-code                                       :: unique id
+    =calendar-code
     =about                                            :: metadata
     =detail                                           :: title, desc, location
-    when=moment
-    era=(unit era)
+    when=moment:hora
+    era=(unit era:hora)
     =invites
     =rsvp                                             :: organizer rsvp
   ==
@@ -30,6 +31,7 @@
 +$  about
   $:  organizer=@p
       date-created=@da
+      last-updated=@da
       =event-type
   ==
 ::  events are 'projected' if they're based on an era and have not yet been

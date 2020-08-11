@@ -15,10 +15,14 @@
     =calendar-code
     =event-code
     title=(unit title)
+    ::  fields of detail
     desc=(unit (unit @t))
     loc=(unit (unit location))
-    when=(unit moment)
     description=(unit (unit @t))
+    ::
+    when=(unit moment)
+    era=(unit (unit era))
+    =invites
   ==
 ::
 +$  rsvp-change
@@ -47,11 +51,12 @@
       ::
       $:  %create-event
           =calendar-code
-          title=@t
           =event-code
-          start=@da
-          end=dur
-          description=(unit @t)
+          organizer=@p
+          =detail
+          when=moment
+          era=(unit era)
+          =invites
       ==
       ::
       $:  %update-event

@@ -503,18 +503,20 @@
   (starting-in-range start end m era)
 ::  +events-in-range: given a recurring event and a range, produce a list of
 ::  all events starting OVERLAPPING WITH the range [start, end)
+::  TODO move somewhere outside of hora
+::  FIXME also update the event type to %projected or w/e
 ::
-++  events-in-range
-  |=  [e=event start=@da end=@da]
-  ^-  (list event)
-  ?>  (lte start end)
-  ?~  era.e
-    =/  [event-start=@da event-end=@da]
-        (moment-to-range moment.e)
-    ?:  (ranges-overlap start end event-start event-end)
-      ~[e]
-    ~
-  %+  turn
-    (overlapping-in-range start end moment.e u.era.e)
-  |=(m=moment e(moment m))
+::  ++  events-in-range
+::    |=  [e=event start=@da end=@da]
+::    ^-  (list event)
+::    ?>  (lte start end)
+::    ?~  era.e
+::      =/  [event-start=@da event-end=@da]
+::          (moment-to-range moment.e)
+::      ?:  (ranges-overlap start end event-start event-end)
+::        ~[e]
+::      ~
+::    %+  turn
+::      (overlapping-in-range start end moment.e u.era.e)
+::    |=(m=moment e(moment m))
 --
