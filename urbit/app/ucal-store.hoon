@@ -228,7 +228,7 @@
     ::
       %create-event
     =/  input  +.action
-    =/  =about:ucal  [our.bowl now.bowl now.bowl %concrete]
+    =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
       %:  event
         event-code.input                                :: TODO: generate
