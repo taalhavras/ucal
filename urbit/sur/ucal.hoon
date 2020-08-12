@@ -23,7 +23,6 @@
     =about                                            :: metadata
     =detail                                           :: title, desc, location
     when=moment:hora
-    era=(unit era:hora)
     =invites
     =rsvp                                             :: organizer rsvp
   ==
