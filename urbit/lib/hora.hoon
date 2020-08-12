@@ -285,12 +285,17 @@
         ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
           ?>  =(month-delta 0)
           [(advance-months m-start-date interval.era) 1]
+        ::  in this case the moment ends before the start of our range
+        ::  but is in the same month. advance by one interval
+        ?:  &(=(month-delta 0) (lte m-end start))
+          [(advance-months m-start-date interval.era) 1]
         [(advance-months m-start-date month-delta) 0]
     ?:  ?=([%on *] form.rrule.era)
       =|  i=@ud
       |-
       =/  new-start-date=date  (advance-months adjusted-start-date i)
       =/  new-start=@da  (year new-start-date)
+      ?>  (gte new-start m-start)
       ?:  (lte d.t.m-start-date (days-in-month m.new-start-date y.new-start-date))
         =/  count=@ud
             (monthly-increments new-start m-start d.t.m-start-date interval.era)
@@ -501,22 +506,4 @@
     :-  m
     (starting-in-range start end m era)
   (starting-in-range start end m era)
-::  +events-in-range: given a recurring event and a range, produce a list of
-::  all events starting OVERLAPPING WITH the range [start, end)
-::  TODO move somewhere outside of hora
-::  FIXME also update the event type to %projected or w/e
-::
-::  ++  events-in-range
-::    |=  [e=event start=@da end=@da]
-::    ^-  (list event)
-::    ?>  (lte start end)
-::    ?~  era.e
-::      =/  [event-start=@da event-end=@da]
-::          (moment-to-range moment.e)
-::      ?:  (ranges-overlap start end event-start event-end)
-::        ~[e]
-::      ~
-::    %+  turn
-::      (overlapping-in-range start end moment.e u.era.e)
-::    |=(m=moment e(moment m))
 --

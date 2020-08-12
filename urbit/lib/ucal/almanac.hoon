@@ -1,5 +1,5 @@
 /-  *ucal-almanac, *ucal-store
-/+  hora
+/+  hora, ucal-util
 |%
 ::  +al: door for almanac manipulation
 ::
@@ -14,8 +14,10 @@
   ++  add-event
     |=  =event
     ^-  almanac
-    =/  events=(list ^event)  (~(get ja events.alma) calendar-code.event)
-    alma(events (~(put by events.alma) calendar-code.event (insort events event)))
+    =/  events=(list ^event)  (~(get ja events.alma) calendar-code.data.event)
+    %=  alma
+      events  (~(put by events.alma) calendar-code.data.event (insort events event))
+    ==
   ::
   ++  delete-calendar
     |=  code=calendar-code
@@ -73,16 +75,16 @@
       [~ alma]
     =/  cur=event  u.to-update
     =/  new-detail=detail
-      %=  detail.cur
-        title  (fall title.patch title.detail.cur)
-        desc  (fall desc.patch desc.detail.cur)
-        loc  (fall loc.patch loc.detail.cur)
+      %=  detail.data.cur
+        title  (fall title.patch title.detail.data.cur)
+        desc  (fall desc.patch desc.detail.data.cur)
+        loc  (fall loc.patch loc.detail.data.cur)
       ==
     =/  new-event=event
         %=  cur
-          detail  new-detail
-          about  about.cur(last-updated now)
-          when  (fall when.patch when.cur)
+          detail.data  new-detail
+          about.data  about.data.cur(last-updated now)
+          when.data  (fall when.patch when.data.cur)
           era  (fall era.patch era.cur)
         ==
     :-
@@ -102,21 +104,21 @@
         %+  reel  u.old
         |=  [cur=event acc=[(unit event) (list event)]]
         ^-  [(unit event) (list event)]
-        ?.  =(event-code.cur event-code.rsvp)
+        ?.  =(event-code.data.cur event-code.rsvp)
           [-.acc cur +.acc]
         ::  found target, update invites
         =/  new-event=event
             ::  first check if the change is for the host
-            ?:  =(who.rsvp organizer.about.cur)
+            ?:  =(who.rsvp organizer.about.data.cur)
               ::  cannot uninvite organizer, so status can't be ~
-              cur(rsvp (need status.rsvp))
+              cur(rsvp.data (need status.rsvp))
             ::  using got, will crash if @p not invited
             ::  TODO is that desired?
-            =/  inv=invite  (~(got by invites.cur) who.rsvp)
+            =/  inv=invite  (~(got by invites.data.cur) who.rsvp)
             ?~  status.rsvp
-              cur(invites (~(del by invites.cur) who.rsvp)) :: uninvite @p
+              cur(invites.data (~(del by invites.data.cur) who.rsvp)) :: uninvite @p
             =/  new-invite=invite  inv(rsvp status.rsvp)
-            cur(invites (~(put by invites.cur) who.rsvp new-invite))
+            cur(invites.data (~(put by invites.data.cur) who.rsvp new-invite))
         [`new-event new-event +.acc]
       ?~  new-event
         [~ alma]
@@ -129,12 +131,12 @@
     |=  [events=(list event) =event]
     ^-  (list ^event)
     =|  acc=(list ^event)
-    =/  [e-start=@da e-end=@da]  (moment-to-range:hora when.event)
+    =/  [e-start=@da e-end=@da]  (moment-to-range:hora when.data.event)
     |-
     ?~  events
       ::  event is older than all previous ones, add to end
       (flop [event acc])
-    =/  [start=@da end=@da]  (moment-to-range:hora when.i.events)
+    =/  [start=@da end=@da]  (moment-to-range:hora when.data.i.events)
     ?.  (gte e-start start)
       $(events t.events, acc [i.events acc])
     ::  now our order should be (flop acc) then event then events
@@ -161,7 +163,7 @@
     ::      [[cur l] &]
     =/  [match=(list event) rest=(list event)]
         %+  skid  events
-        |=(e=event =(code event-code.e))
+        |=(e=event =(code event-code.data.e))
     =/  n=@  (lent match)
     ?:  =(n 0)
       [~ rest]
@@ -197,10 +199,30 @@
     =/  events=(list event)  (~(get ja events.alma) calendar-code)
     =/  match=(list event)
         %+  skim  events
-        |=(e=event =(event-code event-code.e))
+        |=(e=event =(event-code event-code.data.e))
     ?~  match
       ~
     ?>  =((lent match) 1)
     `i.match
+  ::
+  ++  get-events-inrange
+    |=  [code=calendar-code start=@da end=@da]
+    ^-  (unit [(list event) (list projected-event)])
+    =/  events=(unit (list event))  (~(get by events.alma) code)
+    ?~  events
+      ~
+    %-  some
+    %-  tail
+    %^  spin  u.events
+      `[(list event) (list projected-event)]`[~ ~]
+    |=  [cur=event events=(list event) projections=(list projected-event)]
+    ^-  [event (list event) (list projected-event)]
+    =/  [e=(unit event) p=(list projected-event)]
+        (events-overlapping-in-range:ucal-util cur start end)
+    :-  cur
+    :_  (weld p projections)
+    ?~  e
+      events
+    [u.e events]
   --
 --

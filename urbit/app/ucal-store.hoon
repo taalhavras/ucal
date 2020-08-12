@@ -13,6 +13,8 @@
 +$  card   card:agent:gall
 +$  cal    calendar:ucal
 +$  event  event:ucal
++$  event-data  event-data:ucal
++$  projected-event  projected-event:ucal
 +$  calendar-code  calendar-code:ucal
 +$  event-code  event-code:ucal
 +$  almanac  almanac:ucal-almanac
@@ -136,6 +138,13 @@
       ?~  res
         [~ ~]
       ``noun+!>(u.res)
+    ::
+        [%y %events %inrange *]
+      ~&  [%inrange t.t.t.path]
+      =/  res  (get-events-inrange:uc t.t.t.path)
+      ?~  res
+        [~ ~]
+      ``noun+!>(u.res)
     ==
   ++  on-fail   on-fail:def
 --
@@ -170,6 +179,18 @@
     ~
   =/  code=calendar-code  (snag 0 path)
   (~(get-events-bycal al alma.state) code)
+::
+++  get-events-inrange
+  |=  =path
+  ^-  (unit [(list event) (list projected-event)])
+  ?.  =((lent path) 3)
+    ~
+  =/  =calendar-code  (snag 0 path)
+  =/  [start=@da end=@da]
+      %+  normalize-period
+        (slav %da (snag 1 path))
+      (slav %da (snag 2 path))
+  (~(get-events-inrange al alma.state) calendar-code start end)
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -228,17 +249,19 @@
     ::
       %create-event
     =/  input  +.action
-    =/  =about:ucal  [our.bowl now.bowl now.bowl %concrete]
+    =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
       %:  event
-        event-code.input                                :: TODO: generate
-        calendar-code.input
-        about
-        detail.input
-        when.input
+        %:  event-data
+          event-code.input  :: TODO: generate
+          calendar-code.input
+          about
+          detail.input
+          when.input
+          invites.input
+          %yes  :: organizer is attending own event by default
+        ==
         era.input
-        invites.input
-        %yes  :: organizer is attending own event by default
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
