@@ -285,12 +285,17 @@
         ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
           ?>  =(month-delta 0)
           [(advance-months m-start-date interval.era) 1]
+        ::  in this case the moment ends before the start of our range
+        ::  but is in the same month. advance by one interval
+        ?:  &(=(month-delta 0) (lte m-end start))
+          [(advance-months m-start-date interval.era) 1]
         [(advance-months m-start-date month-delta) 0]
     ?:  ?=([%on *] form.rrule.era)
       =|  i=@ud
       |-
       =/  new-start-date=date  (advance-months adjusted-start-date i)
       =/  new-start=@da  (year new-start-date)
+      ?>  (gte new-start m-start)
       ?:  (lte d.t.m-start-date (days-in-month m.new-start-date y.new-start-date))
         =/  count=@ud
             (monthly-increments new-start m-start d.t.m-start-date interval.era)

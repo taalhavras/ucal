@@ -618,6 +618,14 @@
           `era`[[%instances 10] 1 monthly+on]
         ==
       !>  (~(put in *(set moment)) `moment`[%days ~2014.2.5 1])
+      :-
+        :*
+          ~2020.3.4..10.00.00
+          ~2020.4.10
+          `moment`[%block ~2020.3.4..07.00.00 ~h2]
+          `era`[infinite 1 monthly+on]
+        ==
+      !>  (~(put in *(set moment)) `moment`[%block ~2020.4.4..07.00.00 ~h2])
       ::  hit end of query range
       ::  hit end of era (instances)
       ::  hit end of era (time)
@@ -671,7 +679,7 @@
       !>
       %:  successor-in-range
         ~2020.8.31
-        ~2020.9.30
+        ~2020.9.25
         `moment`[%days ~2020.8.29 1]
         `era`[infinite 1 [%monthly %weekday %last]]
       ==
