@@ -39,9 +39,61 @@
     ^-  projected-event
     [ed(when m) era]
   --
+::  utilities for converting event/calendar codes to/from cords
+++  cc-to-cord
+  |=  =calendar-code
+  ^-  @t
+  (crip <calendar-code>)
+::
+++  ec-to-cord
+  |=  =event-code
+  ^-  @t
+  (crip <event-code>)
+::
+++  cord-to-cc
+  |=  =cord
+  ^-  calendar-code
+  %-  from-digits
+  (rash cord (plus sid:ab))
+::
+++  cord-to-ec
+  |=  =cord
+  ^-  event-code
+  %-  from-digits
+  (rash cord (plus sid:ab))
+::  +from-digits:  converts a list of digits to a single atom
+::
+++  from-digits
+  |=  l=(list @)
+  ^-  @ud
+  (roll l |=([cur=@ud acc=@ud] (add (mul 10 acc) cur)))
 ::  +vcal-to-ucal: converts a vcalendar to our data representation
+::
 ++  vcal-to-ucal
-  |=  vcal=vcalendar
+  |=  [=vcalendar =calendar-code owner=@p now=@da]
   ^-  [calendar (list event)]
+  =/  cal=calendar
+    %:  calendar
+      owner
+      calendar-code
+      (crip prodid.vcalendar)
+      now
+      now
+    ==
+  :-  cal
+  %-  head
+  %+  reel
+    events.vcalendar
+  |=  [cur=vevent events=(list event) code=event-code]
+  ^-  [(list event) event-code]
+  =/  res=(unit event)  (vevent-to-event cur code)
+  ?~  res
+    [events code]
+  [[u.res events] +(code)]
+::  +vevent-to-event: attempts to parse event from vevent
+::
+++  vevent-to-event
+  |=  [=vevent =event-code]
+  ^-  (unit event)
   !!
 --

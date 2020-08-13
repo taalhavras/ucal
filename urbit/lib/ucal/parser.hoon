@@ -98,12 +98,8 @@
 ::
 ++  from-digits
   |=  l=(list @)
-  =|  acc=@
-  =/  m=@  (pow 10 (dec (lent l)))
-  |-
-  ?~  l
-    acc
-  $(acc (add acc (mul i.l m)), m (div m 10), l t.l)
+  ^-  @ud
+  (roll l |=([cur=@ud acc=@ud] (add (mul 10 acc) cur)))
 ::
 ++  parse-rdate-values
   |=  [t=tape props=(map tape tape)]
