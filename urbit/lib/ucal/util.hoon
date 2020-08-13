@@ -1,4 +1,4 @@
-/-  *ucal, *hora
+/-  *ucal, *hora, *ucal-components
 /+  *hora
 |%
 ::  +events-overlapping-in-range: given an event and a range, produces
@@ -39,4 +39,9 @@
     ^-  projected-event
     [ed(when m) era]
   --
+::  +vcal-to-ucal: converts a vcalendar to our data representation
+++  vcal-to-ucal
+  |=  vcal=vcalendar
+  ^-  [calendar (list event)]
+  !!
 --

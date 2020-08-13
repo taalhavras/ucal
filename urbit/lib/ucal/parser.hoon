@@ -1,5 +1,5 @@
-/+  pretty-file, ucalendar-components, ucalendar-calendar
-=,  [ucalendar-components ucalendar-calendar]
+/-  *ucal-components
+/+  pretty-file
 ::  Core for parsing .ics files containing VEVENTs and VALARMs
 ::
 |%
