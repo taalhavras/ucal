@@ -38,7 +38,11 @@
 +$  event-status  ?(%tentative %confirmed %cancelled)
 ::  $latlon:  type for a latitude and a longitude, two floating points
 ::
-+$  latlon  $:(lat=dn lon=dn)
++$  latlon
+  $:
+    lat=dn
+    lon=dn
+  ==
 ::  $period:  ics period per the rfc
 ::
 +$  period

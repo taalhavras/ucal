@@ -1,4 +1,4 @@
-/-  *ucal, *hora, *ucal-components
+/-  *ucal, *hora, components=ucal-components
 /+  *hora
 |%
 ::  +events-overlapping-in-range: given an event and a range, produces
@@ -70,7 +70,7 @@
 ::  +vcal-to-ucal: converts a vcalendar to our data representation
 ::
 ++  vcal-to-ucal
-  |=  [=vcalendar =calendar-code owner=@p now=@da]
+  |=  [=vcalendar:components =calendar-code owner=@p now=@da]
   ^-  [calendar (list event)]
   =/  cal=calendar
     %:  calendar
@@ -84,16 +84,67 @@
   %-  head
   %+  reel
     events.vcalendar
-  |=  [cur=vevent events=(list event) code=event-code]
+  |=  [cur=vevent:components events=(list event) code=event-code]
   ^-  [(list event) event-code]
-  =/  res=(unit event)  (vevent-to-event cur code)
+  =/  res=(unit event)  (vevent-to-event cur code calendar-code owner now)
   ?~  res
     [events code]
   [[u.res events] +(code)]
 ::  +vevent-to-event: attempts to parse event from vevent
 ::
 ++  vevent-to-event
-  |=  [=vevent =event-code]
+  |=  [v=vevent:components =event-code =calendar-code owner=@p now=@da]
   ^-  (unit event)
+  =/  res=(unit (unit era))  (parse-era rrule.v rdate.v exdate.v)
+  ?~  res
+    ~
+  %-  some
+  %:  event
+    %:  event-data
+      event-code
+      calendar-code
+      %:  about
+        owner
+        (fall created.v now)
+        (fall last-modified.v now)
+      ==
+      %:  detail
+        (fall (bind summary.v crip) '')
+        (bind description.v crip)
+        (parse-location location.v geo.v)
+      ==
+      (parse-moment dtstart.v end.v)
+      `invites`~  :: TODO parse invites? what does this look like?
+      `rsvp`%yes  :: TODO parse rsvp? unclear what this should be
+    ==
+    u.res
+  ==
+::
+++  parse-location
+  |=  [loc=(unit tape) geo=(unit latlon:components)]
+  ^-  (unit location)
+  ::  TODO how do we want to handle situations where only geo is specified?
+  ::  our current definition of location doesn't handle it - update?
+  ?~  loc
+    ~
+  =/  address=@t  (crip u.loc)
+  ?~  geo
+    `[address ~]
+  `[address `[(ryld lat.u.geo) (ryld lon.u.geo)]]
+::
+++  parse-moment
+  |=  [start=ical-time:components end=event-ending:components]
+  ^-  moment
+  !!
+::  +parse-era: given parsed components of rrule, produce an era.
+::  if the rrule cannot be parsed into our era, produce ~. If there
+::  is no rrule, produce [~ ~]. if there is a valid rrule, produce
+::  the era.
+::
+++  parse-era
+  |=  [rrule=(unit rrule:components) rdate=(list rdate:components) exdate=(list ical-time:components)]
+  ^-  (unit (unit era))
+  ?~  rrule
+    [~ ~]
   !!
 --
