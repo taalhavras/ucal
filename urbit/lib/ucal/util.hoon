@@ -1,15 +1,19 @@
 /-  *ucal, *hora, components=ucal-components
-/+  *hora
+/+  *hora, utc=ucal-timezones-utc
 |%
 ::  +events-overlapping-in-range: given an event and a range, produces
 ::  a unit event (representing whether the input event overlaps with
 ::  the target range) and a list of projected events (if the event is
-::  recurring, these are the generated instances that also fall in range)
+::  recurring, these are the generated instances that also fall in range).
+::  IMPORTANT: THE INPUT TIMES ARE ASSUMED TO BE IN UTC.
+::  TODO could change above by also taking in a timezone and applying adjustment?
 ++  events-overlapping-in-range
   =<
   |=  [e=event start=@da end=@da]
   ^-  [(unit event) (list projected-event)]
   ?>  (lte start end)
+  ::  adjust by timezone
+  =/  [start=@da end=@da]  [(from-utc.tz.data.e start) (from-utc.tz.data.e end)]
   =/  [event-start=@da event-end=@da]  (moment-to-range when.data.e)
   ?~  era.e
     :_  ~
@@ -113,9 +117,11 @@
         (bind description.v crip)
         (parse-location location.v geo.v)
       ==
-      (parse-moment dtstart.v end.v)
+      (parse-moment ical-time.dtstart.v end.v)
       `invites`~  :: TODO parse invites? what does this look like?
       `rsvp`%yes  :: TODO parse rsvp? unclear what this should be
+      ::  TODO parse the actual timezone
+      utc
     ==
     u.res
   ==

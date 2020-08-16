@@ -1096,7 +1096,7 @@
     ^-  [vevent required-tags unique-tags wall]
     ?<  dtstart.rt
     :^
-    v(dtstart (parse-date-or-datetime t))
+    v(dtstart [(parse-date-or-datetime t) (~(get by props) "TZID")])
     rt(dtstart &)
     ut
     rest

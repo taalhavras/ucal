@@ -6,6 +6,7 @@
 ::
 +$  ical-time
   $%
+    ::  timezone unspecified means floating
     [%date d=@da]
     [%date-time d=@da utc=?]
   ==
@@ -175,7 +176,7 @@
       uid=cord
       ::  start of event
       ::
-      dtstart=ical-time
+      dtstart=[=ical-time tzid=(unit tzid)]
       ::  end of our event
       ::
       end=event-ending
