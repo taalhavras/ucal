@@ -158,9 +158,41 @@
 ::  the era.
 ::
 ++  parse-era
-  |=  [rrule=(unit rrule:components) rdate=(list rdate:components) exdate=(list ical-time:components)]
+  |=  [rr=(unit rrule:components) rdate=(list rdate:components) exdate=(list ical-time:components)]
   ^-  (unit (unit era))
-  ?~  rrule
+  ?~  rr
     [~ ~]
-  !!
+  =/  et=(unit era-type)
+      ?~  count.u.rr
+        ?~  until.u.rr
+          `[%infinite ~]
+        ?:  ?=([%date *] u.until.u.rr)
+          `[%until d.u.until.u.rr]
+        `[%until d.u.until.u.rr]
+      ?~  until.u.rr
+        `[%instances u.count.u.rr]
+      ::  can't specify both count and until
+      ~
+  ?~  et
+    ~
+  =/  r=(unit rrule)
+      ^-  (unit rrule)
+      ?+  freq.u.rr
+        ~
+      ::
+          %daily
+        !!
+      ::
+          %weekly
+        !!
+      ::
+          %monthly
+        !!
+      ::
+          %yearly
+        !!
+      ==
+  ?~  r
+    ~
+  ``[u.et interval.u.rr u.r]
 --
