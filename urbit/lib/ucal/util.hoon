@@ -158,6 +158,22 @@
 ::  the era.
 ::
 ++  parse-era
+  =>
+  |%
+  ++  rrule-day-to-weekday
+    ^-  (map rrule-day:components weekday)
+    %-  ~(gas by *(map rrule-day:components weekday))
+    ^-  (list [rrule-day:components weekday])
+    :~
+      [%su %sun]
+      [%mo %mon]
+      [%tu %tue]
+      [%we %wed]
+      [%th %thu]
+      [%fr %fri]
+      [%sa %sat]
+    ==
+  --
   |=  [rr=(unit rrule:components) rdate=(list rdate:components) exdate=(list ical-time:components)]
   ^-  (unit (unit era))
   ?~  rr
@@ -184,7 +200,15 @@
         !!
       ::
           %weekly
-        !!
+        ?>  (gth (lent byweekday.u.rr) 0)
+        ::  don't use weeknum in this rule
+        %-  some
+        :-  %weekly
+        %-  silt
+        %+  turn
+          byweekday.u.rr
+        |=  cur=rrule-weekdaynum:components
+        (~(got by rrule-day-to-weekday) day.cur)
       ::
           %monthly
         !!
