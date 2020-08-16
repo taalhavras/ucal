@@ -141,7 +141,17 @@
 ++  parse-moment
   |=  [start=ical-time:components end=event-ending:components]
   ^-  moment
-  !!
+  ?:  ?=([%date *] start)
+    ?:  ?=([%dtend *] end)
+      ?:  ?=([%date *] end.end)
+        [%days d.start +((div (sub d.end.end d.start) ~h24))]
+      [%period d.start d.end.end]
+    [%block d.start duration.end]
+  ?:  ?=([%dtend *] end)
+    ?:  ?=([%date *] end.end)
+      [%period d.start d.end.end]
+    [%period d.start d.end.end]
+  [%block d.start duration.end]
 ::  +parse-era: given parsed components of rrule, produce an era.
 ::  if the rrule cannot be parsed into our era, produce ~. If there
 ::  is no rrule, produce [~ ~]. if there is a valid rrule, produce
