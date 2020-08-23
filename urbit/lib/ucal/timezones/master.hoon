@@ -1,6 +1,6 @@
 ::  stores all timezones mapped by name
 ::
-/+  ucal-timezone, utc=ucal-timezones-utc
+/+  ucal-timezone, utc=ucal-timezones-utc, ny=ucal-timezones-america-new-york
 |%
 ::  keys should be lowercase
 ::
@@ -10,6 +10,7 @@
   ^-  (list [tape tz:ucal-timezone])
   :~
     ["utc" utc]
+    ["america/new_york" ny]
   ==
 ::
 ++  get-tz
