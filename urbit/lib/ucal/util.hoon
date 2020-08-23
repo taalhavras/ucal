@@ -1,5 +1,5 @@
 /-  *ucal, *hora, components=ucal-components
-/+  *hora, utc=ucal-timezones-utc
+/+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master, ucal-timezone
 |%
 ::  +events-overlapping-in-range: given an event and a range, produces
 ::  a unit event (representing whether the input event overlaps with
@@ -13,7 +13,8 @@
   ^-  [(unit event) (list projected-event)]
   ?>  (lte start end)
   ::  adjust by timezone
-  =/  [start=@da end=@da]  [(from-utc.tz.data.e start) (from-utc.tz.data.e end)]
+  =/  =tz:ucal-timezone  (get-tz:tzmaster tzid.data.e)
+  =/  [start=@da end=@da]  [(from-utc.tz start) (from-utc.tz end)]
   =/  [event-start=@da event-end=@da]  (moment-to-range when.data.e)
   ?~  era.e
     :_  ~
@@ -120,8 +121,7 @@
       (parse-moment ical-time.dtstart.v end.v)
       `invites`~  :: TODO parse invites? what does this look like?
       `rsvp`%yes  :: TODO parse rsvp? unclear what this should be
-      ::  TODO parse the actual timezone
-      utc
+      (fall tzid.dtstart.v "utc")
     ==
     u.res
   ==

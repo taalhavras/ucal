@@ -22,7 +22,7 @@
     when=moment:hora
     =invites
     =rsvp                                             :: organizer rsvp
-    =tz:ucal-timezone
+    tzid=tape
   ==
 ::  $event: type for calendar events. the optional era determines recurrence
 ::

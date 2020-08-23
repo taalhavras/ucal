@@ -78,7 +78,7 @@
           detail.data  new-detail
           about.data  about.data.cur(last-updated now)
           when.data  (fall when.patch when.data.cur)
-          tz.data  (fall tz.patch tz.data.cur)
+          tzid.data  (fall tzid.patch tzid.data.cur)
           era  (fall era.patch era.cur)
         ==
     :-

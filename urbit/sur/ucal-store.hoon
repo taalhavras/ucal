@@ -23,7 +23,7 @@
     when=(unit moment)
     era=(unit (unit era))
     =invites
-    tz=(unit tz:ucal-timezone)
+    tzid=(unit tape)
   ==
 ::
 +$  rsvp-change
