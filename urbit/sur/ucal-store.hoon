@@ -37,9 +37,8 @@
 ::
 +$  action
   $%  $:  %create-calendar
-          =calendar-code
           title=@t
-          timezone=(unit tz:ucal-timezone)  :: optional, otherwise utc
+          timezone=(unit tape)  :: optional, otherwise utc
       ==
       ::
       $:  %update-calendar
@@ -58,6 +57,7 @@
           when=moment
           era=(unit era)
           =invites
+          tzid=tape
       ==
       ::
       $:  %update-event

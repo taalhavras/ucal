@@ -205,13 +205,12 @@
     =/  new=cal
       %:  cal                                           :: new calendar
         our.bowl                                        :: ship
-        calendar-code.input                             :: unique code
+        cal-code.state                                  :: unique code
         title.input                                     :: title
-        (fall timezone.input 'utc')                     :: timezone
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?>  =(~ (~(get-calendar al alma.state) calendar-code.input)) :: error if exists
+    ?>  =(~ (~(get-calendar al alma.state) cal-code.state)) :: error if exists
     =/  paths=(list path)  ~[/calendars]
     =/  u=update:ucal-store  [%calendar-added new]
     =/  v=vase  !>(u)
@@ -220,6 +219,7 @@
     :-  ~[c]
     %=  state
       alma  (~(add-calendar al alma.state) new)
+      cal-code  +(cal-code.state)
     ==
     ::
       %update-calendar
@@ -264,6 +264,7 @@
           %yes  :: organizer is attending own event by default
         ==
         era.input
+        tzid.input
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
