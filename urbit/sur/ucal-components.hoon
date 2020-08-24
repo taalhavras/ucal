@@ -6,6 +6,7 @@
 ::
 +$  ical-time
   $%
+    ::  timezone unspecified means floating
     [%date d=@da]
     [%date-time d=@da utc=?]
   ==
@@ -38,7 +39,11 @@
 +$  event-status  ?(%tentative %confirmed %cancelled)
 ::  $latlon:  type for a latitude and a longitude, two floating points
 ::
-+$  latlon  $:(lat=dn lon=dn)
++$  latlon
+  $:
+    lat=dn
+    lon=dn
+  ==
 ::  $period:  ics period per the rfc
 ::
 +$  period
@@ -171,7 +176,7 @@
       uid=cord
       ::  start of event
       ::
-      dtstart=ical-time
+      dtstart=[=ical-time tzid=(unit tzid)]
       ::  end of our event
       ::
       end=event-ending
@@ -361,5 +366,24 @@
     ::
     last-modified=(unit ical-datetime)
     url=(unit tape)
+  ==
+::  $vcalendar:  ics vcalendar object
+::
++$  vcalendar
+  $:
+    ::  Required fields
+    ::
+    ::  "product id" of whatever generated this calendar
+    ::
+    prodid=tape
+    ::  ical version
+    ::
+    version=tape
+    ::  events in our calendar
+    ::
+    events=(list vevent)
+    ::  Optional fields
+    ::
+    timezones=(map tzid vtimezone)
   ==
 --

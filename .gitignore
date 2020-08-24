@@ -5,3 +5,4 @@ ics/*
 *.temp
 .urbitrc
 node_modules/
+urbit/gen/dummy.hoon

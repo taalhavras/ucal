@@ -4,7 +4,7 @@
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
 /-  ucal, ucal-almanac, ucal-store
-/+  default-agent, ucal-util, alma-door=ucal-almanac
+/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
 ::
 ::: local type
 ::
@@ -21,7 +21,10 @@
 ++  al  al:alma-door
 ::
 +$  state-zero
-  $:  alma=almanac
+  $:
+    alma=almanac ::  maintains calendar and event states
+    cal-code=calendar-code ::  for generating calendar codes
+    event-codes=(map calendar-code event-code) ::  for generating event codes
   ==
 ::
 +$  versioned-state
@@ -158,7 +161,7 @@
   ^-  (unit cal)
   ?.  =((lent path) 1)
     ~
-  =/  code=calendar-code  (snag 0 path)
+  =/  code=calendar-code  (cord-to-cc (snag 0 path))
   (~(get-calendar al alma.state) code)
 ::
 ++  get-specific-event
@@ -167,8 +170,8 @@
   ~&  [%specific-event-path path]
   ?.  =((lent path) 2)
     ~
-  =/  =calendar-code  (snag 0 path)
-  =/  =event-code  (snag 1 path)
+  =/  =calendar-code  (cord-to-cc (snag 0 path))
+  =/  =event-code  (cord-to-ec (snag 1 path))
   (~(get-event al alma.state) calendar-code event-code)
 ::
 ++  get-events-bycal
@@ -177,7 +180,7 @@
   ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
-  =/  code=calendar-code  (snag 0 path)
+  =/  code=calendar-code  (cord-to-cc (snag 0 path))
   (~(get-events-bycal al alma.state) code)
 ::
 ++  get-events-inrange
@@ -185,7 +188,7 @@
   ^-  (unit [(list event) (list projected-event)])
   ?.  =((lent path) 3)
     ~
-  =/  =calendar-code  (snag 0 path)
+  =/  =calendar-code  (cord-to-cc (snag 0 path))
   =/  [start=@da end=@da]
       %+  normalize-period
         (slav %da (snag 1 path))
@@ -203,13 +206,12 @@
     =/  new=cal
       %:  cal                                           :: new calendar
         our.bowl                                        :: ship
-        calendar-code.input                             :: unique code
+        cal-code.state                                  :: unique code
         title.input                                     :: title
-        (fall timezone.input 'utc')                     :: timezone
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?>  =(~ (~(get-calendar al alma.state) calendar-code.input)) :: error if exists
+    ?>  =(~ (~(get-calendar al alma.state) cal-code.state)) :: error if exists
     =/  paths=(list path)  ~[/calendars]
     =/  u=update:ucal-store  [%calendar-added new]
     =/  v=vase  !>(u)
@@ -218,6 +220,8 @@
     :-  ~[c]
     %=  state
       alma  (~(add-calendar al alma.state) new)
+      cal-code  +(cal-code.state)
+      event-codes  (~(put by event-codes.state) cal-code.state 0)
     ==
     ::
       %update-calendar
@@ -241,34 +245,43 @@
         =/  removed=update:ucal-store  [%calendar-removed code]
         [%give %fact ~[/calendars] %ucal-update !>(removed)]
     =/  kick-subs=card
-        [%give %kick ~[(snoc `path`/events/bycal code)] ~]
+        [%give %kick ~[(snoc `path`/events/bycal (cc-to-cord code))] ~]
     :-  ~[cal-update kick-subs]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
+      event-codes  (~(del by event-codes.state) code)
     ==
     ::
       %create-event
     =/  input  +.action
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
+    ::  generate new event code
+    =/  cur-code=(unit event-code)  (~(get by event-codes.state) calendar-code.input)
+    ?~  cur-code
+      ::  nonexistent calendar
+      ::  FIXME do we want to just use got above and crash?
+      `state
     =/  new=event
       %:  event
         %:  event-data
-          event-code.input  :: TODO: generate
+          u.cur-code
           calendar-code.input
           about
           detail.input
           when.input
           invites.input
           %yes  :: organizer is attending own event by default
+          tzid.input
         ==
         era.input
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
-    =/  paths=(list path)  ~[(snoc `path`/events/bycal calendar-code.input)]
+    =/  paths=(list path)  ~[(snoc `path`/events/bycal (cc-to-cord calendar-code.input))]
     :-  [%give %fact paths %ucal-update !>(`update:ucal-store`[%event-added new])]~
     %=  state
       alma  (~(add-event al alma.state) new)
+      event-codes  (~(put by event-codes.state) calendar-code.input +(u.cur-code))
     ==
     ::
       %update-event
@@ -278,7 +291,7 @@
     ?~  new-event
       `state  :: nonexistent update
     =/  u=update:ucal-store  [%event-changed u.new-event]
-    =/  pax=path  (snoc `path`/events/bycal calendar-code.patch.input)
+    =/  pax=path  (snoc `path`/events/bycal (cc-to-cord calendar-code.patch.input))
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
     state(alma new-alma)
@@ -288,7 +301,7 @@
     =/  event-code  event-code.+.action
     =/  u=update:ucal-store  [%event-removed event-code]
     :-
-    ~[[%give %fact ~[(snoc `path`/events/bycal cal-code)] %ucal-update !>(u)]]
+    ~[[%give %fact ~[(snoc `path`/events/bycal (cc-to-cord cal-code))] %ucal-update !>(u)]]
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
@@ -298,14 +311,34 @@
     ?~  new-event
       `state
     =/  u=update:ucal-store  [%event-changed u.new-event]
-    =/  pax=path  (snoc `path`/events/bycal calendar-code.rsvp-change.input)
+    =/  pax=path  (snoc `path`/events/bycal (cc-to-cord calendar-code.rsvp-change.input))
     :-
     ~[[%give %fact ~[pax] %ucal-update !>(u)]]
     state(alma new-alma)
     ::
       %import-from-ics
     ::  TODO implement
-    `state
+    =/  input  +.action
+    =/  [cal=calendar events=(list event)]
+        %:  vcal-to-ucal
+          (calendar-from-file:ucal-parser path.input)
+          cal-code.state
+          our.bowl
+          now.bowl
+        ==
+    =/  [new-alma=almanac next-event-code=event-code]
+        %-  tail :: only care about state produced in spin, not list
+        %^  spin  events
+          [(~(add-calendar al alma.state) cal) `event-code`0]
+        |=  [e=event alma=almanac code=event-code]
+        ^-  [event almanac event-code]
+        [e (~(add-event al alma) e) +(code)]
+    :-  ~[[%give %fact ~[/calendars] [%ucal-update !>(`update:ucal-store`[%calendar-added cal])]]]
+    %=  state
+      alma  new-alma
+      cal-code  +(cal-code.state)
+      event-codes  (~(put by event-codes.state) cal-code.state next-event-code)
+    ==
   ==
 ::
 :: period of time, properly ordered

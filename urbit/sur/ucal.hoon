@@ -1,16 +1,13 @@
-/+  ucal-components, hora
+/+  hora, ucal-timezone
 |%
-:: TODO: enumerated list of all possible timezones
-+$  timezone  @t
 +$  title     @t
-+$  event-code  @tas
-+$  calendar-code  @tas
++$  event-code  @ud
++$  calendar-code  @ud
 ::
 +$  calendar
   $:  owner=@p
       =calendar-code                                    :: internal name, unique
       =title                                            :: external name
-      =timezone
       date-created=@da
       last-modified=@da
   ==
@@ -25,6 +22,7 @@
     when=moment:hora
     =invites
     =rsvp                                             :: organizer rsvp
+    tzid=tape
   ==
 ::  $event: type for calendar events. the optional era determines recurrence
 ::

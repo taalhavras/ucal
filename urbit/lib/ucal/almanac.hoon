@@ -45,17 +45,10 @@
     =/  cal=(unit calendar)  (~(get by cals.alma) calendar-code.patch)
     ?~  cal
       [~ alma]
-    =/  new-tz=timezone
-        ?~  timezone.patch
-          timezone.u.cal
-        ?~  u.timezone.patch
-          'utc'
-        u.u.timezone.patch
     =/  new=calendar
         %=  u.cal
           owner  (fall owner.patch owner.u.cal)
           title  (fall title.patch title.u.cal)
-          timezone  new-tz
           last-modified  now
         ==
     :-
@@ -85,6 +78,7 @@
           detail.data  new-detail
           about.data  about.data.cur(last-updated now)
           when.data  (fall when.patch when.data.cur)
+          tzid.data  (fall tzid.patch tzid.data.cur)
           era  (fall era.patch era.cur)
         ==
     :-

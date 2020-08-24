@@ -1,4 +1,5 @@
 /-  *hora, *ucal
+/+  ucal-timezone
 |%
 ::
 ::
@@ -7,7 +8,6 @@
     owner=(unit @p)
     =calendar-code
     title=(unit @t)
-    timezone=(unit (unit timezone))
   ==
 ::
 +$  event-patch
@@ -23,6 +23,7 @@
     when=(unit moment)
     era=(unit (unit era))
     =invites
+    tzid=(unit tape)
   ==
 ::
 +$  rsvp-change
@@ -36,9 +37,7 @@
 ::
 +$  action
   $%  $:  %create-calendar
-          =calendar-code
           title=@t
-          timezone=(unit timezone)                      :: optional, otherwise utc
       ==
       ::
       $:  %update-calendar
@@ -51,12 +50,12 @@
       ::
       $:  %create-event
           =calendar-code
-          =event-code
           organizer=@p
           =detail
           when=moment
           era=(unit era)
           =invites
+          tzid=tape
       ==
       ::
       $:  %update-event
