@@ -100,7 +100,9 @@
 ++  vevent-to-event
   |=  [v=vevent:components =event-code =calendar-code owner=@p now=@da]
   ^-  (unit event)
-  =/  res=(unit (unit era))  (parse-era rrule.v rdate.v exdate.v)
+  =/  m=moment  (parse-moment ical-time.dtstart.v end.v)
+  =/  start=@da  (head (moment-to-range m))
+  =/  res=(unit (unit era))  (parse-era start rrule.v rdate.v exdate.v)
   ?~  res
     ~
   %-  some
@@ -118,7 +120,7 @@
         (bind description.v crip)
         (parse-location location.v geo.v)
       ==
-      (parse-moment ical-time.dtstart.v end.v)
+      m
       `invites`~  :: TODO parse invites? what does this look like?
       `rsvp`%yes  :: TODO parse rsvp? unclear what this should be
       (fall tzid.dtstart.v "utc")
@@ -174,7 +176,7 @@
       [%sa %sat]
     ==
   --
-  |=  [rr=(unit rrule:components) rdate=(list rdate:components) exdate=(list ical-time:components)]
+  |=  [start=@da rr=(unit rrule:components) rdate=(list rdate:components) exdate=(list ical-time:components)]
   ^-  (unit (unit era))
   ?~  rr
     [~ ~]
@@ -197,7 +199,7 @@
         ~
       ::
           %daily
-        !!
+        `[%daily ~]
       ::
           %weekly
         ?>  (gth (lent byweekday.u.rr) 0)
@@ -211,10 +213,46 @@
         (~(got by rrule-day-to-weekday) day.cur)
       ::
           %monthly
-        !!
+        =/  d=date  (yore start)
+        ::  if we have bymonthday specified, it's a %on rule,
+        ::  otherwise it's a %weekday rule
+        ?~  bymonthday.u.rr
+          ::  FIXME check the weekday start falls on is in line
+          ::  with what the rule specifies? verify with byday?
+          ::  also how to tell fourth and last apart?
+          %-  some
+          :+  %monthly
+            %weekday
+          ::  1-7 -> 0, 8-14 -> 1, 15->21 -> 2, 21-28 -> 3, 29-31 -> 4
+          =/  res  (div (dec d.t.d) 7)
+          ?:  =(res 0)
+            %first
+          ?:  =(res 1)
+            %second
+          ?:  =(res 2)
+            %third
+          ?:  =(res 3)
+            ::  TODO for now always produce %fourth
+            ::  but this could also be %last
+            %fourth
+          %last
+        =/  [s=flag delta=@ud]  (old:si i.bymonthday.u.rr)
+        ::  now we want to check the number of days in our target month
+        =/  days=@ud  (days-in-month m.d y.d)
+        ?:  (gth days delta)
+          ~
+        =/  target=@ud
+            ?:  s
+              delta
+            +((sub days delta))
+        ::  if rrule day doesn't line up with the start date
+        ::  the rule is invalid
+        ?:  =(target d.t.d)
+          `[%monthly %on ~]
+        ~
       ::
           %yearly
-        !!
+        `[%yearly ~]
       ==
   ?~  r
     ~
