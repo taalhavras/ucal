@@ -1,5 +1,5 @@
-/-  ucal
-|_  act=action:ucal
+/-  ucal-store
+|_  act=action:ucal-store
 ++  grow
   |%
   ++  tank  >act<
@@ -7,6 +7,6 @@
 ::
 ++  grab
   |%
-  ++  noun  action:ucal
+  ++  noun  action:ucal-store
   --
 --
