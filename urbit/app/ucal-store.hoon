@@ -4,7 +4,7 @@
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
 /-  ucal, ucal-almanac, ucal-store
-/+  default-agent, *ucal-util, alma-door=ucal-almanac
+/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
 ::
 ::: local type
 ::
@@ -21,7 +21,9 @@
 ++  al  al:alma-door
 ::
 +$  state-zero
-  $:  alma=almanac
+  $:
+    alma=almanac ::  maintains calendar and event states
+    cal-code=calendar-code:ucal ::  for generating new codes
   ==
 ::
 +$  versioned-state
@@ -305,7 +307,23 @@
     ::
       %import-from-ics
     ::  TODO implement
-    `state
+    =/  input  +.action
+    =/  [cal=calendar events=(list event)]
+        %:  vcal-to-ucal
+          (calendar-from-file:ucal-parser path.input)
+          cal-code.state
+          our.bowl
+          now.bowl
+        ==
+    =/  new-alma=almanac
+        %-  tail :: only care about state produced in spin, not list
+        %^  spin  events
+          (~(add-calendar al alma.state) cal)
+        |=  [e=event alma=almanac]
+        ^-  [event almanac]
+        [e (~(add-event al alma) e)]
+    :-  ~[[%give %fact ~[/calendars] [%ucal-update !>(`update:ucal-store`[%calendar-added cal])]]]
+    state(alma new-alma, cal-code +(cal-code.state))
   ==
 ::
 :: period of time, properly ordered
