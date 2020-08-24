@@ -38,7 +38,6 @@
 +$  action
   $%  $:  %create-calendar
           title=@t
-          timezone=(unit tape)  :: optional, otherwise utc
       ==
       ::
       $:  %update-calendar
@@ -51,7 +50,6 @@
       ::
       $:  %create-event
           =calendar-code
-          =event-code
           organizer=@p
           =detail
           when=moment

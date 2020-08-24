@@ -23,7 +23,8 @@
 +$  state-zero
   $:
     alma=almanac ::  maintains calendar and event states
-    cal-code=calendar-code:ucal ::  for generating new codes
+    cal-code=calendar-code ::  for generating calendar codes
+    event-codes=(map calendar-code event-code) ::  for generating event codes
   ==
 ::
 +$  versioned-state
@@ -220,6 +221,7 @@
     %=  state
       alma  (~(add-calendar al alma.state) new)
       cal-code  +(cal-code.state)
+      event-codes  (~(put by event-codes.state) cal-code.state 0)
     ==
     ::
       %update-calendar
@@ -247,24 +249,31 @@
     :-  ~[cal-update kick-subs]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
+      event-codes  (~(del by event-codes.state) code)
     ==
     ::
       %create-event
     =/  input  +.action
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
+    ::  generate new event code
+    =/  cur-code=(unit event-code)  (~(get by event-codes.state) calendar-code.input)
+    ?~  cur-code
+      ::  nonexistent calendar
+      ::  FIXME do we want to just use got above and crash?
+      `state
     =/  new=event
       %:  event
         %:  event-data
-          event-code.input  :: TODO: generate
+          u.cur-code
           calendar-code.input
           about
           detail.input
           when.input
           invites.input
           %yes  :: organizer is attending own event by default
+          tzid.input
         ==
         era.input
-        tzid.input
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
@@ -272,6 +281,7 @@
     :-  [%give %fact paths %ucal-update !>(`update:ucal-store`[%event-added new])]~
     %=  state
       alma  (~(add-event al alma.state) new)
+      event-codes  (~(put by event-codes.state) calendar-code.input +(u.cur-code))
     ==
     ::
       %update-event
@@ -316,15 +326,19 @@
           our.bowl
           now.bowl
         ==
-    =/  new-alma=almanac
+    =/  [new-alma=almanac next-event-code=event-code]
         %-  tail :: only care about state produced in spin, not list
         %^  spin  events
-          (~(add-calendar al alma.state) cal)
-        |=  [e=event alma=almanac]
-        ^-  [event almanac]
-        [e (~(add-event al alma) e)]
+          [(~(add-calendar al alma.state) cal) `event-code`0]
+        |=  [e=event alma=almanac code=event-code]
+        ^-  [event almanac event-code]
+        [e (~(add-event al alma) e) +(code)]
     :-  ~[[%give %fact ~[/calendars] [%ucal-update !>(`update:ucal-store`[%calendar-added cal])]]]
-    state(alma new-alma, cal-code +(cal-code.state))
+    %=  state
+      alma  new-alma
+      cal-code  +(cal-code.state)
+      event-codes  (~(put by event-codes.state) cal-code.state next-event-code)
+    ==
   ==
 ::
 :: period of time, properly ordered
