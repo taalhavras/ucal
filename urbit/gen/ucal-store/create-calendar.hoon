@@ -1,4 +1,4 @@
-/-  *ucal-store, *sole
+/-  *ucal-store
 :-  %say
 |=  [* [title=@t ~] ~]
 :-  %ucal-action
