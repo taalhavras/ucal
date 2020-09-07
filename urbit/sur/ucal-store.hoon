@@ -1,5 +1,4 @@
-/-  *hora, *ucal
-/+  ucal-timezone
+/-  *hora, *ucal, ucal-timezone
 |%
 ::
 ::

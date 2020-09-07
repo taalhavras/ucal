@@ -1,5 +1,5 @@
-/-  *ucal, *hora, components=ucal-components
-/+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master, ucal-timezone
+/-  *ucal, *hora, components=ucal-components, ucal-timezone
+/+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
 ::  +events-overlapping-in-range: given an event and a range, produces
 ::  a unit event (representing whether the input event overlaps with

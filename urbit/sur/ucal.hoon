@@ -1,4 +1,5 @@
-/+  hora, ucal-timezone
+/-  ucal-timezone
+/+  hora
 |%
 +$  title     @t
 +$  event-code  @ud
