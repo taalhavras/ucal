@@ -6,3 +6,4 @@ ics/*
 .urbitrc
 node_modules/
 urbit/gen/dummy.hoon
+urbit/gen/resource-test.hoon
