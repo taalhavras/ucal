@@ -1,4 +1,4 @@
-/-  *hora, *ucal, ucal-timezone
+/-  *hora, *ucal, ucal-timezone, *ucal-almanac
 |%
 ::
 ::
@@ -77,13 +77,15 @@
       ==
   ==
 ::
-::  $initial: sent to subscribers on initial subscription
+::  $to-subscriber: sent to subscribers - union of initial
+::  payload and periodic updates
 ::
-+$  initial
++$  to-subscriber
   $%
-    [%calendars calendars=(list calendar)]
-    [%events-bycal events=(list event)]
+    [%initial =almanac]
+    [%update =update]
   ==
+::
 ::  $update: updates sent to subscribers
 ::
 +$  update
