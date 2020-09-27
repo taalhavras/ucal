@@ -1,4 +1,4 @@
-/-  *hora, *ucal, ucal-timezone, *ucal-almanac
+/-  *hora, *ucal, ucal-timezone, *ucal-almanac, *resource
 |%
 ::
 ::
@@ -89,12 +89,15 @@
 ::  $update: updates sent to subscribers
 ::
 +$  update
-  $%
-    [%calendar-added =calendar]
-    [%calendar-changed =calendar]
-    [%calendar-removed =calendar-code]
-    [%event-added =event]
-    [%event-changed =event]
-    [%event-removed =event-code]
+  $:
+    =resource
+    $%
+      [%calendar-added =calendar]
+      [%calendar-changed =calendar]
+      [%calendar-removed =calendar-code]
+      [%event-added =event]
+      [%event-changed =event]
+      [%event-removed =event-code]
+    ==
   ==
 --

@@ -3,7 +3,7 @@
 :: - poke
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
-/-  ucal, ucal-almanac, ucal-store
+/-  ucal, ucal-almanac, ucal-store, *resource
 /+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
 ::
 ::: local type
@@ -95,9 +95,8 @@
       (on-watch:def path)
     ::
         [%calendars ~]
-      %+  give  %ucal-to-subscriber
-      ^-  to-subscriber:ucal-store
-      [%initial alma.state]
+      =/  ts=to-subscriber:ucal-store  [%initial alma.state]
+      [%give %fact ~ %ucal-to-subscriber !>(ts)]~
     ==
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
@@ -113,6 +112,9 @@
         :: Alright, so the y seems to correspond to whether the last piece
         :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
         :: /x/a/b as our path, while with %gy we get /x/a/b/c
+        [%y %almanac ~]
+      ``noun+!>(alma.state)
+    ::
         [%y %calendars ~]
       ``noun+!>((~(get-calendars al alma.state)))
     ::
@@ -208,7 +210,7 @@
       ==
     ?>  =(~ (~(get-calendar al alma.state) cal-code.state)) :: error if exists
     =/  paths=(list path)  ~[/calendars]
-    =/  u=to-subscriber:ucal-store  [%update %calendar-added new]
+    =/  u=to-subscriber:ucal-store  [%update rid %calendar-added new]
     =/  v=vase  !>(u)
     =/  cag=cage  [%ucal-to-subscriber v]
     =/  c=card  [%give %fact paths cag]
@@ -226,7 +228,7 @@
     ?~  new-cal
       ::  nonexistant update
       `state
-    =/  ts=to-subscriber:ucal-store  [%update %calendar-changed u.new-cal]
+    =/  ts=to-subscriber:ucal-store  [%update rid %calendar-changed u.new-cal]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
     :-  ~[[%give %fact ~[/calendars] cag]]
     state(alma new-alma)
@@ -238,7 +240,7 @@
     ::  kick from /events/bycal/calendar-code
     ::  give fact to /calendars
     =/  cal-update=card
-        =/  removed=to-subscriber:ucal-store  [%update %calendar-removed code]
+        =/  removed=to-subscriber:ucal-store  [%update rid %calendar-removed code]
         [%give %fact ~[/calendars] %ucal-to-subscriber !>(removed)]
     :-  ~[cal-update]
     %=  state
@@ -272,7 +274,7 @@
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[/calendars]
-    =/  ts=to-subscriber:ucal-store  [%update %event-added new]
+    =/  ts=to-subscriber:ucal-store  [%update rid %event-added new]
     :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
     %=  state
       alma  (~(add-event al alma.state) new)
@@ -285,7 +287,7 @@
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
       `state  :: nonexistent update
-    =/  ts=to-subscriber:ucal-store  [%update %event-changed u.new-event]
+    =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
     :-
     ~[[%give %fact ~[/calendars] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -293,7 +295,7 @@
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  ts=to-subscriber:ucal-store  [%update %event-removed event-code]
+    =/  ts=to-subscriber:ucal-store  [%update rid %event-removed event-code]
     :-
     ~[[%give %fact ~[/calendars] %ucal-to-subscriber !>(ts)]]
     state(alma (~(delete-event al alma.state) event-code cal-code))
@@ -304,7 +306,7 @@
         (~(update-rsvp al alma.state) input)
     ?~  new-event
       `state
-    =/  ts=to-subscriber:ucal-store  [%update %event-changed u.new-event]
+    =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
     :-
     ~[[%give %fact ~[/calendars] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -326,7 +328,7 @@
         |=  [e=event alma=almanac code=event-code]
         ^-  [event almanac event-code]
         [e (~(add-event al alma) e) +(code)]
-    =/  ts=to-subscriber:ucal-store  [%update %calendar-added cal]
+    =/  ts=to-subscriber:ucal-store  [%update rid %calendar-added cal]
     :-  ~[[%give %fact ~[/calendars] [%ucal-to-subscriber !>(ts)]]]
     %=  state
       alma  new-alma
@@ -334,6 +336,9 @@
       event-codes  (~(put by event-codes.state) cal-code.state next-event-code)
     ==
   ==
+::
+:: resource for calendar
+++  rid  `resource`[our.bowl %calendars]
 ::
 :: period of time, properly ordered
 ::

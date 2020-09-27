@@ -8,8 +8,8 @@
 ++  config
   ^-  config:pull-hook
   :*  %ucal-store
-      update:ucal-store
-      %ucal-update
+      to-subscriber:ucal-store
+      %ucal-to-subscriber
       %ucal-push-hook
   ==
 --
@@ -40,5 +40,4 @@
   |=  =resource
   ^-  (unit path)
   `/
-
 --
