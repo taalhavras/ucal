@@ -1,13 +1,14 @@
 # Urbit Calendar
 
+## Usage
+
+
 ## Current Roadmap
-These are the current big tasks to undertake
+These are the current big tasks to undertake (and their relative priorities)
 
-1. pH testing
-2. almanac update to use ordered map, dovetails with gall agent enrichment to support date-range queries for events
-3. hook development
-
-With regards to how they should be prioritized, I think finalizing the data model is probably the most important thing and should be prioritized first. Once that's done, the hook and almanac updates can proceed independently.
+1. hook development
+2. pH testing
+3. almanac update to use ordered map, dovetails with gall agent enrichment to support date-range queries for events
 
 ### pH Testing
 branch: aqua-testing
@@ -20,6 +21,6 @@ branch: none yet
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
 
 ### hook development
-branch: none yet
+branch: pull-push-hooks
 
-The current "hook" doesn't really fulfill the standards of a "hook" according to the [userspace development guidelines](https://docs.google.com/document/d/1hS_UuResG1S4j49_H-aSshoTOROKBnGoJAaRgOipf54/edit?ts=5d533e42). A fully fleshed out hook would communicate with hooks on other ships and would also have some sort of permissions system informing who can see what events and who can edit them.
+use lib-hook to implement the push/pull hook pattern
