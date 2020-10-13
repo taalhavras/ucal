@@ -317,7 +317,6 @@
     state(alma new-alma)
     ::
       %import-from-ics
-    ::  TODO implement
     =/  input  +.action
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
