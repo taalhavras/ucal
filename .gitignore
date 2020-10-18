@@ -7,3 +7,4 @@ ics/*
 node_modules/
 urbit/gen/dummy.hoon
 urbit/gen/resource-test.hoon
+package-lock.json
