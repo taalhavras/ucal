@@ -20,5 +20,6 @@
   "homepage": "https://github.com/taalhavras/ucal#readme",
   "devDependencies": {
     "gulp": "^4.0.0"
-  }
+  },
+  "dependencies": {}
 }
