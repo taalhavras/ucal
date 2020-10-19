@@ -1,6 +1,6 @@
 ::  ucal: subscription results
 ::
-/-  *ucal
+/-  *ucal-store
 |_  =to-subscriber
 ++  grow
   |%

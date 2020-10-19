@@ -87,6 +87,7 @@
     |=  =path
     ^-  (quip card _this)
     :_  this
+    ~&  [%store-on-watch path]
     ::  NOTE
     ::  if we crash it terminates the subscription
     ::  (a negative watch-ack goes to the subscriber)
@@ -94,7 +95,7 @@
     ?+  path
       (on-watch:def path)
     ::
-        [%calendars ~]
+        [%almanac ~]
       =/  ts=to-subscriber:ucal-store  [%initial alma.state]
       [%give %fact ~ %ucal-to-subscriber !>(ts)]~
     ==
@@ -209,7 +210,7 @@
         now.bowl                                        :: last modified
       ==
     ?>  =(~ (~(get-calendar al alma.state) cal-code.state)) :: error if exists
-    =/  paths=(list path)  ~[/calendars]
+    =/  paths=(list path)  ~[/almanac]
     =/  u=to-subscriber:ucal-store  [%update rid %calendar-added new]
     =/  v=vase  !>(u)
     =/  cag=cage  [%ucal-to-subscriber v]
@@ -230,7 +231,7 @@
       `state
     =/  ts=to-subscriber:ucal-store  [%update rid %calendar-changed u.new-cal]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
-    :-  ~[[%give %fact ~[/calendars] cag]]
+    :-  ~[[%give %fact ~[/almanac] cag]]
     state(alma new-alma)
     ::
       %delete-calendar
@@ -238,10 +239,10 @@
     ?<  =(~ (~(get-calendar al alma.state) code))
     ::  produce cards
     ::  kick from /events/bycal/calendar-code
-    ::  give fact to /calendars
+    ::  give fact to /almanac
     =/  cal-update=card
         =/  removed=to-subscriber:ucal-store  [%update rid %calendar-removed code]
-        [%give %fact ~[/calendars] %ucal-to-subscriber !>(removed)]
+        [%give %fact ~[/almanac] %ucal-to-subscriber !>(removed)]
     :-  ~[cal-update]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
@@ -273,7 +274,7 @@
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
-    =/  paths=(list path)  ~[/calendars]
+    =/  paths=(list path)  ~[/almanac]
     =/  ts=to-subscriber:ucal-store  [%update rid %event-added new]
     :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
     %=  state
@@ -289,7 +290,7 @@
       `state  :: nonexistent update
     =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
     :-
-    ~[[%give %fact ~[/calendars] %ucal-to-subscriber !>(ts)]]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
     ::
       %delete-event
@@ -297,7 +298,7 @@
     =/  event-code  event-code.+.action
     =/  ts=to-subscriber:ucal-store  [%update rid %event-removed event-code]
     :-
-    ~[[%give %fact ~[/calendars] %ucal-to-subscriber !>(ts)]]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
@@ -308,7 +309,7 @@
       `state
     =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
     :-
-    ~[[%give %fact ~[/calendars] %ucal-to-subscriber !>(ts)]]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
     ::
       %import-from-ics
@@ -328,7 +329,7 @@
         ^-  [event almanac event-code]
         [e (~(add-event al alma) e) +(code)]
     =/  ts=to-subscriber:ucal-store  [%update rid %calendar-added cal]
-    :-  ~[[%give %fact ~[/calendars] [%ucal-to-subscriber !>(ts)]]]
+    :-  ~[[%give %fact ~[/almanac] [%ucal-to-subscriber !>(ts)]]]
     %=  state
       alma  new-alma
       cal-code  +(cal-code.state)
@@ -337,7 +338,7 @@
   ==
 ::
 :: resource for calendar
-++  rid  `resource`[our.bowl %calendars]
+++  rid  `resource`[our.bowl %almanac]
 ::
 :: period of time, properly ordered
 ::

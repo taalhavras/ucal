@@ -7,7 +7,7 @@
 ++  config
   ^-  config:push-hook
   :*  %ucal-store
-      /calendars :: sub path for all store updates
+      /almanac :: sub path for all store updates
       to-subscriber:ucal-store
       %ucal-to-subscriber
       %ucal-pull-hook
@@ -21,7 +21,6 @@
 |_  =bowl:gall
 +*  this        .
     def         ~(. (default-agent this %|) bowl)
-    grp       ~(. grpl bowl)
 ::
 ++  on-init  on-init:def
 ++  on-save  !>(~)
@@ -65,6 +64,7 @@
 ++  initial-watch
   |=  [=path rid=resource]
   ^-  vase
+  ~&  [%ucal-push-hook-initial-watch path rid]
   ::  TODO do we want any initial state in the path?
   ::  don't think so atm, but can be revisited
   ::  TODO ok so what about the resource? since we're
@@ -77,7 +77,7 @@
     (scot %p our.bowl)
     %ucal-store
     (scot %da now.bowl)
-    /calendars
+    /almanac
   ==
 ::
 --
