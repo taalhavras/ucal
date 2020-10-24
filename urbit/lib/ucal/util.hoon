@@ -202,15 +202,17 @@
         `[%daily ~]
       ::
           %weekly
-        ?>  (gth (lent byweekday.u.rr) 0)
-        ::  don't use weeknum in this rule
+        ::  byweekday.u.rr can be empty, so we also include the current weekday.
+        ::  we don't use weeknum in this rule.
+        =/  weekdays=(set weekday)
+            %-  silt
+            %+  turn
+              byweekday.u.rr
+            |=  cur=rrule-weekdaynum:components
+            (~(got by rrule-day-to-weekday) day.cur)
         %-  some
         :-  %weekly
-        %-  silt
-        %+  turn
-          byweekday.u.rr
-        |=  cur=rrule-weekdaynum:components
-        (~(got by rrule-day-to-weekday) day.cur)
+        (~(put in weekdays) (get-weekday start))
       ::
           %monthly
         =/  d=date  (yore start)

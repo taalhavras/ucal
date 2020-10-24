@@ -7,3 +7,5 @@ ics/*
 node_modules/
 urbit/gen/dummy.hoon
 package-lock.json
+urbit/app/ucal-test.hoon
+urbit/gen/snip.hoon
