@@ -28,7 +28,7 @@
   ^-  (unit [m tape (map tape tape)])
   =/  tokens=(list tape)  (split-first t col)
   ?>  =((lent tokens) 2)
-  =/  props=(list tape)  (split (snag 0 tokens) mic)
+  =/  props=(list tape)  (split-non-escaped (snag 0 tokens) mic)
   =/  tag=(unit m)  ((soft m) (crip (cass (snag 0 props))))
   ?~  tag
     ~
@@ -71,6 +71,16 @@
   %+  cook
     |=(x=tape !=(x "-"))  ::  %.y if we don't have '-', %.n otherwise
   (whut ;~(pose lus hep))  ::  the sign itself is optional
+::  +split-non-escaped: splits tape on rul unless matching segment is preceded by a '\'
+::
+++  split-non-escaped
+    |*  [t=tape rul=rule]
+    ^-  (list tape)
+    %+  scan
+      t
+    %+  more  rul
+      %+  cook  zing
+      (star ;~(pose ;~(plug bas next (easy ~)) ;~(less rul ;~(plug next (easy ~)))))
 ::  +split:  split input tape on delim rule
 ::
 ++  split
