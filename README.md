@@ -32,6 +32,7 @@ Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same
 
 ### Other useful generators
 `+all-calendars` : dumps a list of `[title code owner]` tuples so you can quickly see what calendars are in the store. Useful in conjunction with...
+
 `+events-in-range =calendar-code start=@da end=@da` : gets the events in the specified date range for the specified calendar.
 both of these are simple wrappers around some of the scries listed above, but they're nice for quickly checking the state of your calendar(s).
 
