@@ -1,4 +1,4 @@
-/-  *ucal, *ucal-store
+/-  *ucal
 :-  %say
 |=  [[now=@da * bec=beak] [=calendar-code start=@da end=@da ~] ~]
 :-  %noun
