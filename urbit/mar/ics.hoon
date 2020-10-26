@@ -8,7 +8,7 @@
 ++  grab  ::  convert from
     |%
     ++  mime
-        |=  [p=mite:eyre q=octs:eyre]
+        |=  [p=mite q=octs]
         ^-  @t
         q.q
     ++  txt  of-wain:format ::  wain to cord
