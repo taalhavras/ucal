@@ -156,7 +156,7 @@
 ++  ranges-overlap
   |*  [a=@ b=@ c=@ d=@]
   ^-  flag
-  &((lth a d) (lth b c))
+  &((lth a c) (lth c b))
 ::  +date-in-range: checks if d is in [start, end)
 ::
 ++  date-in-range
