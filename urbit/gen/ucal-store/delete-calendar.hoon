@@ -1,6 +1,6 @@
 /-  *ucal-store
 :-  %say
-|=  [[* * bec=beak] [=calendar-code ~] ~]
+|=  [* [=calendar-code ~] ~]
 :-  %ucal-action
 ^-  action
 :*
