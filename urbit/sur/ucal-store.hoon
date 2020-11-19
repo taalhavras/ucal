@@ -21,7 +21,6 @@
     ::
     when=(unit moment)
     era=(unit (unit era))
-    =invites
     tzid=(unit tape)
   ==
 ::

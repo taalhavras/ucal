@@ -30,12 +30,17 @@ The best documentation for these is the source code for `action` in `sur/ucal-st
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
 
+### Other useful generators
+`+all-calendars` : dumps a list of `[title code owner]` tuples so you can quickly see what calendars are in the store. Useful in conjunction with...
+
+`+events-in-range =calendar-code start=@da end=@da` : gets the events in the specified date range for the specified calendar.
+both of these are simple wrappers around some of the scries listed above, but they're nice for quickly checking the state of your calendar(s).
 
 ### Subscribing to calendars on other ships
 Not yet implemented.
 
 ### Inviting ships to your events
-Not ye implemented.
+Not yet implemented.
 
 ## Current Roadmap
 These are the current big tasks to undertake (and their relative priorities)

@@ -71,9 +71,7 @@
 +$  rsvp  $?(%yes %no %maybe)
 ::
 +$  invite
-  $:  who=@p
-      note=@t
-      =event-code
+  $:  note=@t
       optional=?
       ::  if ~, then the invited party hasn't responded
       rsvp=(unit rsvp)
