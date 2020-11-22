@@ -10,7 +10,7 @@
       (scot %da now)
       %events
       %inrange
-      (scot %ud calendar-code)
+      (scot %tas calendar-code)
       (scot %da start)
       (scot %da end)
       ~
