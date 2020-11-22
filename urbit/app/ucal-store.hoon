@@ -23,8 +23,6 @@
 +$  state-zero
   $:
     alma=almanac ::  maintains calendar and event states
-    cal-code=calendar-code ::  for generating calendar codes
-    event-codes=(map calendar-code event-code) ::  for generating event codes
   ==
 ::
 +$  versioned-state
@@ -159,7 +157,7 @@
   ^-  (unit cal)
   ?.  =((lent path) 1)
     ~
-  =/  code=calendar-code  (cord-to-cc (snag 0 path))
+  =/  code=calendar-code  `term`(snag 0 path)
   (~(get-calendar al alma.state) code)
 ::
 ++  get-specific-event
@@ -168,8 +166,8 @@
   ~&  [%specific-event-path path]
   ?.  =((lent path) 2)
     ~
-  =/  =calendar-code  (cord-to-cc (snag 0 path))
-  =/  =event-code  (cord-to-ec (snag 1 path))
+  =/  =calendar-code  `term`(snag 0 path)
+  =/  =event-code  `term`(snag 1 path)
   (~(get-event al alma.state) calendar-code event-code)
 ::
 ++  get-events-bycal
@@ -178,7 +176,7 @@
   ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
-  =/  code=calendar-code  (cord-to-cc (snag 0 path))
+  =/  code=calendar-code  `term`(snag 0 path)
   (~(get-events-bycal al alma.state) code)
 ::
 ++  get-events-inrange
@@ -186,7 +184,7 @@
   ^-  (unit [(list event) (list projected-event)])
   ?.  =((lent path) 3)
     ~
-  =/  =calendar-code  (cord-to-cc (snag 0 path))
+  =/  =calendar-code  `term`(snag 0 path)
   =/  [start=@da end=@da]
       %+  normalize-period
         (slav %da (snag 1 path))
@@ -204,12 +202,11 @@
     =/  new=cal
       %:  cal                                           :: new calendar
         our.bowl                                        :: ship
-        cal-code.state                                  :: unique code
+        (make-uuid eny.bowl 8)                          :: unique code
         title.input                                     :: title
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    ?>  =(~ (~(get-calendar al alma.state) cal-code.state)) :: error if exists
     =/  paths=(list path)  ~[/almanac]
     =/  u=to-subscriber:ucal-store  [%update rid %calendar-added new]
     =/  v=vase  !>(u)
@@ -218,8 +215,6 @@
     :-  ~[c]
     %=  state
       alma  (~(add-calendar al alma.state) new)
-      cal-code  +(cal-code.state)
-      event-codes  (~(put by event-codes.state) cal-code.state 0)
     ==
     ::
       %update-calendar
@@ -246,22 +241,15 @@
     :-  ~[cal-update]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
-      event-codes  (~(del by event-codes.state) code)
     ==
     ::
       %create-event
     =/  input  +.action
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
-    ::  generate new event code
-    =/  cur-code=(unit event-code)  (~(get by event-codes.state) calendar-code.input)
-    ?~  cur-code
-      ::  nonexistent calendar
-      ::  FIXME do we want to just use got above and crash?
-      `state
     =/  new=event
       %:  event
         %:  event-data
-          u.cur-code
+          (make-uuid eny.bowl 8)
           calendar-code.input
           about
           detail.input
@@ -279,7 +267,6 @@
     :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
     %=  state
       alma  (~(add-event al alma.state) new)
-      event-codes  (~(put by event-codes.state) calendar-code.input +(u.cur-code))
     ==
     ::
       %update-event
@@ -317,23 +304,21 @@
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
           (calendar-from-file:ucal-parser path.input)
-          cal-code.state
+          (make-uuid eny.bowl 8)
           our.bowl
           now.bowl
         ==
-    =/  [new-alma=almanac next-event-code=event-code]
+    =/  new-alma=almanac
         %-  tail :: only care about state produced in spin, not list
         %^  spin  events
-          [(~(add-calendar al alma.state) cal) `event-code`0]
-        |=  [e=event alma=almanac code=event-code]
-        ^-  [event almanac event-code]
-        [e (~(add-event al alma) e) +(code)]
+          [(~(add-calendar al alma.state) cal)]
+        |=  [e=event alma=almanac]
+        ^-  [event almanac]
+        [e (~(add-event al alma) e)]
     =/  ts=to-subscriber:ucal-store  [%update rid %calendar-added cal]
     :-  ~[[%give %fact ~[/almanac] [%ucal-to-subscriber !>(ts)]]]
     %=  state
       alma  new-alma
-      cal-code  +(cal-code.state)
-      event-codes  (~(put by event-codes.state) cal-code.state next-event-code)
     ==
   ==
 ::

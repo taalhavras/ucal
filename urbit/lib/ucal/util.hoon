@@ -56,7 +56,7 @@
   ::  +get-random-char: gets a term of a single ascii character [a-z]
   ::
   ++  get-random-char
-    |=  =rng
+    |*  =rng
     ^-  [term ^rng]
     =/  [incr=@ud continuation=^rng]  (rads:rng 26)
     [`term`(add 'a' incr) continuation]
@@ -64,13 +64,13 @@
   ::  backwards and reverse upon return.
   ::
   ++  make-term-list
-    |=  [=rng len=@ud acc=(list term)]
+    |*  [=rng len=@ud acc=(list term)]
     ^-  (list term)
     ?:  =(len 0)
       (flop acc)
     =/  acc=(list term)
         ?:  =(0 (mod len 4))
-          [%- acc]
+          [`term`'-' acc]
         acc
     =/  [nxt=term continuation=^rng]  (get-random-char rng)
     %^  make-term-list  continuation
@@ -82,28 +82,6 @@
   ?>  (gth len 0)
   =/  [first=term =rng]  (get-random-char ~(. og eny))
   `term`(crip (make-term-list rng (dec len) ~[first]))
-::  utilities for converting event/calendar codes to/from cords
-++  cc-to-cord
-  |=  =calendar-code
-  ^-  @t
-  (crip <calendar-code>)
-::
-++  ec-to-cord
-  |=  =event-code
-  ^-  @t
-  (crip <event-code>)
-::
-++  cord-to-cc
-  |=  =cord
-  ^-  calendar-code
-  %-  from-digits
-  (rash cord (plus sid:ab))
-::
-++  cord-to-ec
-  |=  =cord
-  ^-  event-code
-  %-  from-digits
-  (rash cord (plus sid:ab))
 ::  +from-digits:  converts a list of digits to a single atom
 ::
 ++  from-digits
