@@ -208,6 +208,7 @@
         now.bowl                                        :: last modified
       ==
     =/  paths=(list path)  ~[/almanac]
+    =/  rid=resource  (resource-for-calendar calendar-code.new)
     =/  u=to-subscriber:ucal-store  [%update rid %calendar-added new]
     =/  v=vase  !>(u)
     =/  cag=cage  [%ucal-to-subscriber v]
@@ -224,6 +225,7 @@
     ?~  new-cal
       ::  nonexistant update
       `state
+    =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
     =/  ts=to-subscriber:ucal-store  [%update rid %calendar-changed u.new-cal]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
     :-  ~[[%give %fact ~[/almanac] cag]]
@@ -236,6 +238,7 @@
     ::  kick from /events/bycal/calendar-code
     ::  give fact to /almanac
     =/  cal-update=card
+        =/  rid=resource  (resource-for-calendar code)
         =/  removed=to-subscriber:ucal-store  [%update rid %calendar-removed code]
         [%give %fact ~[/almanac] %ucal-to-subscriber !>(removed)]
     :-  ~[cal-update]
@@ -263,6 +266,7 @@
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[/almanac]
+    =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [%update rid %event-added new]
     :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
     %=  state
@@ -275,6 +279,7 @@
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
       `state  :: nonexistent update
+    =/  rid=resource  (resource-for-calendar calendar-code.patch.input)
     =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
@@ -283,6 +288,7 @@
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
+    =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [%update rid %event-removed event-code]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
@@ -294,6 +300,7 @@
         (~(update-rsvp al alma.state) input)
     ?~  new-event
       `state
+    =/  rid=resource  (resource-for-calendar calendar-code.rsvp-change.input)
     =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
@@ -315,15 +322,19 @@
         |=  [e=event alma=almanac]
         ^-  [event almanac]
         [e (~(add-event al alma) e)]
+    =/  rid=resource  (resource-for-calendar calendar-code.cal)
     =/  ts=to-subscriber:ucal-store  [%update rid %calendar-added cal]
     :-  ~[[%give %fact ~[/almanac] [%ucal-to-subscriber !>(ts)]]]
     %=  state
       alma  new-alma
     ==
   ==
+::  +resource-for-calendar: get resource for a given calendar
 ::
-:: resource for calendar
-++  rid  `resource`[our.bowl %almanac]
+++  resource-for-calendar
+  |=  =calendar-code
+  ^-  resource
+  `resource`[our.bowl `term`calendar-code]
 ::
 :: period of time, properly ordered
 ::
