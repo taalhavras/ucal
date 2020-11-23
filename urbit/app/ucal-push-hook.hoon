@@ -47,7 +47,7 @@
   ?:  ?=([%initial *] ts)
     ~&  %initial-no-rid
     ~
-  ~&  [%rid-is resourc.update.ts]
+  ~&  [%rid-is resource.update.ts]
   `resource.update.ts
 ::
 ++  take-update
