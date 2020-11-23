@@ -79,6 +79,13 @@
         %ucal-action
       =^  cards  state  (poke-ucal-action:uc !<(action:ucal-store vase))
       [cards this]
+    ::
+        %ucal-to-subscriber
+      ::  this is where updates from ucal-pull-hook come through.
+      ~&  %ucal-to-subscriber-via-poke
+      =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
+      ~&  [%ts ts]
+      `this
     ==
   ::
   ++  on-watch
@@ -97,7 +104,10 @@
       =/  ts=to-subscriber:ucal-store  [%initial alma.state]
       [%give %fact ~ %ucal-to-subscriber !>(ts)]~
     ==
-  ++  on-agent  on-agent:def
+  ++  on-agent
+    |~  [=wire =sign:agent:gall]
+    ~&  [%ucal-store-on-agent wire sign]
+    (on-agent:def wire sign)
   ++  on-arvo   on-arvo:def
   ++  on-leave  on-leave:def
   ++  on-peek

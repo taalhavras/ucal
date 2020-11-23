@@ -26,7 +26,10 @@
 ++  on-save  !>(~)
 ++  on-load  on-load:def
 ++  on-poke  on-poke:def
-++  on-agent  on-agent:def
+++  on-agent
+  |~  [=wire =sign:agent:gall]
+  ~&  [%ucal-pull-hook-on-agent wire sign]
+  (on-agent:def wire sign)
 ++  on-watch  on-watch:def
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
