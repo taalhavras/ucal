@@ -42,15 +42,19 @@
 ++  resource-for-update
   |=  =vase
   ^-  (unit resource)
+  ~&  %resource-for-update
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
   ?:  ?=([%initial *] ts)
+    ~&  %initial-no-rid
     ~
+  ~&  [%rid-is resourc.update.ts]
   `resource.update.ts
 ::
 ++  take-update
   |=  =vase
   ^-  [(list card) agent]
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
+  ~&  [%take-update ts]
   ::  if a calendar is removed, kick subs for the resource.
   ::  otherwise do nothing?
   ?.  ?=([%update *] ts)
@@ -71,13 +75,18 @@
   ::  just dumping the whole almanac it also doesn't
   ::  matter...
   !>  ^-  to-subscriber:ucal-store
-  :-  %initial
-  .^  almanac
-    %gy
-    (scot %p our.bowl)
-    %ucal-store
-    (scot %da now.bowl)
-    /almanac
-  ==
+  ::  get the whole almanac, then do our lookups on it
+  =/  alma=almanac
+      .^  almanac
+        %gy
+        (scot %p our.bowl)
+        %ucal-store
+        (scot %da now.bowl)
+        /almanac
+      ==
+  =/  cc=calendar-code  name.rid
+  :+  %initial
+    (~(got by cals.alma) cc)
+  (~(get ja events.alma) cc)
 ::
 --

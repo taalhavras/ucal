@@ -81,7 +81,7 @@
 ::
 +$  to-subscriber
   $%
-    [%initial =almanac]
+    [%initial =calendar events=(list event)]
     [%update =update]
   ==
 ::
@@ -91,7 +91,6 @@
   $:
     =resource
     $%
-      [%calendar-added =calendar]
       [%calendar-changed =calendar]
       [%calendar-removed =calendar-code]
       [%event-added =event]

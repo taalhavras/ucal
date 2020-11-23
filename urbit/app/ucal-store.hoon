@@ -93,17 +93,10 @@
     ^-  (quip card _this)
     :_  this
     ~&  [%store-on-watch path]
-    ::  NOTE
-    ::  if we crash it terminates the subscription
-    ::  (a negative watch-ack goes to the subscriber)
-    ::  as it it never started.
-    ?+  path
-      (on-watch:def path)
-    ::
-        [%almanac ~]
-      =/  ts=to-subscriber:ucal-store  [%initial alma.state]
-      [%give %fact ~ %ucal-to-subscriber !>(ts)]~
-    ==
+    ::  NOTE: the store sends subscription updates on /almanac that are proxied
+    ::  by ucal-push-hook. However, since these are per-calendar, there's no
+    ::  initial state we want to send here.
+    (on-watch:def path)
   ++  on-agent
     |~  [=wire =sign:agent:gall]
     ~&  [%ucal-store-on-agent wire sign]
@@ -112,7 +105,7 @@
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
-    ~&  [%path-is path]
+    ~&  [%peek-path-is path]
     ^-  (unit (unit cage))
     ?+  path
       (on-peek:def path)
@@ -217,13 +210,7 @@
         now.bowl                                        :: created
         now.bowl                                        :: last modified
       ==
-    =/  paths=(list path)  ~[/almanac]
-    =/  rid=resource  (resource-for-calendar calendar-code.new)
-    =/  u=to-subscriber:ucal-store  [%update rid %calendar-added new]
-    =/  v=vase  !>(u)
-    =/  cag=cage  [%ucal-to-subscriber v]
-    =/  c=card  [%give %fact paths cag]
-    :-  ~[c]
+    :-  ~
     %=  state
       alma  (~(add-calendar al alma.state) new)
     ==
@@ -332,9 +319,7 @@
         |=  [e=event alma=almanac]
         ^-  [event almanac]
         [e (~(add-event al alma) e)]
-    =/  rid=resource  (resource-for-calendar calendar-code.cal)
-    =/  ts=to-subscriber:ucal-store  [%update rid %calendar-added cal]
-    :-  ~[[%give %fact ~[/almanac] [%ucal-to-subscriber !>(ts)]]]
+    :-  ~
     %=  state
       alma  new-alma
     ==
