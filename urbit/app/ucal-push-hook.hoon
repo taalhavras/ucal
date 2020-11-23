@@ -44,10 +44,7 @@
   ^-  (unit resource)
   ~&  %resource-for-update
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
-  ~&  ts
-  ?:  ?=([%initial *] ts)
-    `resource.ts
-  `resource.update.ts
+  `resource.ts
 ::
 ++  take-update
   |=  =vase
@@ -56,11 +53,11 @@
   ~&  [%take-update ts]
   ::  if a calendar is removed, kick subs for the resource.
   ::  otherwise do nothing?
-  ?.  ?=([%update *] ts)
+  ?.  ?=([%update *] +.ts)
     `this
-  ?.  ?=([%calendar-removed *] (tail update.ts))
+  ?.  ?=([%calendar-removed *] update.ts)
     `this
-  =/  =card  [%give %kick ~[(en-path:resource resource.update.ts)] ~]
+  =/  =card  [%give %kick ~[(en-path:resource resource.ts)] ~]
   :_  this
   ~[card]
 ::
@@ -84,7 +81,7 @@
         /almanac
       ==
   =/  cc=calendar-code  name.rid
-  :^  %initial  rid
+  :^  rid  %initial
     (~(got by cals.alma) cc)
   (~(get ja events.alma) cc)
 ::

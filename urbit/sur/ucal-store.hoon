@@ -92,10 +92,11 @@
 ::
 +$  update
   $%
-    [%calendar-changed =calendar]
+    [%calendar-changed patch=calendar-patch]
     [%calendar-removed =calendar-code]
     [%event-added =event]
-    [%event-changed =event]
+    [%event-changed patch=event-patch]
     [%event-removed =calendar-code =event-code]
+    [%rsvp-changed =rsvp-change]
   ==
 --
