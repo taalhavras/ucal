@@ -295,13 +295,13 @@
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
-    =/  input  +.action
+    =/  input=rsvp-change:ucal-store  +.action
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-rsvp al alma.state) input)
     ?~  new-event
       `state
-    =/  rid=resource  (resource-for-calendar calendar-code.rsvp-change.input)
-    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed rsvp-change.input]
+    =/  rid=resource  (resource-for-calendar calendar-code.input)
+    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed input]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -358,7 +358,8 @@
           (~(delete-event al old-alma) event-code.update.ts calendar-code.update.ts)
         ::
             %rsvp-changed
-          !!
+          %-  tail
+          (~(update-rsvp al old-alma) rsvp-change.update.ts)
         ==
     %=  state
       external  (~(put by external.state) from new-alma)
