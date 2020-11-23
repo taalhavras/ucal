@@ -226,7 +226,7 @@
       ::  nonexistant update
       `state
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
-    =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input]
+    =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
     :-  ~[[%give %fact ~[/almanac] cag]]
     state(alma new-alma)
@@ -280,7 +280,7 @@
     ?~  new-event
       `state  :: nonexistent update
     =/  rid=resource  (resource-for-calendar calendar-code.patch.input)
-    =/  ts=to-subscriber:ucal-store  [rid %update %event-changed input]
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-changed input now.bowl]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -343,7 +343,8 @@
     =/  new-alma=almanac
         ?-  -.update.ts
             %calendar-changed
-          !!
+          %-  tail
+          (~(update-calendar al old-alma) calendar-patch.update.ts modify-time.update.ts)
         ::
             %calendar-removed
           (~(delete-calendar al old-alma) calendar-code.update.ts)
@@ -352,7 +353,8 @@
           (~(add-event al old-alma) event.update.ts)
         ::
             %event-changed
-          !!
+          %-  tail
+          (~(update-event al old-alma) event-patch.update.ts modify-time.update.ts)
         ::
             %event-removed
           (~(delete-event al old-alma) event-code.update.ts calendar-code.update.ts)
