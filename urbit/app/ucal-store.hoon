@@ -113,43 +113,14 @@
     ?+  path
       (on-peek:def path)
     ::
-        :: y the y???
-        :: Alright, so the y seems to correspond to whether the last piece
-        :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
-        :: /x/a/b as our path, while with %gy we get /x/a/b/c
-        [%y %almanac ~]
-      ``noun+!>(alma.state)
-    ::
-        [%y %calendars ~]
-      ``noun+!>((~(get-calendars al alma.state)))
-    ::
-        [%y %events ~]
-      ``noun+!>((~(get-events al alma.state)))
-    ::
-        [%y %calendars *]
-      =/  res  (get-calendar:uc t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
-    ::
-        [%y %events %specific *]
-      =/  res  (get-specific-event:uc t.t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
-    ::
-        [%y %events %bycal *]
-      =/  res  (get-events-bycal:uc t.t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
-    ::
-        [%y %events %inrange *]
-      ~&  [%inrange t.t.t.path]
-      =/  res  (get-events-inrange:uc t.t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
+        [%y @p *]
+      =/  who=@p  `@p`(slav %p `@tas`+<:path)
+      ?:  =(who our.bowl)
+        (handle-on-peek t.t.path alma.state)
+      =/  other-alma=(unit almanac)  (~(get by external.state) `entity`who)
+      ?~  other-alma
+        ~
+      (handle-on-peek t.t.path u.other-alma)
     ==
   ++  on-fail   on-fail:def
 --
@@ -159,34 +130,34 @@
 |_  bowl=bowl:gall
 ::
 ++  get-calendar
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit cal)
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  `term`(snag 0 path)
-  (~(get-calendar al alma.state) code)
+  (~(get-calendar al almanac) code)
 ::
 ++  get-specific-event
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit event)
   ~&  [%specific-event-path path]
   ?.  =((lent path) 2)
     ~
   =/  =calendar-code  `term`(snag 0 path)
   =/  =event-code  `term`(snag 1 path)
-  (~(get-event al alma.state) calendar-code event-code)
+  (~(get-event al almanac) calendar-code event-code)
 ::
 ++  get-events-bycal
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit (list event))
   ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  `term`(snag 0 path)
-  (~(get-events-bycal al alma.state) code)
+  (~(get-events-bycal al almanac) code)
 ::
 ++  get-events-inrange
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit [(list event) (list projected-event)])
   ?.  =((lent path) 3)
     ~
@@ -195,7 +166,7 @@
       %+  normalize-period
         (slav %da (snag 1 path))
       (slav %da (snag 2 path))
-  (~(get-events-inrange al alma.state) calendar-code start end)
+  (~(get-events-inrange al almanac) calendar-code start end)
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -366,6 +337,51 @@
     %=  state
       external  (~(put by external.state) from new-alma)
     ==
+  ==
+::  +handle-on-peek: handles scries for a particular almanac
+::
+++  handle-on-peek
+  |=  [=path =almanac]
+  ^-  (unit (unit cage))
+  ?+  path  [~ ~] :: unhandled
+  ::
+      :: y the y???
+      :: Alright, so the y seems to correspond to whether the last piece
+      :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
+      :: /x/a/b as our path, while with %gy we get /x/a/b/c
+      [%almanac ~]
+    ``noun+!>(almanac)
+  ::
+      [%calendars ~]
+    ``noun+!>((~(get-calendars al almanac)))
+  ::
+      [%events ~]
+    ``noun+!>((~(get-events al almanac)))
+  ::
+      [%calendars *]
+    =/  res  (get-calendar t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ::
+      [%events %specific *]
+    =/  res  (get-specific-event t.t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ::
+      [%events %bycal *]
+    =/  res  (get-events-bycal t.t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ::
+      [%events %inrange *]
+    ~&  [%inrange t.t.path]
+    =/  res  (get-events-inrange t.t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
   ==
 ::  +resource-for-calendar: get resource for a given calendar
 ::

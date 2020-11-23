@@ -72,12 +72,14 @@
   ::  matter...
   !>  ^-  to-subscriber:ucal-store
   ::  get the whole almanac, then do our lookups on it
+  =/  us=@tas  (scot %p our.bowl)
   =/  alma=almanac
       .^  almanac
         %gy
-        (scot %p our.bowl)
+        us
         %ucal-store
         (scot %da now.bowl)
+        us
         /almanac
       ==
   =/  cc=calendar-code  name.rid
