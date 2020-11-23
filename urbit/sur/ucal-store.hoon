@@ -81,7 +81,7 @@
 ::
 +$  to-subscriber
   $%
-    [%initial =calendar events=(list event)]
+    [%initial =resource =calendar events=(list event)]
     [%update =update]
   ==
 ::

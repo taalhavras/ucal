@@ -44,10 +44,9 @@
   ^-  (unit resource)
   ~&  %resource-for-update
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
+  ~&  ts
   ?:  ?=([%initial *] ts)
-    ~&  %initial-no-rid
-    ~
-  ~&  [%rid-is resource.update.ts]
+    `resource.ts
   `resource.update.ts
 ::
 ++  take-update
@@ -85,7 +84,7 @@
         /almanac
       ==
   =/  cc=calendar-code  name.rid
-  :+  %initial
+  :^  %initial  rid
     (~(got by cals.alma) cc)
   (~(get ja events.alma) cc)
 ::

@@ -96,7 +96,9 @@
     ::  NOTE: the store sends subscription updates on /almanac that are proxied
     ::  by ucal-push-hook. However, since these are per-calendar, there's no
     ::  initial state we want to send here.
-    (on-watch:def path)
+    ?+  path  (on-watch:def path)
+        [%almanac ~]  ~
+    ==
   ++  on-agent
     |~  [=wire =sign:agent:gall]
     ~&  [%ucal-store-on-agent wire sign]
