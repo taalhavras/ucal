@@ -19,6 +19,16 @@
       events  (~(put by events.alma) calendar-code.data.event (insort events event))
     ==
   ::
+  ++  add-events
+    |=  events=(list event)
+    ^-  almanac
+    %-  tail :: only care about state produced in spin, not list
+    %^  spin  events
+      alma
+    |=  [e=event alma=almanac]
+    ^-  [event almanac]
+    [e (~(add-event al alma) e)]
+  ::
   ++  delete-calendar
     |=  code=calendar-code
     ^-  almanac

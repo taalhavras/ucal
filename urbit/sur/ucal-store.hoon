@@ -80,22 +80,22 @@
 ::  payload and periodic updates
 ::
 +$  to-subscriber
-  $%
-    [%initial =resource =calendar events=(list event)]
-    [%update =update]
+  $:
+    =resource
+    $%
+      [%initial =calendar events=(list event)]
+      [%update =update]
+    ==
   ==
 ::
 ::  $update: updates sent to subscribers
 ::
 +$  update
-  $:
-    =resource
-    $%
-      [%calendar-changed =calendar]
-      [%calendar-removed =calendar-code]
-      [%event-added =event]
-      [%event-changed =event]
-      [%event-removed =event-code]
-    ==
+  $%
+    [%calendar-changed =calendar]
+    [%calendar-removed =calendar-code]
+    [%event-added =event]
+    [%event-changed =event]
+    [%event-removed =calendar-code =event-code]
   ==
 --

@@ -22,7 +22,10 @@
 ::
 +$  state-zero
   $:
-    alma=almanac ::  maintains calendar and event states
+    ::  maintains calendar and event states
+    alma=almanac
+    ::  map of entity to almanac, to track almanacs pulled from remote ships
+    external=(map entity almanac)
   ==
 ::
 +$  versioned-state
@@ -82,10 +85,8 @@
     ::
         %ucal-to-subscriber
       ::  this is where updates from ucal-pull-hook come through.
-      ~&  %ucal-to-subscriber-via-poke
-      =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
-      ~&  [%ts ts]
-      `this
+      =^  cards  state  (poke-ucal-to-subscriber:uc !<(to-subscriber:ucal-store vase))
+      [cards this]
     ==
   ::
   ++  on-watch
@@ -225,7 +226,7 @@
       ::  nonexistant update
       `state
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
-    =/  ts=to-subscriber:ucal-store  [%update rid %calendar-changed u.new-cal]
+    =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed u.new-cal]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
     :-  ~[[%give %fact ~[/almanac] cag]]
     state(alma new-alma)
@@ -238,7 +239,7 @@
     ::  give fact to /almanac
     =/  cal-update=card
         =/  rid=resource  (resource-for-calendar code)
-        =/  removed=to-subscriber:ucal-store  [%update rid %calendar-removed code]
+        =/  removed=to-subscriber:ucal-store  [rid %update %calendar-removed code]
         [%give %fact ~[/almanac] %ucal-to-subscriber !>(removed)]
     :-  ~[cal-update]
     %=  state
@@ -266,7 +267,7 @@
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[/almanac]
     =/  rid=resource  (resource-for-calendar calendar-code.input)
-    =/  ts=to-subscriber:ucal-store  [%update rid %event-added new]
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
     :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
     %=  state
       alma  (~(add-event al alma.state) new)
@@ -279,7 +280,7 @@
     ?~  new-event
       `state  :: nonexistent update
     =/  rid=resource  (resource-for-calendar calendar-code.patch.input)
-    =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-changed u.new-event]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -288,7 +289,7 @@
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
     =/  rid=resource  (resource-for-calendar cal-code)
-    =/  ts=to-subscriber:ucal-store  [%update rid %event-removed event-code]
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma (~(delete-event al alma.state) event-code cal-code))
@@ -300,7 +301,7 @@
     ?~  new-event
       `state
     =/  rid=resource  (resource-for-calendar calendar-code.rsvp-change.input)
-    =/  ts=to-subscriber:ucal-store  [%update rid %event-changed u.new-event]
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-changed u.new-event]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -314,16 +315,50 @@
           our.bowl
           now.bowl
         ==
-    =/  new-alma=almanac
-        %-  tail :: only care about state produced in spin, not list
-        %^  spin  events
-          [(~(add-calendar al alma.state) cal)]
-        |=  [e=event alma=almanac]
-        ^-  [event almanac]
-        [e (~(add-event al alma) e)]
     :-  ~
     %=  state
-      alma  new-alma
+      alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
+    ==
+  ==
+::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
+::
+++  poke-ucal-to-subscriber
+  |=  ts=to-subscriber:ucal-store
+  ^-  (quip card _state)
+  ::  TODO do we want to produce cards for these? I don't think so.
+  :-  ~
+  =/  from=entity  entity.resource.ts
+  =/  old-alma=almanac  (~(gut by external.state) from *almanac)
+  ?-  +<.ts
+      %initial
+    ::  shouldn't be any state
+    ?>  =(old-alma *almanac)
+    =/  old-alma=almanac  (~(add-calendar al old-alma) calendar.ts)
+    %=  state
+      external  (~(put by external.state) from (~(add-events al old-alma) events.ts))
+    ==
+  ::
+      %update
+    ::  in every case here we're generating a new almanac
+    =/  new-alma=almanac
+        ?-  -.update.ts
+            %calendar-changed
+          !!
+        ::
+            %calendar-removed
+          (~(delete-calendar al old-alma) calendar-code.update.ts)
+        ::
+            %event-added
+          (~(add-event al old-alma) event.update.ts)
+        ::
+            %event-changed
+          !!
+        ::
+            %event-removed
+          (~(delete-event al old-alma) event-code.update.ts calendar-code.update.ts)
+        ==
+    %=  state
+      external  (~(put by external.state) from new-alma)
     ==
   ==
 ::  +resource-for-calendar: get resource for a given calendar
