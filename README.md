@@ -40,7 +40,7 @@ Both of these are simple wrappers around some of the scries listed above, but th
 ### Subscribing to calendars on other ships
 To enable this, you'll need to start `ucal-push-hook` on the ship you're subscribing to and `ucal-pull-hook` on the ship you're subscribing from (you might as well start them both on every ship though).  Here's an overview of how to set this up with ~zod subscribing to a calendar on ~nel.
 
-1. On ~nel run `+all-calendars` to examine the available calendars. Let's say we have one with code %abcd-efgh that we want ~zod to subscribe to.
+1. On ~nel run `+all-calendars` to examine the available calendars. Let's say we have one with code `%abcd-efgh` that we want ~zod to subscribe to.
 2. On ~zod run `:ucal-pull-hook &pull-hook-action [%add ~nel [~nel %abcd-efgh]]`
 
 Now if ~nel creates events on this calendar, they'll be sent to ~zod's store (this can be verified by scrying, `events-in-range`, or just doing `:ucal-store %print-state`). Event updates and deletions will also be sent over to ~zod. If the calendar is deleted, ~zod will be unsubscribed and the calendar in ~zod's store will be deleted. If ~zod wants to manually unsubscribe we can poke the pull hook as follows.
