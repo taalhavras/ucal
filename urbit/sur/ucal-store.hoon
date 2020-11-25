@@ -36,6 +36,8 @@
 +$  action
   $%  $:  %create-calendar
           title=@t
+          :: should be used for testing only
+          calendar-code=(unit calendar-code)
       ==
       ::
       $:  %update-calendar
@@ -48,6 +50,8 @@
       ::
       $:  %create-event
           =calendar-code
+          ::  should be used for testing only
+          event-code=(unit event-code)
           organizer=@p
           =detail
           when=moment
