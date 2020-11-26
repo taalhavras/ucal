@@ -1,21 +1,34 @@
-/-  spider, ucal
+/-  spider, ucal, ucal-store, hora
 /+  *ph-io, ph-util
 =,  strand=strand:spider
 |%
 ::
-++  start-ucal
+++  start-ucal-store
   |=  on=@p
   =/  m  (strand ,~)
   ^-  form:m
-  ;<  ~  bind:m  (dojo on "|start %ucal")
-  ::  activated app home/ucal
-  (wait-for-output on "activated app home/ucal")
+  ;<  ~  bind:m  (dojo on "|start %ucal-store")
+  (wait-for-output on "activated app home/ucal-store")
 ::
-++  ucal-poke
-  |=  [on=@p =action:ucal]
+++  start-ucal-pull-hook
+  |=  on=@p
   =/  m  (strand ,~)
   ^-  form:m
-  =/  t=tape  (weld ":ucal &ucal-action " <action>)
+  ;<  ~  bind:m  (dojo on "|start %ucal-pull-hook")
+  (wait-for-output on "activated app home/ucal-pull-hook")
+  ::
+++  start-ucal-push-hook
+  |=  on=@p
+  =/  m  (strand ,~)
+  ^-  form:m
+  ;<  ~  bind:m  (dojo on "|start %ucal-push-hook")
+  (wait-for-output on "activated app home/ucal-push-hook")
+::
+++  ucal-poke
+  |=  [on=@p =action:ucal-store]
+  =/  m  (strand ,~)
+  ^-  form:m
+  =/  t=tape  (weld ":ucal-store &ucal-action " <action>)
   ~&  >  [%poking-ucal on action]
   ;<  ~  bind:m  (dojo on t)
   ;<  ~  bind:m  (wait-for-output on ">=")
@@ -35,67 +48,69 @@
   ::  /j/~zod/rift/now/target-ship becomes the below
   ::  /i/(scot %p her)/j/(scot %p her)/rift/(scot %da now.bowl)/(scot %p who)/noun
   =/  c-on=cord  (scot %p on)
-  =/  prefix=path  ~[%i c-on %gy c-on %ucal (scot %da now.bol)]
-  =/  new-path=path  (weld prefix (snoc `path`pax %noun))
+  =/  prefix=path  ~[%i c-on %gy c-on %ucal-store (scot %da now.bol)]
+  ::  =/  prefix=path  ~[%i c-on %gy c-on %ucal-store (scot %da now.bol)]
+  ::  =/  new-path=path  (weld prefix pax)
+  ::  =/  new-path=path  (weld prefix (snoc `path`pax %noun))
+  =/  new-path=path  pax
+  ~&  >  [%path-is new-path]
+  =/  res  (scry-aqua:ph-util noun on now.bol new-path)
+  ~&  >  [%res-is res]
   %-  need
-  ;;((unit mol) (scry-aqua:ph-util noun on now.bol new-path))
+  ;;((unit mol) res)
 ::
 ++  validate-cal
-  |=  [on=@p code=calendar-code:ucal v=$-(calendar:ucal flag)]
+  |=  [on=@p target=@p code=calendar-code:ucal v=$-(calendar:ucal flag)]
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  >  [%validating-cal on code]
   ;<  bol=bowl:spider  bind:m  get-bowl
+  =/  =path  ~[(scot %p target) %calendars code]
+  ~&  >  [%path path]
   =/  cal=calendar:ucal
-      (scry-ucal on bol calendar:ucal ~[%calendars code])
+      (scry-ucal on bol calendar:ucal path)
   ~&  >  [%got-cal cal]
   (pure:m !>((v cal)))
 ::
 ++  validate-event
-  |=  [on=@p =calendar-code:ucal =event-code:ucal v=$-(event:ucal flag)]
+  |=  [on=@p target=@p =calendar-code:ucal =event-code:ucal v=$-(event:ucal flag)]
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  bol=bowl:spider  bind:m  get-bowl
   =/  ev=event:ucal
-      (scry-ucal on bol event:ucal ~[%events %specific calendar-code event-code])
+      (scry-ucal on bol event:ucal ~[(scot %p target) %events %specific calendar-code event-code])
   (pure:m !>((v ev)))
 ::
 ++  cal-basic-properties-match
-  |=  [cal=calendar:ucal owner=@p code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
+  |=  [cal=calendar:ucal owner=@p code=calendar-code:ucal title=@t]
   ^-  flag
   ?&
     =(owner.cal owner)
     =(calendar-code.cal code)
     =(title.cal title)
-    =(timezone.cal (fall tz 'utc'))
   ==
 ::
 ++  validate-cal-basic-properties
-  |=  [on=@p owner=@p code=calendar-code:ucal title=@t tz=(unit timezone:ucal)]
+  |=  [on=@p target=@p owner=@p code=calendar-code:ucal title=@t]
   =/  validator
-      (bake (curr cal-basic-properties-match [owner code title tz]) calendar:ucal)
-  (validate-cal on code validator)
+      (bake (curr cal-basic-properties-match [owner code title]) calendar:ucal)
+  (validate-cal on target code validator)
 ::
 ++  event-basic-properties-match
-  |=  [ev=event:ucal owner=@p =calendar-code:ucal =event-code:ucal title=@t start=@da end=@da description=(unit @t)]
+  |=  [=event:ucal owner=@p =event-data:ucal era=(unit era:hora)]
   ^-  flag
   ?&
-    =(owner.ev owner)
-    =(calendar-code.ev calendar-code)
-    =(event-code.ev event-code)
-    =(title.ev title)
-    =(start.ev start)
-    =(end.ev end)
-    =(description.ev description)
+    =(data.event event-data)
+    =(era.event era)
   ==
 ::
 ++  validate-event-basic-properties
-  |=  [on=@p owner=@p =calendar-code:ucal =event-code:ucal title=@t start=@da end=@da description=(unit @t)]
+  |=  [on=@p target=@p owner=@p =event-data:ucal era=(unit era:hora)]
   =/  validator
       %+  bake
         %+  curr
           event-basic-properties-match
-        [owner calendar-code event-code title start end description]
+        [owner event-data era]
       event:ucal
-  (validate-event on calendar-code event-code validator)
+  (validate-event on target calendar-code.event-data event-code.event-data validator)
 --

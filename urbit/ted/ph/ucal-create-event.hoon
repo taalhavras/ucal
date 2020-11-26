@@ -8,7 +8,7 @@
 ::  start a fake ship, ~zod
 ;<  ~  bind:m  (raw-ship ~zod ~)
 ::  now start ucal on zod
-;<  ~  bind:m  (start-ucal:test-util ~zod)
+;<  ~  bind:m  (start-ucal-store:test-util ~zod)
 ::  create a calendar
 =/  a1=action:ucal  [%create-calendar %a 'First Cal' ~]
 ;<  ~  bind:m  (ucal-poke:test-util ~zod a1)
@@ -22,6 +22,7 @@
 ::  now verify the event's properties
 ;<  res=vase  bind:m
     %:  validate-event-basic-properties:test-util
+      ~zod
       ~zod
       ~zod
       %a

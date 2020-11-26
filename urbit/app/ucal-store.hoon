@@ -343,6 +343,7 @@
 ++  handle-on-peek
   |=  [=path =almanac]
   ^-  (unit (unit cage))
+  ~&  [%handle-on-peek path]
   ?+  path  [~ ~] :: unhandled
   ::
       :: y the y???
