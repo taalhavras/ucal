@@ -1,5 +1,13 @@
 /-  *hora
 |%
+::  +normalize-da: remove hours/minutes/seconds from an @da
+::
+++  normalize-da
+  |=  a=@da
+  ^-  @da
+  =/  d=date  (yore a)
+  (year d(h.t 0, m.t 0, s.t 0, f.t ~))
+::
 ++  weekdays-by-idx
   ^-  (map @ud weekday)
   %-  ~(gas by *(map @ud weekday))
@@ -343,9 +351,7 @@
     ~
   =/  [new-moment=moment count=@ud]  u.res
   ::  now go from moment to day it starts on
-  =/  moment-start=@da
-      =/  d=date  (yore (head (moment-to-range new-moment)))
-      (year d(h.t 0, m.t 0, s.t 0, f.t ~))
+  =/  moment-start=@da  (normalize-da (head (moment-to-range new-moment)))
   ?.  (~(has in exdates.era) moment-start)
     res
   ::  the moment we generated was an excluded date - recur on successor of
@@ -523,7 +529,15 @@
   ::  m-start --- start --- m-end --- end
   ::  in this case, the moment overlaps with the range even though
   ::  it doesn't start in it.
-  ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
+  =/  include-initial=flag
+      ?&
+        (lth m-start start)
+        (lth m-end end)
+        (gth m-end start)
+        ::  don't want to include the initial moment if it's in exdates
+        !(~(has in exdates.era) (normalize-da m-start))
+      ==
+  ?:  include-initial
     :-  m
     (starting-in-range start end m era)
   (starting-in-range start end m era)

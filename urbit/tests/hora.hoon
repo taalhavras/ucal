@@ -1183,6 +1183,23 @@
       (~(gas in nex) ~[~2019.4.4 ~2019.5.4 ~2019.6.4 ~2019.7.4])
       ==
       !>  [`moment`[%block ~2019.8.4..18.48.00 ~h2] 4]
+    ::  overlapping-in-range special case initial overlap is excluded
+    %+  expect-eq
+      !>
+      %-  silt
+      ^-  (list moment)
+      %:  overlapping-in-range
+        ~2019.2.3..10.00.00
+        ~2020.5.5
+        `moment`[%block ~2019.2.3..9.30.00 ~h1]
+        ^-  era
+        :^    infinite
+            1
+          yearly
+        (~(put in nex) ~2019.2.3)
+      ==
+      !>  ^-  (set moment)
+      (~(put in *(set moment)) [%block ~2020.2.3..9.30.00 ~h1])
   ==
   |%
   --
