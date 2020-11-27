@@ -1150,4 +1150,40 @@
     ==
     !>  [`moment`[%days ~2020.2.2 2] 1]
   ==
+::
+++  test-exdates
+  =<
+  ;:  weld
+    ::  single exdate - excluded irrespective of time
+    %+  expect-eq
+      !>
+      %:  successor-in-range
+        ~2019.2.3
+        ~2020.2.3
+        `moment`[%block ~2019.4.4..18.48.00 ~h2]
+        ^-  era
+        :^    [%instances 2]
+            1
+          yearly
+        (~(put in nex) ~2019.4.4)
+      ==
+      successor-fail
+    ::  multiple exdates skipped
+    %+  expect-eq
+      !>
+      %-  need
+      %:  successor-in-range
+        ~2019.2.3
+        ~2020.2.3
+        `moment`[%block ~2019.4.4..18.48.00 ~h2]
+      ^-  era
+      :^    infinite
+          1
+        [%monthly on]
+      (~(gas in nex) ~[~2019.4.4 ~2019.5.4 ~2019.6.4 ~2019.7.4])
+      ==
+      !>  [`moment`[%block ~2019.8.4..18.48.00 ~h2] 4]
+  ==
+  |%
+  --
 --

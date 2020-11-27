@@ -349,9 +349,15 @@
   ?.  (~(has in exdates.era) moment-start)
     res
   ::  the moment we generated was an excluded date - recur on successor of
-  ::  the generated moment.
+  ::  the generated moment. once we recur, we must update the count based
+  ::  on our earlier result that was in exdates.
   =/  successor=moment  (advance-moment new-moment interval.era rrule.era)
-  (successor-in-range start end successor era)
+  %+  bind
+    (successor-in-range start end successor era)
+  |=  [mom=moment cnt=@ud]
+  ^-  [moment @ud]
+  ::  count incremented due to advance-moment being called
+  [mom (add +(count) cnt)]
   |%
   ::  +weekly-increments: given two dates, calculates the number of weekdays
   ::  in between them that are in days, incrementing the week by interval.
