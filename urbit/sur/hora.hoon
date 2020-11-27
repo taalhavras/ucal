@@ -63,12 +63,14 @@
   ==
 ::  $era:  An era is our equivalent of a recurrence rule. The rrule component
 ::  determines the mechanism of the recurrence along with the interval, and
-::  the type determines the era's bounds.
+::  the type determines the era's bounds. exdates is a set of @da where the
+::  era doesn't start (exclusions).
 ::
 +$  era
   $:
     type=era-type
     interval=$~(1 @ud)
     =rrule
+    exdates=(set @da)
   ==
 --
