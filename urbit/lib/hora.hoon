@@ -226,117 +226,132 @@
   =/  [m-start=@da m-end=@da]  (moment-to-range m)
   ?:  (gte m-start end)
     ~
-  ?:  (gte m-start start)
-    `[m 0]
-  ?:  ?=([%daily *] rrule.era)
-    =/  increment=@dr  (mul ~d1 interval.era)
-    =/  coeff=@ud  (get-coeff start m-start increment)
-    =/  new-start=@da  (add m-start (mul coeff increment))
-    ?.  &((validator new-start) (check-within-era new-start coeff type.era))
-      ~
-    `[(move-moment-start m new-start) coeff]
-  ?:  ?=([%weekly *] rrule.era)
-    ::  using 7 days as the increment, but will then need
-    ::  some offset logic to handle different days
-    =/  increment=@dr  (mul ~d7 interval.era)
-    =/  coeff=@ud  (get-coeff start m-start increment)
-    =/  new-start=@da  (add m-start (mul coeff increment))
-    =/  new-start-day=weekday  (get-weekday new-start)
-    =/  new-start-idx=@ud  (~(got by idx-by-weekday) new-start-day)
-    ::  now check all days in the weekly rule to see if any
-    ::  are in range. we get the negative delta for each
-    =/  days=(list weekday)  ~(tap in days.rrule.era)
-    =/  final-start=(unit @da)
-        =|  acc=(unit @da)
-        |-
-        ?~  days
-          acc
-        =/  cur=weekday  i.days
-        =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
-        ::  we're only interested in days on or before new-start-day
-        ::  so we treat all days as such.
-        =/  day-diff=@dr
-            %+  mul
-              ~d1
-            ?:  (lte cur-idx new-start-idx)
-              (sub new-start-idx cur-idx)
-            (sub (add new-start-idx 7) cur-idx)
-        =/  adjusted-start=@da  (sub new-start day-diff)
-        ?.  (validator adjusted-start)
-          $(days t.days)
-        ?~  acc
-          $(acc `adjusted-start, days t.days)
-        $(acc (some `@da`(min adjusted-start u.acc)), days t.days)
-    ?~  final-start
-      ~
-    =/  count=@ud
-        (weekly-increments u.final-start m-start days.rrule.era interval.era)
-    ?.  (check-within-era u.final-start count type.era)
-      ~
-    `[(move-moment-start m u.final-start) count]
-  ?:  ?=([%monthly *] rrule.era)
-    =/  month-diff=@ud  (months-between start m-start)
-    =/  coeff=@ud  (get-coeff month-diff 0 interval.era)
-    =/  month-delta=@ud  (mul coeff interval.era)
-    =/  m-start-date=date  (yore m-start)
-    =/  [adjusted-start-date=date adjust=@ud]
-        ::  in this case m-start is an OVERLAP with our range
-        ::  but doesn't start in it. we should bump by one interval
-        ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
-          ?>  =(month-delta 0)
-          [(advance-months m-start-date interval.era) 1]
-        ::  in this case the moment ends before the start of our range
-        ::  but is in the same month. advance by one interval
-        ?:  &(=(month-delta 0) (lte m-end start))
-          [(advance-months m-start-date interval.era) 1]
-        [(advance-months m-start-date month-delta) 0]
-    ?:  ?=([%on *] form.rrule.era)
-      =|  i=@ud
-      |-
-      =/  new-start-date=date  (advance-months adjusted-start-date i)
-      =/  new-start=@da  (year new-start-date)
-      ?>  (gte new-start m-start)
-      ?:  (lte d.t.m-start-date (days-in-month m.new-start-date y.new-start-date))
-        =/  count=@ud
-            (monthly-increments new-start m-start d.t.m-start-date interval.era)
-        ?.  &((validator new-start) (check-within-era new-start count type.era))
+  =/  res=(unit [moment @ud])
+      ?:  (gte m-start start)
+        `[m 0]
+      ?:  ?=([%daily *] rrule.era)
+        =/  increment=@dr  (mul ~d1 interval.era)
+        =/  coeff=@ud  (get-coeff start m-start increment)
+        =/  new-start=@da  (add m-start (mul coeff increment))
+        ?.  &((validator new-start) (check-within-era new-start coeff type.era))
           ~
-        `[(move-moment-start m new-start) count]
-      ::  TODO I think this is guaranteed to terminate, but I haven't
-      ::  proved that yet. But I think addition under modulo is cyclic
-      ::  so we'll eventually get back to the original or another
-      ::  satisfying month.
-      $(i (add i interval.era))
-    ?:  ?=([%weekday *] form.rrule.era)
-      ::  get current weekday
-      =/  cur=weekday  (get-weekday m-start)
-      =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
-      =/  new-start=@da
-          (nth-weekday cur adjusted-start-date instance.form.rrule.era)
-      ?>  =(cur (get-weekday new-start))
-      =/  adj-coeff=@ud  (add coeff adjust)
-      ?.  &((validator new-start) (check-within-era new-start adj-coeff type.era))
-        ~
-      `[(move-moment-start m new-start) adj-coeff]
-    !!
-  ?:  ?=([%yearly *] rrule.era)
-    ::  TODO as implemented, yearly recurring events on feb 29th get
-    ::  moved to march 1st - do we want to support different behavior?
-    =/  start-date=date  (yore start)
-    =/  m-start-date=date  (yore m-start)
-    =/  coeff=@ud  (get-coeff y.start-date y.m-start-date interval.era)
-    =/  new-year=@ud  (add y.m-start-date (mul coeff interval.era))
-    ::  now adjust if we're in the same year as start - if we don't
-    ::  we'll fail if the adjusted moment starts before start.
-    =/  [new-start=@da coeff=@ud]
-        =/  res=@da  (year m-start-date(y new-year))
-        ?:  (gth res start)
-          [res coeff]
-        [(year m-start-date(y (add new-year interval.era))) +(coeff)]
-    ?.  &((validator new-start) (check-within-era new-start coeff type.era))
-      ~
-    `[(move-moment-start m new-start) coeff]
-  !!
+        `[(move-moment-start m new-start) coeff]
+      ?:  ?=([%weekly *] rrule.era)
+        ::  using 7 days as the increment, but will then need
+        ::  some offset logic to handle different days
+        =/  increment=@dr  (mul ~d7 interval.era)
+        =/  coeff=@ud  (get-coeff start m-start increment)
+        =/  new-start=@da  (add m-start (mul coeff increment))
+        =/  new-start-day=weekday  (get-weekday new-start)
+        =/  new-start-idx=@ud  (~(got by idx-by-weekday) new-start-day)
+        ::  now check all days in the weekly rule to see if any
+        ::  are in range. we get the negative delta for each
+        =/  days=(list weekday)  ~(tap in days.rrule.era)
+        =/  final-start=(unit @da)
+            =|  acc=(unit @da)
+            |-
+            ?~  days
+              acc
+            =/  cur=weekday  i.days
+            =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
+            ::  we're only interested in days on or before new-start-day
+            ::  so we treat all days as such.
+            =/  day-diff=@dr
+                %+  mul
+                  ~d1
+                ?:  (lte cur-idx new-start-idx)
+                  (sub new-start-idx cur-idx)
+                (sub (add new-start-idx 7) cur-idx)
+            =/  adjusted-start=@da  (sub new-start day-diff)
+            ?.  (validator adjusted-start)
+              $(days t.days)
+            ?~  acc
+              $(acc `adjusted-start, days t.days)
+            $(acc (some `@da`(min adjusted-start u.acc)), days t.days)
+        ?~  final-start
+          ~
+        =/  count=@ud
+            (weekly-increments u.final-start m-start days.rrule.era interval.era)
+        ?.  (check-within-era u.final-start count type.era)
+          ~
+        `[(move-moment-start m u.final-start) count]
+      ?:  ?=([%monthly *] rrule.era)
+        =/  month-diff=@ud  (months-between start m-start)
+        =/  coeff=@ud  (get-coeff month-diff 0 interval.era)
+        =/  month-delta=@ud  (mul coeff interval.era)
+        =/  m-start-date=date  (yore m-start)
+        =/  [adjusted-start-date=date adjust=@ud]
+            ::  in this case m-start is an OVERLAP with our range
+            ::  but doesn't start in it. we should bump by one interval
+            ?:  &((lth m-start start) (lth m-end end) (gth m-end start))
+              ?>  =(month-delta 0)
+              [(advance-months m-start-date interval.era) 1]
+            ::  in this case the moment ends before the start of our range
+            ::  but is in the same month. advance by one interval
+            ?:  &(=(month-delta 0) (lte m-end start))
+              [(advance-months m-start-date interval.era) 1]
+            [(advance-months m-start-date month-delta) 0]
+        ?:  ?=([%on *] form.rrule.era)
+          =|  i=@ud
+          |-
+          =/  new-start-date=date  (advance-months adjusted-start-date i)
+          =/  new-start=@da  (year new-start-date)
+          ?>  (gte new-start m-start)
+          ?:  (lte d.t.m-start-date (days-in-month m.new-start-date y.new-start-date))
+            =/  count=@ud
+                (monthly-increments new-start m-start d.t.m-start-date interval.era)
+            ?.  &((validator new-start) (check-within-era new-start count type.era))
+              ~
+            `[(move-moment-start m new-start) count]
+          ::  TODO I think this is guaranteed to terminate, but I haven't
+          ::  proved that yet. But I think addition under modulo is cyclic
+          ::  so we'll eventually get back to the original or another
+          ::  satisfying month.
+          $(i (add i interval.era))
+        ?:  ?=([%weekday *] form.rrule.era)
+          ::  get current weekday
+          =/  cur=weekday  (get-weekday m-start)
+          =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
+          =/  new-start=@da
+              (nth-weekday cur adjusted-start-date instance.form.rrule.era)
+          ?>  =(cur (get-weekday new-start))
+          =/  adj-coeff=@ud  (add coeff adjust)
+          ?.  &((validator new-start) (check-within-era new-start adj-coeff type.era))
+            ~
+          `[(move-moment-start m new-start) adj-coeff]
+        !!
+      ?:  ?=([%yearly *] rrule.era)
+        ::  TODO as implemented, yearly recurring events on feb 29th get
+        ::  moved to march 1st - do we want to support different behavior?
+        =/  start-date=date  (yore start)
+        =/  m-start-date=date  (yore m-start)
+        =/  coeff=@ud  (get-coeff y.start-date y.m-start-date interval.era)
+        =/  new-year=@ud  (add y.m-start-date (mul coeff interval.era))
+        ::  now adjust if we're in the same year as start - if we don't
+        ::  we'll fail if the adjusted moment starts before start.
+        =/  [new-start=@da coeff=@ud]
+            =/  res=@da  (year m-start-date(y new-year))
+            ?:  (gth res start)
+              [res coeff]
+            [(year m-start-date(y (add new-year interval.era))) +(coeff)]
+        ?.  &((validator new-start) (check-within-era new-start coeff type.era))
+          ~
+        `[(move-moment-start m new-start) coeff]
+      !!
+  ::  now we have res, check for exdates.
+  ?~  res
+    ~
+  =/  [new-moment=moment count=@ud]  u.res
+  ::  now go from moment to day it starts on
+  =/  moment-start=@da
+      =/  d=date  (yore (head (moment-to-range new-moment)))
+      (year d(h.t 0, m.t 0, s.t 0, f.t ~))
+  ?.  (~(has in exdates.era) moment-start)
+    res
+  ::  the moment we generated was an excluded date - recur on successor of
+  ::  the generated moment.
+  =/  successor=moment  (advance-moment new-moment interval.era rrule.era)
+  (successor-in-range start end successor era)
   |%
   ::  +weekly-increments: given two dates, calculates the number of weekdays
   ::  in between them that are in days, incrementing the week by interval.

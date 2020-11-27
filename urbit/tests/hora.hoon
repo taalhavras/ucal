@@ -20,6 +20,9 @@
 ::  constant for infinite eras
 ::
 ++  infinite  `era-type`[%infinite ~]
+::  constant for empty exdates
+::
+++  nex  *(set @da)
 ::
 ++  test-hora-daily-recurrence
   =>
@@ -35,7 +38,7 @@
           ~2019.3.3..06.00.00
           ~2019.3.3..07.00.00
           `moment`[%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00]
-          `era`[infinite 1 daily]
+          `era`[infinite 1 daily nex]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%period ~2019.3.3..06.15.00 ~2019.3.3..06.45.00])
@@ -45,7 +48,7 @@
           ~2019.3.3..06.00.00
           ~2019.3.8..07.00.00
           `moment`[%block ~2019.3.3..06.15.00 ~h1]
-          `era`[infinite 2 daily]
+          `era`[infinite 2 daily nex]
         ==
       !>
       %-  silt
@@ -61,7 +64,7 @@
           ~2018.4.17
           ~2019.4.17
           `moment`[%days ~2018.4.19 1]
-          `era`[`era-type`[%instances 4] 2 daily]
+          `era`[`era-type`[%instances 4] 2 daily nex]
         ==
       !>
       %-  silt
@@ -78,7 +81,7 @@
           ~2018.4.17
           ~2019.4.17
           `moment`[%days ~2018.4.19 1]
-          `era`[[%until ~2018.4.23] 2 daily]
+          `era`[[%until ~2018.4.23] 2 daily nex]
         ==
       !>
       %-  silt
@@ -109,7 +112,7 @@
         ~2020.1.1
         ~2020.10.1
         `moment`[%days ~2019.12.3 1]
-        `era`[`era-type`[%until ~2019.12.24] 10 daily]
+        `era`[`era-type`[%until ~2019.12.24] 10 daily nex]
       ==
       successor-fail
     ::  moment starts after target range
@@ -119,7 +122,7 @@
         ~2017.5.23
         ~2019.8.4
         `moment`[%block ~2019.10.3..04.30.00 ~m30]
-        `era`[infinite 1 daily]
+        `era`[infinite 1 daily nex]
       ==
       successor-fail
     ::  requires too many applications of the rule
@@ -129,7 +132,7 @@
         ~2020.2.14
         ~2020.8.20
         `moment`[%period ~2018.2.14..03.15.00 ~2018.2.14..05.30.00]
-        `era`[`era-type`[%instances 20] 17 daily]
+        `era`[`era-type`[%instances 20] 17 daily nex]
       ==
       successor-fail
     ::  last instance of event is in range
@@ -140,7 +143,7 @@
         ~2020.2.3
         ~2020.2.7
         `moment`[%block ~2020.1.19..20.00.00 ~h1]
-        `era`[`era-type`[%instances 4] 5 daily]
+        `era`[`era-type`[%instances 4] 5 daily nex]
       ==
       !>  [`moment`[%block ~2020.2.3..20.00.00 ~h1] 3]
     ::  no events generate within the target range
@@ -150,7 +153,7 @@
         ~2020.11.3
         ~2020.11.10
         `moment`[%days ~2020.9.3 3]
-        `era`[infinite 100 daily]
+        `era`[infinite 100 daily nex]
       ==
       successor-fail
     ::  initial moment overlaps with target
@@ -161,7 +164,7 @@
         ~2020.2.3
         ~2020.2.24
         `moment`[%days ~2020.2.1 3]
-        `era`[[%instances 2] 10 daily]
+        `era`[[%instances 2] 10 daily nex]
       ==
       !>  [`moment`[%days ~2020.2.11 3] 1]
     %+  expect-eq
@@ -170,7 +173,7 @@
         ~2020.2.3
         ~2020.2.24
         `moment`[%days ~2020.2.1 3]
-        `era`[[%instances 1] 10 daily]
+        `era`[[%instances 1] 10 daily nex]
       ==
       successor-fail
     ::  general cases
@@ -182,7 +185,7 @@
         ~2020.1.1
         ~2020.10.1
         `moment`[%days ~2019.12.3 1]
-        `era`[`era-type`[%until ~2020.4.9] 10 daily]
+        `era`[`era-type`[%until ~2020.4.9] 10 daily nex]
       ==
       !>  [`moment`[%days ~2020.1.2 1] 3]
     ::  starting-in-range tests
@@ -204,7 +207,7 @@
       ~2016.11.22
       ~2017.7.12
       `moment`[%days ~2016.11.21 2]
-      `era`[[%instances 4] 7 daily]
+      `era`[[%instances 4] 7 daily nex]
     ==
     !>
     %-  silt
@@ -232,7 +235,7 @@
       ~2016.11.22
       ~2017.7.12
       `moment`[%days ~2016.11.21 2]
-      `era`[[%instances 4] 7 daily]
+      `era`[[%instances 4] 7 daily nex]
     ==
     !>
     %-  silt
@@ -266,7 +269,7 @@
           ~2020.8.11
           ~2020.8.14
           `moment`[%days ~2020.8.8 1]
-          `era`[infinite 1 weekend]
+          `era`[infinite 1 weekend nex]
         ==
       !>  *(set moment)
       ::  nothing in era (time)
@@ -275,7 +278,7 @@
           ~2020.8.20
           ~2020.8.31
           `moment`[%days ~2020.8.5 1]
-          `era`[[%until ~2020.8.15] 1 mwf]
+          `era`[[%until ~2020.8.15] 1 mwf nex]
         ==
       !>  *(set moment)
       ::  nothing in era (instances)
@@ -284,7 +287,7 @@
           ~2020.8.24
           ~2020.8.31
           `moment`[%block ~2020.8.3..14.00.00 ~h2]
-          `era`[[%instances 8] 1 mwf]
+          `era`[[%instances 8] 1 mwf nex]
         ==
       !>  *(set moment)
       ::  first instance is the only thing in range
@@ -293,7 +296,7 @@
           ~2020.8.4
           ~2020.8.6
           `moment`[%block ~2020.8.5..18.00.00 ~h1.m30]
-          `era`[infinite 1 mwf]
+          `era`[infinite 1 mwf nex]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%block ~2020.8.5..18.00.00 ~h1.m30])
@@ -303,7 +306,7 @@
           ~2020.8.4
           ~2020.8.6
           `moment`[%block ~2020.8.3..18.00.00 ~h1.m30]
-          `era`[infinite 1 mwf]
+          `era`[infinite 1 mwf nex]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%block ~2020.8.5..18.00.00 ~h1.m30])
@@ -313,7 +316,7 @@
           ~2020.8.16
           ~2020.8.22
           `moment`[%days ~2020.8.3 1]
-          `era`[infinite 1 mwf]
+          `era`[infinite 1 mwf nex]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -324,7 +327,7 @@
           ~2020.8.1
           ~2020.9.7
           `moment`[%days ~2020.8.1 1]
-          `era`[[%instances 4] 1 [%weekly (~(put in *(set weekday)) %sat)]]
+          `era`[[%instances 4] 1 [%weekly (~(put in *(set weekday)) %sat)] nex]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -341,7 +344,7 @@
           ~2020.8.1
           ~2020.8.31
           `moment`[%days ~2020.8.4 1]
-          `era`[[%until ~2020.8.13] 1 tth]
+          `era`[[%until ~2020.8.13] 1 tth nex]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -440,7 +443,7 @@
         ~2020.8.1
         ~2020.8.31
         `moment`[%days ~2020.7.23 1]
-        `era`[[%until ~2020.7.30] 1 tth]
+        `era`[[%until ~2020.7.30] 1 tth nex]
       ==
       successor-fail
     ::  moment starts after target range
@@ -450,7 +453,7 @@
         ~2020.8.1
         ~2020.8.31
         `moment`[%days ~2020.9.1 1]
-        `era`[infinite 1 tth]
+        `era`[infinite 1 tth nex]
       ==
       successor-fail
     ::  too many applications of rule
@@ -460,7 +463,7 @@
         ~2020.8.18
         ~2020.8.31
         `moment`[%days ~2020.8.3 1]
-        `era`[[%instances 5] 1 mwf]
+        `era`[[%instances 5] 1 mwf nex]
       ==
       successor-fail
     ::  no events in target range
@@ -470,7 +473,7 @@
         ~2020.8.4
         ~2020.8.5
         `moment`[%days ~2020.8.3 1]
-        `era`[infinite 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])]]
+        `era`[infinite 1 [%weekly (silt `(list weekday)`~[%mon %thu %fri])] nex]
       ==
       successor-fail
     ::  initial moment overlaps with range
@@ -480,7 +483,7 @@
         ~2020.8.9..04.00.00
         ~2020.8.25
         `moment`[%block ~2020.8.8..23.00.00 ~h6]
-        `era`[[%instances 1] 1 [%weekly (silt `(list weekday)`~[%sat %tue])]]
+        `era`[[%instances 1] 1 [%weekly (silt `(list weekday)`~[%sat %tue])] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -490,7 +493,7 @@
         ~2020.8.9..04.00.00
         ~2020.8.25
         `moment`[%block ~2020.8.8..23.00.00 ~h6]
-        `era`[[%instances 2] 1 [%weekly (silt `(list weekday)`~[%sat %tue])]]
+        `era`[[%instances 2] 1 [%weekly (silt `(list weekday)`~[%sat %tue])] nex]
       ==
       !>  [`moment`[%block ~2020.8.11..23.00.00 ~h6] 1]
     ::  general cases
@@ -502,7 +505,7 @@
         ~2020.8.12
         ~2020.8.26
         `moment`[%block ~2020.8.13..12.00.00 ~h2]
-        `era`[infinite 1 tth]
+        `era`[infinite 1 tth nex]
       ==
       !>  [`moment`[%block ~2020.8.13..12.00.00 ~h2] 0]
     ::  last instance falls in range
@@ -513,7 +516,7 @@
         ~2020.8.21
         ~2020.8.31
         `moment`[%block ~2020.8.1..04.00.00 ~m30]
-        `era`[[%instances 7] 1 weekend]
+        `era`[[%instances 7] 1 weekend nex]
       ==
       !>  [`moment`[%block ~2020.8.22..04.00.00 ~m30] 6]
     ::  TODO {starting, overlapping}-in-range tests
@@ -540,7 +543,7 @@
         ~2020.8.4..12.00.00
         ~2020.8.8..18.00.00
         `moment`[%block ~2020.8.4..10.00.00 ~h3]
-        `era`[infinite 1 tth]
+        `era`[infinite 1 tth nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -563,7 +566,7 @@
           ~2015.2.23
           ~2015.4.26
           `moment`[%days ~2016.3.25 3]
-          `era`[infinite 1 [%monthly on]]
+          `era`[infinite 1 [%monthly on] nex]
         ==
       !>  *(set moment)
       ::  nothing in era (time)
@@ -572,7 +575,7 @@
           ~2019.1.23
           ~2020.2.4
           `moment`[%days ~2017.5.14 1]
-          `era`[[%until ~2019.1.1] 1 [%monthly on]]
+          `era`[[%until ~2019.1.1] 1 [%monthly on] nex]
         ==
       !>  *(set moment)
       ::  nothing in era (instances)
@@ -581,7 +584,7 @@
           ~2020.9.4
           ~2020.12.2
           `moment`[%days ~2014.10.9 1]
-          `era`[[%instances 20] 1 [%monthly on]]
+          `era`[[%instances 20] 1 [%monthly on] nex]
         ==
       !>  *(set moment)
       :-
@@ -589,7 +592,7 @@
           ~2020.9.4
           ~2020.12.2
           `moment`[%days ~2014.10.9 1]
-          `era`[[%instances 20] 1 [%monthly %weekday %second]]
+          `era`[[%instances 20] 1 [%monthly %weekday %second] nex]
         ==
       !>  *(set moment)
       ::  first instance is the only thing in range
@@ -598,7 +601,7 @@
           ~2013.8.5
           ~2014.3.2
           `moment`[%days ~2014.1.29 1]
-          `era`[[%instances 10] 1 monthly+on]
+          `era`[[%instances 10] 1 monthly+on nex]
         ==
       !>  (~(put in *(set moment)) `moment`[%days ~2014.1.29 1])
       :-
@@ -606,7 +609,7 @@
           ~2013.8.5
           ~2014.2.2
           `moment`[%days ~2014.1.29 1]
-          `era`[[%instances 10] 1 [%monthly %weekday %last]]
+          `era`[[%instances 10] 1 [%monthly %weekday %last] nex]
         ==
       !>  (~(put in *(set moment)) `moment`[%days ~2014.1.29 1])
       ::  only one instance falls in the range
@@ -615,7 +618,7 @@
           ~2014.2.2
           ~2014.3.2
           `moment`[%days ~2014.1.5 1]
-          `era`[[%instances 10] 1 monthly+on]
+          `era`[[%instances 10] 1 monthly+on nex]
         ==
       !>  (~(put in *(set moment)) `moment`[%days ~2014.2.5 1])
       :-
@@ -623,7 +626,7 @@
           ~2020.3.4..10.00.00
           ~2020.4.10
           `moment`[%block ~2020.3.4..07.00.00 ~h2]
-          `era`[infinite 1 monthly+on]
+          `era`[infinite 1 monthly+on nex]
         ==
       !>  (~(put in *(set moment)) `moment`[%block ~2020.4.4..07.00.00 ~h2])
       ::  hit end of query range
@@ -672,7 +675,7 @@
         ~2020.6.9
         ~2020.7.4
         `moment`[%days ~2020.6.7 1]
-        `era`[infinite 1 [%monthly on]]
+        `era`[infinite 1 [%monthly on] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -681,7 +684,7 @@
         ~2020.8.31
         ~2020.9.25
         `moment`[%days ~2020.8.29 1]
-        `era`[infinite 1 [%monthly %weekday %last]]
+        `era`[infinite 1 [%monthly %weekday %last] nex]
       ==
       successor-fail
     ::  end of era (instances)
@@ -691,7 +694,7 @@
         ~2020.9.1
         ~2020.9.30
         `moment`[%days ~2020.1.31 1]
-        `era`[[%instances 4] 1 [%monthly on]]
+        `era`[[%instances 4] 1 [%monthly on] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -700,7 +703,7 @@
         ~2020.6.1
         ~2020.7.31
         `moment`[%days ~2020.1.31 1]
-        `era`[[%instances 3] 1 [%monthly on]]
+        `era`[[%instances 3] 1 [%monthly on] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -709,7 +712,7 @@
         ~2020.3.1
         ~2020.3.31
         `moment`[%days ~2020.1.1 1]
-        `era`[[%instances 2] 1 [%monthly %weekday %first]]
+        `era`[[%instances 2] 1 [%monthly %weekday %first] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -718,7 +721,7 @@
         ~2020.5.2
         ~2020.12.4
         `moment`[%days ~2020.1.8 1]
-        `era`[[%instances 4] 1 [%monthly %weekday %second]]
+        `era`[[%instances 4] 1 [%monthly %weekday %second] nex]
       ==
       successor-fail
     ::  end of era (time)
@@ -728,7 +731,7 @@
         ~2020.9.20
         ~2020.12.3
         `moment`[%days ~2020.2.25 1]
-        `era`[[%until ~2020.8.3] 1 [%monthly on]]
+        `era`[[%until ~2020.8.3] 1 [%monthly on] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -737,7 +740,7 @@
         ~2020.9.20
         ~2020.12.3
         `moment`[%days ~2020.2.29 1]
-        `era`[[%until ~2020.8.3] 1 [%monthly %weekday %last]]
+        `era`[[%until ~2020.8.3] 1 [%monthly %weekday %last] nex]
       ==
       successor-fail
     ::  overlapping instance
@@ -747,7 +750,7 @@
         ~2020.8.3
         ~2021.4.2
         `moment`[%block ~2020.8.2..23.00.00 ~h2]
-        `era`[[%instances 1] 1 [%monthly on]]
+        `era`[[%instances 1] 1 [%monthly on] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -756,7 +759,7 @@
         ~2020.8.3
         ~2021.4.2
         `moment`[%block ~2020.8.2..23.00.00 ~h2]
-        `era`[[%instances 1] 1 [%monthly %weekday %first]]
+        `era`[[%instances 1] 1 [%monthly %weekday %first] nex]
       ==
       successor-fail
     %+  expect-eq
@@ -766,7 +769,7 @@
       ~2020.8.3
       ~2021.4.2
       `moment`[%block ~2020.8.2..23.00.00 ~h2]
-      `era`[[%instances 2] 1 [%monthly on]]
+      `era`[[%instances 2] 1 [%monthly on] nex]
       ==
       !>  [`moment`[%block ~2020.9.2..23.00.00 ~h2] 1]
     %+  expect-eq
@@ -776,7 +779,7 @@
       ~2020.8.3
       ~2021.4.2
       `moment`[%block ~2020.8.2..23.00.00 ~h2]
-      `era`[[%instances 2] 1 [%monthly %weekday %first]]
+      `era`[[%instances 2] 1 [%monthly %weekday %first] nex]
       ==
       !>  [`moment`[%block ~2020.9.6..23.00.00 ~h2] 1]
     ::  {starting, overlapping}-in-range tests
@@ -804,7 +807,7 @@
         ~2020.3.4
         ~2020.3.28
         `moment`[%days ~2020.3.2 3]
-        `era`[infinite 1 [%monthly on]]
+        `era`[infinite 1 [%monthly on] nex]
       ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%days ~2020.3.2 3])
@@ -815,7 +818,7 @@
         ~2020.3.4
         ~2020.3.28
         `moment`[%days ~2020.3.2 3]
-        `era`[infinite 1 [%monthly [%weekday %first]]]
+        `era`[infinite 1 [%monthly [%weekday %first]] nex]
       ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%days ~2020.3.2 3])
@@ -827,7 +830,7 @@
         ~2020.5.20
         ~2020.8.3
         `moment`[%days ~2020.5.19 3]
-        `era`[infinite 1 [%monthly on]]
+        `era`[infinite 1 [%monthly on] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -844,7 +847,7 @@
         ~2020.11.4
         ~2021.3.3
         `moment`[%days ~2020.11.1 4]
-        `era`[infinite 1 [%monthly %weekday %first]]
+        `era`[infinite 1 [%monthly %weekday %first] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -862,7 +865,7 @@
         ~2020.5.20
         ~2020.8.3
         `moment`[%days ~2020.5.19 3]
-        `era`[infinite 1 [%monthly %weekday %third]]
+        `era`[infinite 1 [%monthly %weekday %third] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -880,7 +883,7 @@
         ~2020.3.20
         ~2020.5.21
         `moment`[%days ~2020.3.17 4]
-        [[%instances 2] 1 [%monthly on]]
+        `era`[[%instances 2] 1 [%monthly on] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -896,7 +899,7 @@
         ~2020.3.20
         ~2020.5.21
         `moment`[%days ~2020.3.17 4]
-        [[%instances 3] 1 [%monthly on]]
+        `era`[[%instances 3] 1 [%monthly on] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -913,7 +916,7 @@
         ~2020.1.31
         ~2020.5.30
         `moment`[%days ~2020.1.30 4]
-        [[%instances 3] 1 [%monthly on]]
+        `era`[[%instances 3] 1 [%monthly on] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -930,7 +933,7 @@
         ~2020.3.20
         ~2020.5.21
         `moment`[%days ~2020.3.17 4]
-        [[%instances 1] 1 [%monthly on]]
+        `era`[[%instances 1] 1 [%monthly on] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -945,7 +948,7 @@
         ~2020.11.4
         ~2021.3.3
         `moment`[%days ~2020.11.1 4]
-        `era`[[%instances 1] 1 [%monthly %weekday %first]]
+        `era`[[%instances 1] 1 [%monthly %weekday %first] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -960,7 +963,7 @@
         ~2020.5.20
         ~2020.8.3
         `moment`[%days ~2020.5.19 3]
-        `era`[[%instances 2] 1 [%monthly %weekday %third]]
+        `era`[[%instances 2] 1 [%monthly %weekday %third] nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -983,7 +986,7 @@
           ~2020.6.1
           ~2020.9.1
           `moment`[%days ~2020.7.1..04.00.00 1]
-          `era`[infinite 1 yearly]
+          `era`[infinite 1 yearly nex]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) `moment`[%days ~2020.7.1..04.00.00 1])
@@ -993,7 +996,7 @@
           ~2020.1.1
           ~2020.1.31
           `moment`[%days ~2015.1.10 1]
-          `era`[[%instances 6] 1 yearly]
+          `era`[[%instances 6] 1 yearly nex]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) `moment`[%days ~2020.1.10 1])
@@ -1003,7 +1006,7 @@
           ~2019.9.4
           ~2020.5.27
           `moment`[%days ~2017.10.2..23.59.59 1]
-          `era`[infinite 2 yearly]
+          `era`[infinite 2 yearly nex]
         ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) `moment`[%days ~2019.10.2..23.59.59 1])
@@ -1013,7 +1016,7 @@
           ~2016.1.1
           ~2020.1.1
           `moment`[%days ~2015.3.3 1]
-          `era`[infinite 1 yearly]
+          `era`[infinite 1 yearly nex]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -1030,7 +1033,7 @@
           ~2015.2.22
           ~2020.4.23
           `moment`[%days ~2015.3.3 1]
-          `era`[[%instances 3] 1 yearly]
+          `era`[[%instances 3] 1 yearly nex]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -1046,7 +1049,7 @@
           ~2014.8.22
           ~2020.7.4
           `moment`[%days ~2015.6.20 1]
-          `era`[[%until ~2019.4.2] 1 yearly]
+          `era`[[%until ~2019.4.2] 1 yearly nex]
         ==
       !>  ^-  (set moment)
       %-  silt
@@ -1079,7 +1082,7 @@
         ~2019.2.3
         ~2020.12.21
         `moment`[%days ~2019.2.2 2]
-        `era`[[%instances 1] 1 yearly]
+        `era`[[%instances 1] 1 yearly nex]
       ==
       successor-fail
     %+  expect-eq
@@ -1089,7 +1092,7 @@
         ~2019.2.3
         ~2020.12.21
         `moment`[%days ~2019.2.2 2]
-        `era`[[%instances 2] 1 yearly]
+        `era`[[%instances 2] 1 yearly nex]
       ==
       !>  [`moment`[%days ~2020.2.2 2] 1]
     ::  {starting, overlapping}-in-range tests
@@ -1118,7 +1121,7 @@
         ~2020.4.2
         ~2022.5.9
         `moment`[%days ~2020.4.1 3]
-        `era`[infinite 1 yearly]
+        `era`[infinite 1 yearly nex]
       ==
       !>  ^-  (set moment)
       %-  silt
@@ -1143,7 +1146,7 @@
       ~2019.2.3
       ~2020.12.21
       `moment`[%days ~2019.2.2 2]
-      `era`[[%instances 2] 1 yearly]
+      `era`[[%instances 2] 1 yearly nex]
     ==
     !>  [`moment`[%days ~2020.2.2 2] 1]
   ==

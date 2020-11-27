@@ -258,5 +258,5 @@
       ==
   ?~  r
     ~
-  ``[u.et interval.u.rr u.r]
+  ``[u.et interval.u.rr u.r ~]
 --
