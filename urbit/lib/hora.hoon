@@ -339,7 +339,7 @@
         ::  we'll fail if the adjusted moment starts before start.
         =/  [new-start=@da coeff=@ud]
             =/  res=@da  (year m-start-date(y new-year))
-            ?:  (gth res start)
+            ?:  (gte res start)
               [res coeff]
             [(year m-start-date(y (add new-year interval.era))) +(coeff)]
         ?.  &((validator new-start) (check-within-era new-start coeff type.era))
