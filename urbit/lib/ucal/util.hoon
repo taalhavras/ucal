@@ -258,5 +258,16 @@
       ==
   ?~  r
     ~
+  =/  excludes=(set @da)
+      %-  ~(gas in *(set @da))
+      %+  turn
+        exdate
+      |=  it=ica-time:component
+      ^-  @da
+      %-  normalize-da
+      ?-  -:it
+        %date  d.it
+        %date-time d.it
+      ==
   ``[u.et interval.u.rr u.r ~]
 --
