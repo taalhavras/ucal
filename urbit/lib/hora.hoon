@@ -564,10 +564,6 @@
 ++  split-subsequent
   |=  [orig=moment =era derived=moment]
   ^-  [^era ^era]
-  ::  we need to special case instance bounded eras here - the new era
-  ::  should be adjusted such that if m is instance k and the total #
-  ::  is N, our new frequency should be N - k
-
   ::  use successor-in-range on the derived moment's bounds
   =/  [d-start=@da d-end=@da]  (moment-to-range derived)
   =/  res=[moment @ud]
