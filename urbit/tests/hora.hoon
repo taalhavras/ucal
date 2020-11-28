@@ -23,6 +23,12 @@
 ::  constant for empty exdates
 ::
 ++  nex  *(set @da)
+::  a wrapper for advance-moment with no exdates - used to simplify testing.
+::  we can discard count since it's always 1 with no exdates.
+++  advance-moment-no-exdates
+  |=  [m=moment interval=@ud =rrule]
+  ^-  moment
+  (head (advance-moment m interval rrule nex))
 ::
 ++  test-hora-daily-recurrence
   =>
@@ -95,15 +101,15 @@
   =/  until=era-type  [%until ~2020.5.1]
   =/  s1=@da  ~2030.4.9..04.30.00
   ;:  weld
-    ::  advance-moment tests
+    ::  advance-moment-no-exdates tests
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2019.1.1 1] 1 daily)
+      !>  (advance-moment-no-exdates `moment`[%days ~2019.1.1 1] 1 daily)
       !>  `moment`[%days ~2019.1.2 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%block ~2019.3.24 ~h4] 10 daily)
+      !>  (advance-moment-no-exdates `moment`[%block ~2019.3.24 ~h4] 10 daily)
       !>  `moment`[%block ~2019.4.3 ~h4]
     %+  expect-eq
-      !>  (advance-moment `moment`[%period s1 (add s1 ~m30)] 3 daily)
+      !>  (advance-moment-no-exdates `moment`[%period s1 (add s1 ~m30)] 3 daily)
       !>  `moment`[%period (add s1 ~d3) ;:(add s1 ~d3 ~m30)]
     ::  era ends before target range
     %+  expect-eq
@@ -365,74 +371,74 @@
   ;:  weld
     ::  advance moment tests
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.3 1] 1 mwf)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.3 1] 1 mwf)
       !>  `moment`[%days ~2020.8.5 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.4 2] 1 tth)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.4 2] 1 tth)
       !>  `moment`[%days ~2020.8.6 2]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.6 2] 1 tth)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.6 2] 1 tth)
       !>  `moment`[%days ~2020.8.11 2]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.4 2] 2 tth)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.4 2] 2 tth)
       !>  `moment`[%days ~2020.8.6 2]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.6 2] 2 tth)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.6 2] 2 tth)
       !>  `moment`[%days ~2020.8.18 2]
     %+  expect-eq
-      !>  (advance-moment `moment`[%block ~2020.8.8..06.30.00 ~h2] 1 weekend)
+      !>  (advance-moment-no-exdates `moment`[%block ~2020.8.8..06.30.00 ~h2] 1 weekend)
       !>  `moment`[%block ~2020.8.9..06.30.00 ~h2]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.30 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.30 1] 1 all-days)
       !>  `moment`[%days ~2020.8.31 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.31 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.31 1] 1 all-days)
       !>  `moment`[%days ~2020.9.1 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.1 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.1 1] 1 all-days)
       !>  `moment`[%days ~2020.9.2 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.2 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.2 1] 1 all-days)
       !>  `moment`[%days ~2020.9.3 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.3 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.3 1] 1 all-days)
       !>  `moment`[%days ~2020.9.4 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.4 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.4 1] 1 all-days)
       !>  `moment`[%days ~2020.9.5 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.5 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.5 1] 1 all-days)
       !>  `moment`[%days ~2020.9.6 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.6 1] 1 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.6 1] 1 all-days)
       !>  `moment`[%days ~2020.9.7 1]
     ::  two week intervals
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.30 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.30 1] 2 all-days)
       !>  `moment`[%days ~2020.8.31 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.8.31 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.8.31 1] 2 all-days)
       !>  `moment`[%days ~2020.9.1 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.1 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.1 1] 2 all-days)
       !>  `moment`[%days ~2020.9.2 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.2 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.2 1] 2 all-days)
       !>  `moment`[%days ~2020.9.3 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.3 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.3 1] 2 all-days)
       !>  `moment`[%days ~2020.9.4 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.4 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.4 1] 2 all-days)
       !>  `moment`[%days ~2020.9.5 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.5 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.5 1] 2 all-days)
       !>  `moment`[%days ~2020.9.13 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.13 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.13 1] 2 all-days)
       !>  `moment`[%days ~2020.9.14 1]
     %+  expect-eq
-      !>  (advance-moment `moment`[%days ~2020.9.6 1] 2 all-days)
+      !>  (advance-moment-no-exdates `moment`[%days ~2020.9.6 1] 2 all-days)
       !>  `moment`[%days ~2020.9.7 1]
     ::  successor in range tests
     ::
@@ -635,16 +641,16 @@
     ==
   --
   ;:  weld
-    ::  advance-moment tests
+    ::  advance-moment-no-exdates tests
     %+  expect-eq
-      !>  (advance-moment [%days ~2020.8.11 1] 1 [%monthly on])
+      !>  (advance-moment-no-exdates [%days ~2020.8.11 1] 1 [%monthly on])
       !>  `moment`[%days ~2020.9.11 1]
     %+  expect-eq
-      !>  (advance-moment [%days ~2020.8.11 1] 1 [%monthly %weekday %second])
+      !>  (advance-moment-no-exdates [%days ~2020.8.11 1] 1 [%monthly %weekday %second])
       !>  `moment`[%days ~2020.9.8 1]
     %+  expect-eq
       !>
-      %:  advance-moment
+      %:  advance-moment-no-exdates
         `moment`[%block ~2020.1.1..10.00.00 ~m30]
         1
         `rrule`[%monthly %weekday %first]
@@ -652,20 +658,20 @@
       !>  `moment`[%block ~2020.2.5..10.00.00 ~m30]
     ::  skips over months where day isn't present
     %+  expect-eq
-      !>  (advance-moment [%days ~2020.1.31 1] 1 [%monthly on])
+      !>  (advance-moment-no-exdates [%days ~2020.1.31 1] 1 [%monthly on])
       !>  `moment`[%days ~2020.3.31 1]
     %+  expect-eq
-      !>  (advance-moment [%days ~2019.12.30 1] 2 [%monthly on])
+      !>  (advance-moment-no-exdates [%days ~2019.12.30 1] 2 [%monthly on])
       !>  `moment`[%days ~2020.4.30 1]
     %+  expect-eq
-      !>  (advance-moment [%days ~2019.12.31 1] 2 [%monthly on])
+      !>  (advance-moment-no-exdates [%days ~2019.12.31 1] 2 [%monthly on])
       !>  `moment`[%days ~2020.8.31 1]
     ::  difference between %fourth and %last
     %+  expect-eq
-      !>  (advance-moment [%days ~2020.7.25 1] 1 [%monthly %weekday %fourth])
+      !>  (advance-moment-no-exdates [%days ~2020.7.25 1] 1 [%monthly %weekday %fourth])
       !>  `moment`[%days ~2020.8.22 1]
     %+  expect-eq
-      !>  (advance-moment [%days ~2020.7.25 1] 1 [%monthly %weekday %last])
+      !>  (advance-moment-no-exdates [%days ~2020.7.25 1] 1 [%monthly %weekday %last])
       !>  `moment`[%days ~2020.8.29 1]
     ::  successor-in-range tests
     ::  end of range
@@ -1063,16 +1069,16 @@
     ==
   --
   ;:  weld
-    ::  advance-moment tests
+    ::  advance-moment-no-exdates tests
     %+  expect-eq
-      !>  (advance-moment [%days ~2020.1.1 1] 1 yearly)
+      !>  (advance-moment-no-exdates [%days ~2020.1.1 1] 1 yearly)
       !>  `moment`[%days ~2021.1.1 1]
     %+  expect-eq
-      !>  (advance-moment [%block ~2020.3.18..08.30.00 ~h2] 2 yearly)
+      !>  (advance-moment-no-exdates [%block ~2020.3.18..08.30.00 ~h2] 2 yearly)
       !>  `moment`[%block ~2022.3.18..08.30.00 ~h2]
     %+  expect-eq
       !>
-      (advance-moment [%period ~2020.2.24..05.00.00 ~2020.2.24..09.15.00] 1 yearly)
+      (advance-moment-no-exdates [%period ~2020.2.24..05.00.00 ~2020.2.24..09.15.00] 1 yearly)
       !>  `moment`[%period ~2021.2.24..05.00.00 ~2021.2.24..09.15.00]
     ::  TODO successor-in-range tests
     ::  initial moment overlaps
@@ -1183,7 +1189,8 @@
       (~(gas in nex) ~[~2019.4.4 ~2019.5.4 ~2019.6.4 ~2019.7.4])
       ==
       !>  [`moment`[%block ~2019.8.4..18.48.00 ~h2] 4]
-    ::  overlapping-in-range special case initial overlap is excluded
+    ::  overlapping-in-range tests:
+    ::  special case initial overlap is excluded
     %+  expect-eq
       !>
       %-  silt
@@ -1200,6 +1207,34 @@
       ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%block ~2020.2.3..9.30.00 ~h1])
+    ::  general tests
+    ::  %instances rules with exdates
+    %+  expect-eq
+      !>
+      ^-  (set moment)
+      %-  silt
+      ^-  (list moment)
+      %:  overlapping-in-range
+        ~2020.1.1
+        ~2035.1.1
+        `moment`[%block ~2020.1.2 ~m30]
+        ^-  era
+        :^  [%instances 10]
+            1
+          yearly
+        %-  ~(gas in nex)
+        ~[~2021.1.2 ~2022.1.2 ~2024.1.2 ~2025.1.2 ~2029.1.2 ~2030.1.2]
+      ==
+      !>  ^-  (set moment)
+      %-  ~(gas in *(set moment))
+      ^-  (list moment)
+      :~
+        [%block ~2020.1.2 ~m30]
+        [%block ~2023.1.2 ~m30]
+        [%block ~2026.1.2 ~m30]
+        [%block ~2027.1.2 ~m30]
+        [%block ~2028.1.2 ~m30]
+      ==
   ==
   |%
   --

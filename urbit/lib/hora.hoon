@@ -357,13 +357,14 @@
   ::  the moment we generated was an excluded date - recur on successor of
   ::  the generated moment. once we recur, we must update the count based
   ::  on our earlier result that was in exdates.
-  =/  successor=moment  (advance-moment new-moment interval.era rrule.era)
+  =/  [successor=moment successor-count=@ud]
+      (advance-moment new-moment interval.era rrule.era exdates.era)
   %+  bind
     (successor-in-range start end successor era)
   |=  [mom=moment cnt=@ud]
   ^-  [moment @ud]
   ::  count incremented due to advance-moment being called
-  [mom (add +(count) cnt)]
+  [mom ;:(add successor-count count cnt)]
   |%
   ::  +weekly-increments: given two dates, calculates the number of weekdays
   ::  in between them that are in days, incrementing the week by interval.
@@ -461,8 +462,8 @@
 ::  +advance-moment: given a moment and a recurrence rule, produce the next moment
 ::
 ++  advance-moment
-  |=  [m=moment interval=@ud =rrule]
-  ^-  moment
+  |=  [m=moment interval=@ud =rrule exdates=(set @da)]
+  ^-  [moment @ud]
   ?<  =(interval 0)  :: nonzero interval
   =/  [start=@da end=@da]  (moment-to-range m)
   ::  get new range, then case m to figure out what flavor
@@ -499,7 +500,12 @@
         =/  d=date  (yore start)
         (year d(y (add y.d interval)))
       !!
-  (move-moment-start m new-start)
+  =/  new-moment=moment  (move-moment-start m new-start)
+  ?.  (~(has in exdates) new-start)
+    [new-moment 1]
+  =/  [next-moment=moment count=@ud]
+      (advance-moment new-moment interval rrule exdates)
+  [next-moment +(count)]
 ::
 ++  starting-in-range
   |=  [start=@da end=@da m=moment =era]
@@ -511,9 +517,9 @@
   =/  count=@ud  +:u.successor
   =/  acc=(list moment)  ~[cur]
   |-
-  =/  next=moment  (advance-moment cur interval.era rrule.era)
+  =/  [next=moment next-count=@ud]  (advance-moment cur interval.era rrule.era exdates.era)
   =/  [n-start=@da n-end=@da]  (moment-to-range next)
-  =/  n-count=@ud  +(count)
+  =/  n-count=@ud  (add count next-count)
   ?:  &((check-within-era n-start n-count type.era) (lth n-start end))
     $(acc [next acc], cur next, count n-count)
   acc
