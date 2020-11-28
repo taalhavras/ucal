@@ -517,7 +517,8 @@
   =/  count=@ud  +:u.successor
   =/  acc=(list moment)  ~[cur]
   |-
-  =/  [next=moment next-count=@ud]  (advance-moment cur interval.era rrule.era exdates.era)
+  =/  [next=moment next-count=@ud]
+      (advance-moment cur interval.era rrule.era exdates.era)
   =/  [n-start=@da n-end=@da]  (moment-to-range next)
   =/  n-count=@ud  (add count next-count)
   ?:  &((check-within-era n-start n-count type.era) (lth n-start end))

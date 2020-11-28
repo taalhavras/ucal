@@ -1158,7 +1158,6 @@
   ==
 ::
 ++  test-exdates
-  =<
   ;:  weld
     ::  single exdate - excluded irrespective of time
     %+  expect-eq
@@ -1207,8 +1206,9 @@
       ==
       !>  ^-  (set moment)
       (~(put in *(set moment)) [%block ~2020.2.3..9.30.00 ~h1])
-    ::  general tests
-    ::  %instances rules with exdates
+    ::  %instances rules with exdates - exdates are counted towards
+    ::  the total # of instances (so in this case we don't expect to
+    ::  see events past ~2029.1.2).
     %+  expect-eq
       !>
       ^-  (set moment)
@@ -1236,6 +1236,4 @@
         [%block ~2028.1.2 ~m30]
       ==
   ==
-  |%
-  --
 --
