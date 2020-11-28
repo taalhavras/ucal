@@ -1268,18 +1268,84 @@
   =/  infinite=era  [infinite 1 yearly nex]
   =/  until=era  [[%until ~2020.10.10] 1 yearly nex]
   =/  orig=moment  [%block ~2000.4.4 ~h2]
+  =/  successor=moment  [%block ~2001.4.4 ~h2]
+  =/  child=moment  [%block ~2003.4.4 ~h2]
+  =/  last=moment  [%block ~2004.4.4 ~h2]
   ;:  weld
     ::  second moment is split off
     %+  expect-eq
       !>
       ^-  [era era]
-      (split-subsequent orig instances [%block ~2001.4.4 ~h2])
+      (split-subsequent orig instances successor)
       !>
       ^-  [era era]
       :-  [[%instances 1] 1 yearly nex]
       [[%instances 4] 1 yearly nex]
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig infinite successor)
+      !>
+      ^-  [era era]
+      :-  [[%until ~2001.4.4] 1 yearly nex]
+      infinite
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig until successor)
+      !>
+      ^-  [era era]
+      :-  [[%until ~2001.4.4] 1 yearly nex]
+      until
     ::  arbitrary moment is split
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig instances child)
+      !>
+      ^-  [era era]
+      :-  [[%instances 3] 1 yearly nex]
+      [[%instances 2] 1 yearly nex]
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig infinite child)
+      !>
+      ^-  [era era]
+      :-  [[%until ~2003.4.4] 1 yearly nex]
+      infinite
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig until child)
+      !>
+      ^-  [era era]
+      :-  [[%until ~2003.4.4] 1 yearly nex]
+      until
     ::  last moment is split
-    ::  TODO make sure all era-types are represented in each case
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig instances last)
+      !>
+      ^-  [era era]
+      :-  [[%instances 4] 1 yearly nex]
+      [[%instances 1] 1 yearly nex]
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig infinite last)
+      !>
+      ^-  [era era]
+      :-  [[%until ~2004.4.4] 1 yearly nex]
+      infinite
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig until last)
+      !>
+      ^-  [era era]
+      :-  [[%until ~2004.4.4] 1 yearly nex]
+      until
   ==
 --
