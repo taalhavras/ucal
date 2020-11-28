@@ -3,7 +3,7 @@
 :: - poke
 :: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
 ::
-/-  ucal, ucal-almanac, ucal-store
+/-  ucal, ucal-almanac, ucal-store, *resource
 /+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
 ::
 ::: local type
@@ -22,9 +22,10 @@
 ::
 +$  state-zero
   $:
-    alma=almanac ::  maintains calendar and event states
-    cal-code=calendar-code ::  for generating calendar codes
-    event-codes=(map calendar-code event-code) ::  for generating event codes
+    ::  maintains calendar and event states
+    alma=almanac
+    ::  map of entity to almanac, to track almanacs pulled from remote ships
+    external=(map entity almanac)
   ==
 ::
 +$  versioned-state
@@ -81,73 +82,45 @@
         %ucal-action
       =^  cards  state  (poke-ucal-action:uc !<(action:ucal-store vase))
       [cards this]
+    ::
+        %ucal-to-subscriber
+      ::  this is where updates from ucal-pull-hook come through.
+      =^  cards  state  (poke-ucal-to-subscriber:uc !<(to-subscriber:ucal-store vase))
+      [cards this]
     ==
   ::
   ++  on-watch
     |=  =path
     ^-  (quip card _this)
     :_  this
-    ::  NOTE
-    ::  if we crash it terminates the subscription
-    ::  (a negative watch-ack goes to the subscriber)
-    ::  as it it never started.
-    ?+  path
-      (on-watch:def path)
-    ::
-        [%calendars ~]
-      %+  give  %ucal-initial
-      ^-  initial:ucal-store
-      [%calendars (~(get-calendars al alma.state))]
-    ::
-        [%events %bycal *]
-      %+  give  %ucal-initial
-      ^-  initial:ucal-store
-      [%events-bycal (need (get-events-bycal:uc t.t.path))]
+    ~&  [%store-on-watch path]
+    ::  NOTE: the store sends subscription updates on /almanac that are proxied
+    ::  by ucal-push-hook. However, since these are per-calendar, there's no
+    ::  initial state we want to send here.
+    ?+  path  (on-watch:def path)
+        [%almanac ~]  ~
     ==
-  ++  on-agent  on-agent:def
+  ++  on-agent
+    |~  [=wire =sign:agent:gall]
+    ~&  [%ucal-store-on-agent wire sign]
+    (on-agent:def wire sign)
   ++  on-arvo   on-arvo:def
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
-    ~&  [%path-is path]
+    ~&  [%peek-path-is path]
     ^-  (unit (unit cage))
     ?+  path
       (on-peek:def path)
     ::
-        :: y the y???
-        :: Alright, so the y seems to correspond to whether the last piece
-        :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
-        :: /x/a/b as our path, while with %gy we get /x/a/b/c
-        [%y %calendars ~]
-      ``noun+!>((~(get-calendars al alma.state)))
-    ::
-        [%y %events ~]
-      ``noun+!>((~(get-events al alma.state)))
-    ::
-        [%y %calendars *]
-      =/  res  (get-calendar:uc t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
-    ::
-        [%y %events %specific *]
-      =/  res  (get-specific-event:uc t.t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
-    ::
-        [%y %events %bycal *]
-      =/  res  (get-events-bycal:uc t.t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
-    ::
-        [%y %events %inrange *]
-      ~&  [%inrange t.t.t.path]
-      =/  res  (get-events-inrange:uc t.t.t.path)
-      ?~  res
-        [~ ~]
-      ``noun+!>(u.res)
+        [%y @p *]
+      =/  who=@p  `@p`(slav %p `@tas`+<:path)
+      ?:  =(who our.bowl)
+        (handle-on-peek t.t.path alma.state)
+      =/  other-alma=(unit almanac)  (~(get by external.state) `entity`who)
+      ?~  other-alma
+        ~
+      (handle-on-peek t.t.path u.other-alma)
     ==
   ++  on-fail   on-fail:def
 --
@@ -157,43 +130,43 @@
 |_  bowl=bowl:gall
 ::
 ++  get-calendar
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit cal)
   ?.  =((lent path) 1)
     ~
-  =/  code=calendar-code  (cord-to-cc (snag 0 path))
-  (~(get-calendar al alma.state) code)
+  =/  code=calendar-code  `term`(snag 0 path)
+  (~(get-calendar al almanac) code)
 ::
 ++  get-specific-event
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit event)
   ~&  [%specific-event-path path]
   ?.  =((lent path) 2)
     ~
-  =/  =calendar-code  (cord-to-cc (snag 0 path))
-  =/  =event-code  (cord-to-ec (snag 1 path))
-  (~(get-event al alma.state) calendar-code event-code)
+  =/  =calendar-code  `term`(snag 0 path)
+  =/  =event-code  `term`(snag 1 path)
+  (~(get-event al almanac) calendar-code event-code)
 ::
 ++  get-events-bycal
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit (list event))
   ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
-  =/  code=calendar-code  (cord-to-cc (snag 0 path))
-  (~(get-events-bycal al alma.state) code)
+  =/  code=calendar-code  `term`(snag 0 path)
+  (~(get-events-bycal al almanac) code)
 ::
 ++  get-events-inrange
-  |=  =path
+  |=  [=path =almanac]
   ^-  (unit [(list event) (list projected-event)])
   ?.  =((lent path) 3)
     ~
-  =/  =calendar-code  (cord-to-cc (snag 0 path))
+  =/  =calendar-code  `term`(snag 0 path)
   =/  [start=@da end=@da]
       %+  normalize-period
         (slav %da (snag 1 path))
       (slav %da (snag 2 path))
-  (~(get-events-inrange al alma.state) calendar-code start end)
+  (~(get-events-inrange al almanac) calendar-code start end)
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -204,24 +177,16 @@
       %create-calendar
     =/  input  +.action
     =/  new=cal
-      %:  cal                                           :: new calendar
-        our.bowl                                        :: ship
-        cal-code.state                                  :: unique code
-        title.input                                     :: title
-        now.bowl                                        :: created
-        now.bowl                                        :: last modified
+      %:  cal                                             :: new calendar
+        our.bowl                                          :: ship
+        (fall calendar-code.input (make-uuid eny.bowl 8)) :: unique code
+        title.input                                       :: title
+        now.bowl                                          :: created
+        now.bowl                                          :: last modified
       ==
-    ?>  =(~ (~(get-calendar al alma.state) cal-code.state)) :: error if exists
-    =/  paths=(list path)  ~[/calendars]
-    =/  u=update:ucal-store  [%calendar-added new]
-    =/  v=vase  !>(u)
-    =/  cag=cage  [%ucal-update v]
-    =/  c=card  [%give %fact paths cag]
-    :-  ~[c]
+    :-  ~
     %=  state
       alma  (~(add-calendar al alma.state) new)
-      cal-code  +(cal-code.state)
-      event-codes  (~(put by event-codes.state) cal-code.state 0)
     ==
     ::
       %update-calendar
@@ -231,8 +196,10 @@
     ?~  new-cal
       ::  nonexistant update
       `state
-    =/  cag=cage  [%ucal-update !>(`update:ucal-store`[%calendar-changed u.new-cal])]
-    :-  ~[[%give %fact ~[/calendars] cag]]
+    =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
+    =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
+    =/  cag=cage  [%ucal-to-subscriber !>(ts)]
+    :-  ~[[%give %fact ~[/almanac] cag]]
     state(alma new-alma)
     ::
       %delete-calendar
@@ -240,31 +207,23 @@
     ?<  =(~ (~(get-calendar al alma.state) code))
     ::  produce cards
     ::  kick from /events/bycal/calendar-code
-    ::  give fact to /calendars
+    ::  give fact to /almanac
     =/  cal-update=card
-        =/  removed=update:ucal-store  [%calendar-removed code]
-        [%give %fact ~[/calendars] %ucal-update !>(removed)]
-    =/  kick-subs=card
-        [%give %kick ~[(snoc `path`/events/bycal (cc-to-cord code))] ~]
-    :-  ~[cal-update kick-subs]
+        =/  rid=resource  (resource-for-calendar code)
+        =/  removed=to-subscriber:ucal-store  [rid %update %calendar-removed code]
+        [%give %fact ~[/almanac] %ucal-to-subscriber !>(removed)]
+    :-  ~[cal-update]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
-      event-codes  (~(del by event-codes.state) code)
     ==
     ::
       %create-event
     =/  input  +.action
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
-    ::  generate new event code
-    =/  cur-code=(unit event-code)  (~(get by event-codes.state) calendar-code.input)
-    ?~  cur-code
-      ::  nonexistent calendar
-      ::  FIXME do we want to just use got above and crash?
-      `state
     =/  new=event
       %:  event
         %:  event-data
-          u.cur-code
+          (fall event-code.input (make-uuid eny.bowl 8))
           calendar-code.input
           about
           detail.input
@@ -277,11 +236,12 @@
       ==
     :: calendar must exist
     ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
-    =/  paths=(list path)  ~[(snoc `path`/events/bycal (cc-to-cord calendar-code.input))]
-    :-  [%give %fact paths %ucal-update !>(`update:ucal-store`[%event-added new])]~
+    =/  paths=(list path)  ~[/almanac]
+    =/  rid=resource  (resource-for-calendar calendar-code.input)
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
+    :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
     %=  state
       alma  (~(add-event al alma.state) new)
-      event-codes  (~(put by event-codes.state) calendar-code.input +(u.cur-code))
     ==
     ::
       %update-event
@@ -290,30 +250,31 @@
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
       `state  :: nonexistent update
-    =/  u=update:ucal-store  [%event-changed u.new-event]
-    =/  pax=path  (snoc `path`/events/bycal (cc-to-cord calendar-code.patch.input))
+    =/  rid=resource  (resource-for-calendar calendar-code.patch.input)
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-changed input now.bowl]
     :-
-    ~[[%give %fact ~[pax] %ucal-update !>(u)]]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
     ::
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  u=update:ucal-store  [%event-removed event-code]
+    =/  rid=resource  (resource-for-calendar cal-code)
+    =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     :-
-    ~[[%give %fact ~[(snoc `path`/events/bycal (cc-to-cord cal-code))] %ucal-update !>(u)]]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
-    =/  input  +.action
+    =/  input=rsvp-change:ucal-store  +.action
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-rsvp al alma.state) input)
     ?~  new-event
       `state
-    =/  u=update:ucal-store  [%event-changed u.new-event]
-    =/  pax=path  (snoc `path`/events/bycal (cc-to-cord calendar-code.rsvp-change.input))
+    =/  rid=resource  (resource-for-calendar calendar-code.input)
+    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed input]
     :-
-    ~[[%give %fact ~[pax] %ucal-update !>(u)]]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
     ::
       %import-from-ics
@@ -321,24 +282,114 @@
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
           (calendar-from-file:ucal-parser path.input)
-          cal-code.state
+          (make-uuid eny.bowl 8)
           our.bowl
           now.bowl
         ==
-    =/  [new-alma=almanac next-event-code=event-code]
-        %-  tail :: only care about state produced in spin, not list
-        %^  spin  events
-          [(~(add-calendar al alma.state) cal) `event-code`0]
-        |=  [e=event alma=almanac code=event-code]
-        ^-  [event almanac event-code]
-        [e (~(add-event al alma) e) +(code)]
-    :-  ~[[%give %fact ~[/calendars] [%ucal-update !>(`update:ucal-store`[%calendar-added cal])]]]
+    :-  ~
     %=  state
-      alma  new-alma
-      cal-code  +(cal-code.state)
-      event-codes  (~(put by event-codes.state) cal-code.state next-event-code)
+      alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
     ==
   ==
+::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
+::
+++  poke-ucal-to-subscriber
+  |=  ts=to-subscriber:ucal-store
+  ^-  (quip card _state)
+  ::  TODO do we want to produce cards for these? I don't think so.
+  :-  ~
+  =/  from=entity  entity.resource.ts
+  =/  old-alma=almanac  (~(gut by external.state) from *almanac)
+  ?-  +<.ts
+      %initial
+    ::  shouldn't be any state
+    ?>  =(old-alma *almanac)
+    =/  old-alma=almanac  (~(add-calendar al old-alma) calendar.ts)
+    %=  state
+      external  (~(put by external.state) from (~(add-events al old-alma) events.ts))
+    ==
+  ::
+      %update
+    ::  in every case here we're generating a new almanac
+    =/  new-alma=almanac
+        ?-  -.update.ts
+            %calendar-changed
+          %-  tail
+          (~(update-calendar al old-alma) calendar-patch.update.ts modify-time.update.ts)
+        ::
+            %calendar-removed
+          (~(delete-calendar al old-alma) calendar-code.update.ts)
+        ::
+            %event-added
+          (~(add-event al old-alma) event.update.ts)
+        ::
+            %event-changed
+          %-  tail
+          (~(update-event al old-alma) event-patch.update.ts modify-time.update.ts)
+        ::
+            %event-removed
+          (~(delete-event al old-alma) event-code.update.ts calendar-code.update.ts)
+        ::
+            %rsvp-changed
+          %-  tail
+          (~(update-rsvp al old-alma) rsvp-change.update.ts)
+        ==
+    %=  state
+      external  (~(put by external.state) from new-alma)
+    ==
+  ==
+::  +handle-on-peek: handles scries for a particular almanac
+::
+++  handle-on-peek
+  |=  [=path =almanac]
+  ^-  (unit (unit cage))
+  ~&  [%handle-on-peek path]
+  ?+  path  [~ ~] :: unhandled
+  ::
+      :: y the y???
+      :: Alright, so the y seems to correspond to whether the last piece
+      :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
+      :: /x/a/b as our path, while with %gy we get /x/a/b/c
+      [%almanac ~]
+    ``noun+!>(almanac)
+  ::
+      [%calendars ~]
+    ``noun+!>((~(get-calendars al almanac)))
+  ::
+      [%events ~]
+    ``noun+!>((~(get-events al almanac)))
+  ::
+      [%calendars *]
+    =/  res  (get-calendar t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ::
+      [%events %specific *]
+    =/  res  (get-specific-event t.t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ::
+      [%events %bycal *]
+    =/  res  (get-events-bycal t.t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ::
+      [%events %inrange *]
+    ~&  [%inrange t.t.path]
+    =/  res  (get-events-inrange t.t.path almanac)
+    ?~  res
+      ~
+    ``noun+!>(u.res)
+  ==
+::  +resource-for-calendar: get resource for a given calendar
+::
+++  resource-for-calendar
+  |=  =calendar-code
+  ^-  resource
+  `resource`[our.bowl `term`calendar-code]
 ::
 :: period of time, properly ordered
 ::

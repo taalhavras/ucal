@@ -1,6 +1,6 @@
 /-  *ucal-store
 :-  %say
-|=  [* [title=@t ~] ~]
+|=  [* [title=@t ~] [calendar-code=(unit calendar-code) ~]]
 :-  %ucal-action
 ^-  action
-[%create-calendar title]
+[%create-calendar title calendar-code]

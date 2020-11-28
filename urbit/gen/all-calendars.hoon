@@ -1,13 +1,19 @@
 /-  *ucal
 :-  %say
-|=  [[now=@da * bec=beak] *]
+|=  [[now=@da * bec=beak] ~ [who=(unit @p) ~]]
 :-  %noun
+=/  us=@tas  (scot %p p.bec)
+=/  them=@tas
+    ?~  who
+      us
+    (scot %p u.who)
 =/  res=(list calendar)
     .^  (list calendar)
       %gy
-      (scot %p p.bec)
+      us
       %ucal-store
       (scot %da now)
+      them
       %calendars
       ~
     ==
