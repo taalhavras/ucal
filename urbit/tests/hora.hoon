@@ -1236,4 +1236,30 @@
         [%block ~2028.1.2 ~m30]
       ==
   ==
+::
+++  test-split-single
+  =/  e-1=era  [infinite 1 yearly nex]
+  ;:  weld
+    %+  expect-eq
+      !>
+      ^-  era
+      (split-single e-1 [%block ~2020.1.1..4.00.00 ~h1])
+      !>
+      ^-  era
+      e-1(exdates (~(put in nex) ~2020.1.1))
+    %+  expect-eq
+      !>
+      ^-  era
+      (split-single e-1 [%days ~2020.1.1..4.00.00 3])
+      !>
+      ^-  era
+      e-1(exdates (~(put in nex) ~2020.1.1))
+    %+  expect-eq
+      !>
+      ^-  era
+      (split-single e-1 [%period ~2020.1.1..4.00.00 ~2020.1.1..6.00.00])
+      !>
+      ^-  era
+      e-1(exdates (~(put in nex) ~2020.1.1))
+  ==
 --
