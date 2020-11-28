@@ -564,6 +564,9 @@
 ++  split-subsequent
   |=  [orig=moment =era derived=moment]
   ^-  [^era ^era]
+  ::  we can't split the original moment - since that's just equivalent to
+  ::  replacing the era.
+  ?<  =(orig derived)
   ::  use successor-in-range on the derived moment's bounds
   =/  [d-start=@da d-end=@da]  (moment-to-range derived)
   =/  res=[moment @ud]
@@ -580,8 +583,8 @@
         [[%until d-start] type.era]
       ::  in the instances case, we split the instances between the eras
       ?:  ?=([%instances *] type.era)
-        :-  [%instances (sub num.type.era count)]
-        [%instances count]
+        :-  [%instances count]
+        [%instances (sub num.type.era count)]
       !!
   :-  era(type truncated-era-type)
   era(type new-era-type)

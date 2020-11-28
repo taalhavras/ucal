@@ -1262,4 +1262,24 @@
       ^-  era
       e-1(exdates (~(put in nex) ~2020.1.1))
   ==
+::
+++  test-split-subsequent
+  =/  instances=era  [[%instances 5] 1 yearly nex]
+  =/  infinite=era  [infinite 1 yearly nex]
+  =/  until=era  [[%until ~2020.10.10] 1 yearly nex]
+  =/  orig=moment  [%block ~2000.4.4 ~h2]
+  ;:  weld
+    ::  second moment is split off
+    %+  expect-eq
+      !>
+      ^-  [era era]
+      (split-subsequent orig instances [%block ~2001.4.4 ~h2])
+      !>
+      ^-  [era era]
+      :-  [[%instances 1] 1 yearly nex]
+      [[%instances 4] 1 yearly nex]
+    ::  arbitrary moment is split
+    ::  last moment is split
+    ::  TODO make sure all era-types are represented in each case
+  ==
 --
