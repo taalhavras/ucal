@@ -2,8 +2,8 @@
 /+  hora
 |%
 +$  title     @t
-+$  event-code  @ud
-+$  calendar-code  @ud
++$  event-code  term
++$  calendar-code  term
 ::
 +$  calendar
   $:  owner=@p

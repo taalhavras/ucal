@@ -1,4 +1,4 @@
-/-  *hora, *ucal, ucal-timezone
+/-  *hora, *ucal, ucal-timezone, *ucal-almanac, *resource
 |%
 ::
 ::
@@ -36,6 +36,8 @@
 +$  action
   $%  $:  %create-calendar
           title=@t
+          :: should be used for testing only
+          calendar-code=(unit calendar-code)
       ==
       ::
       $:  %update-calendar
@@ -48,6 +50,8 @@
       ::
       $:  %create-event
           =calendar-code
+          ::  should be used for testing only
+          event-code=(unit event-code)
           organizer=@p
           =detail
           when=moment
@@ -76,22 +80,27 @@
       ==
   ==
 ::
-::  $initial: sent to subscribers on initial subscription
+::  $to-subscriber: sent to subscribers - union of initial
+::  payload and periodic updates
 ::
-+$  initial
-  $%
-    [%calendars calendars=(list calendar)]
-    [%events-bycal events=(list event)]
++$  to-subscriber
+  $:
+    =resource
+    $%
+      [%initial =calendar events=(list event)]
+      [%update =update]
+    ==
   ==
+::
 ::  $update: updates sent to subscribers
 ::
 +$  update
   $%
-    [%calendar-added =calendar]
-    [%calendar-changed =calendar]
+    [%calendar-changed =calendar-patch modify-time=@da]
     [%calendar-removed =calendar-code]
     [%event-added =event]
-    [%event-changed =event]
-    [%event-removed =event-code]
+    [%event-changed =event-patch modify-time=@da]
+    [%event-removed =calendar-code =event-code]
+    [%rsvp-changed =rsvp-change]
   ==
 --
