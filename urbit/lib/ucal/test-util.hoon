@@ -49,12 +49,10 @@
   ::  /i/(scot %p her)/j/(scot %p her)/rift/(scot %da now.bowl)/(scot %p who)/noun
   =/  c-on=cord  (scot %p on)
   =/  prefix=path  ~[%i c-on %gy c-on %ucal-store (scot %da now.bol)]
-  ::  =/  prefix=path  ~[%i c-on %gy c-on %ucal-store (scot %da now.bol)]
   ::  =/  new-path=path  (weld prefix pax)
-  ::  =/  new-path=path  (weld prefix (snoc `path`pax %noun))
-  =/  new-path=path  pax
+  =/  new-path=path  (weld prefix (snoc `path`pax %noun))
   ~&  >  [%path-is new-path]
-  =/  res  (scry-aqua:ph-util noun on now.bol new-path)
+  =/  res  (scry-aqua:ph-util * on now.bol new-path)
   ~&  >  [%res-is res]
   %-  need
   ;;((unit mol) res)

@@ -8,16 +8,21 @@
 ::  start a fake ship, ~zod
 ;<  ~  bind:m  (raw-ship ~zod ~)
 ::  now start ucal on zod
-;<  ~  bind:m  (start-ucal-store:test-util ~zod)
+;<  ~  bind:m  (dojo ~zod "|start %ucal-store")
+;<  ~  bind:m  (wait-for-output ~zod "activated app home/ucal-store")
 ::  create a calendar
 =/  cal-name=cord  'test cal'
 =/  cc=calendar-code  %a
 =/  =action  [%create-calendar cal-name `cc]
-;<  ~  bind:m  (ucal-poke:test-util ~zod action)
-;<  ~  bind:m  (dojo ~zod "+all-calendars")
-=/  out  ~[[%title cal-name %code cc %owner ~zod]]
-;<  ~  bind:m  (wait-for-output ~zod <out>)
-::  ::  now verify it has the right properties
+;<  ~  bind:m  (dojo ~zod (weld ":ucal-store &ucal-action " <action>))
+;<  ~  bind:m  (wait-for-output ~zod ">=")
+;<  bol=bowl:spider  bind:m  get-bowl
+~&  >  [%bol-is bol]
+=/  pax=path  ~[%i (scot %p ~zod) %gy (scot %p ~zod) %ucal-store (scot %da now.bol) (scot %p ~zod) %calendars cc %noun]
+~&  >  [%path-is pax]
+=/  res  (scry-aqua:ph-util * ~zod now.bol pax)
+::  ~&  >  [%res-is res]
+::  now verify it has the right properties
 ::  ;<  res=vase  bind:m  (validate-cal-basic-properties:test-util ~zod ~zod ~zod cc cal-name)
 ::  ~&  [%validation-result-is !<(flag res)]
 ::  ?>  !<(flag res)
