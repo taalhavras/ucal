@@ -43,17 +43,14 @@
 ::  which is currently true but maybe this'll change? note that
 ::  %gx scrys require two trailing %nouns while %gy needs one
 ++  scry-ucal
-  |*  [on=@p bol=bowl:spider mol=mold pax=path]
+  |*  [into=@p bol=bowl:spider mol=mold pax=path]
   ^-  mol
   ::  /j/~zod/rift/now/target-ship becomes the below
   ::  /i/(scot %p her)/j/(scot %p her)/rift/(scot %da now.bowl)/(scot %p who)/noun
-  =/  c-on=cord  (scot %p on)
-  =/  prefix=path  ~[%i c-on %gy c-on %ucal-store (scot %da now.bol)]
+  =/  prefix=path  ~[%i (scot %p into) %gy (scot %p into) %ucal-store (scot %da now.bol)]
   ::  =/  new-path=path  (weld prefix pax)
   =/  new-path=path  (weld prefix (snoc `path`pax %noun))
-  ~&  >  [%path-is new-path]
-  =/  res  (scry-aqua:ph-util * on now.bol new-path)
-  ~&  >  [%res-is res]
+  =/  res  (scry-aqua:ph-util * our.bol now.bol new-path)
   %-  need
   ;;((unit mol) res)
 ::
