@@ -1,6 +1,6 @@
 /-  *ucal-store
 :-  %say
-|=  [[* * bec=beak] [=calendar-code title=@t when=moment tzid=tape ~] [event-code=(unit event-code) desc=(unit @t) loc=(unit location) era=(unit era) =invites ~]]
+|=  [[* * bec=beak] [=calendar-code title=@t when=moment ~] [event-code=(unit event-code) desc=(unit @t) loc=(unit location) era=(unit era) =invites tzid=(unit tape) ~]]
 :-  %ucal-action
 ^-  action
 :*
@@ -12,5 +12,5 @@
   when
   era
   invites
-  tzid
+  (fall tzid "utc")
 ==
