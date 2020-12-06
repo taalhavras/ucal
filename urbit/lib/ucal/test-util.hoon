@@ -1,4 +1,4 @@
-/-  spider, ucal, ucal-store, hora
+/-  spider, ucal, ucal-store, hora, pull-hook
 /+  *ph-io, ph-util
 =,  strand=strand:spider
 |%
@@ -40,6 +40,16 @@
   ;<  ~  bind:m  (dojo on "|start %ucal-push-hook")
   (wait-for-output on "activated app home/ucal-push-hook")
 ::
+::  TODO factor these poking functions into a common helper?
+++  ucal-pull-hook-poke
+  |=  [on=@p =action:pull-hook]
+  =/  m  (strand ,~)
+  ^-  form:m
+  ;<  ~  bind:m  (dojo on ":ucal-pull-hook &pull-hook-action {<action>}")
+  ;<  ~  bind:m  (wait-for-output on ">=")
+  (pure:m ~)
+::
+::  TODO specialize to avoid the map problem?
 ++  ucal-poke
   |=  [on=@p =action:ucal-store]
   =/  m  (strand ,~)
@@ -51,7 +61,7 @@
   ;<  ~  bind:m  (wait-for-output on ">=")
   (pure:m ~)
 ::
-::  scry into ucal on a specific aqua ship - takes the same
+::  scry into ucal-store on a specific aqua ship - takes the same
 ::  parameters that you might pass to .^ in the dojo.
 ::  so you would just pass /calendars/a if you wanted to look
 ::  at /gy/=ucal=/calendars/a on the specified ship.
@@ -59,7 +69,7 @@
 ::  TODO  currently this assumes that all ucal scrys are %gy
 ::  which is currently true but maybe this'll change? note that
 ::  %gx scrys require two trailing %nouns while %gy needs one
-++  scry-ucal
+++  scry-ucal-store
   |*  [into=@p bol=bowl:spider mol=mold pax=path]
   ^-  mol
   ::  /j/~zod/rift/now/target-ship becomes the below
@@ -80,7 +90,7 @@
   =/  =path  ~[(scot %p target) %calendars code]
   ~&  >  [%path path]
   =/  cal=calendar:ucal
-      (scry-ucal on bol calendar:ucal path)
+      (scry-ucal-store on bol calendar:ucal path)
   ~&  >  [%got-cal cal]
   (pure:m !>((v cal)))
 ::
@@ -90,7 +100,7 @@
   ^-  form:m
   ;<  bol=bowl:spider  bind:m  get-bowl
   =/  ev=event:ucal
-      (scry-ucal on bol event:ucal ~[(scot %p target) %events %specific calendar-code event-code])
+      (scry-ucal-store on bol event:ucal ~[(scot %p target) %events %specific calendar-code event-code])
   (pure:m !>((v ev)))
 ::
 ++  cal-basic-properties-match
