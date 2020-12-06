@@ -67,6 +67,32 @@
 ~&  >  [%second-event-equal res]
 ?>  res
 ::  if an event is deleted, nel should no longer see it
+=/  a3=action  [%delete-event cc ec]
+;<  ~  bind:m  (ucal-poke ~zod a3)
+;<  ~  bind:m  (sleep:strandio ~s2)
+=/  events-pax=path  (snoc `path`/~zod/events/bycal cc)
+;<  bol=bowl:spider  bind:m  get-bowl
+=/  zod-events=(list event)  (scry-ucal-store ~zod bol (list event) events-pax)
+=/  nel-events=(list event)  (scry-ucal-store ~nel bol (list event) events-pax)
+::  check that there's only one event
+=/  res=flag
+    ?&
+      =(zod-events nel-events)
+      =((lent zod-events) 1)
+      =((snag 0 zod-events) zod-event-2)
+    ==
+~&  >  [%events-after-delete-equal res]
+?>  res
 ::  if the calendar is deleted, ~nel should not store it anymore
+=/  a4=action  [%delete-calendar cc]
+;<  ~  bind:m  (ucal-poke ~zod a4)
+;<  ~  bind:m  (sleep:strandio ~s2)
+=/  all-cals-pax=path  /~zod/calendars
+;<  bol=bowl:spider  bind:m  get-bowl
+=/  zod-cals=(list calendar)  (scry-ucal-store ~zod bol (list calendar) all-cals-pax)
+=/  nel-cals=(list calendar)  (scry-ucal-store ~nel bol (list calendar) all-cals-pax)
+=/  res=flag  &(=(zod-cals nel-cals) =(zod-cals ~))
+~&  >  [%both-cals-deleted res]
+?>  res
 ;<  ~  bind:m  end-simple
 (pure:m *vase)

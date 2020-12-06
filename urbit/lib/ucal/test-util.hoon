@@ -55,8 +55,6 @@
   =/  m  (strand ,~)
   ^-  form:m
   =/  t=tape  ":ucal-store &ucal-action {<action>}"
-  ~&  >  [%poking-ucal on action]
-  ~&  >  [%tape-is t]
   ;<  ~  bind:m  (dojo on t)
   ;<  ~  bind:m  (wait-for-output on ">=")
   (pure:m ~)
@@ -75,7 +73,6 @@
   ::  /j/~zod/rift/now/target-ship becomes the below
   ::  /i/(scot %p her)/j/(scot %p her)/rift/(scot %da now.bowl)/(scot %p who)/noun
   =/  prefix=path  ~[%i (scot %p into) %gy (scot %p into) %ucal-store (scot %da now.bol)]
-  ::  =/  new-path=path  (weld prefix pax)
   =/  new-path=path  (weld prefix (snoc `path`pax %noun))
   =/  res  (scry-aqua:ph-util * our.bol now.bol new-path)
   %-  need
