@@ -2,6 +2,22 @@
 /+  *ph-io, ph-util
 =,  strand=strand:spider
 |%
+::  $start-fleet: spin up the specified ships and start
+::  ucal-store and ucal-{pull,push}-hook on the specified ships.
+::
+++  start-fleet
+  |=  ships=(list @p)
+  =/  m  (strand ,~)
+  ^-  form:m
+  ?~  ships
+    (pure:m ~)
+  ;<  ~  bind:m  (raw-ship i.ships ~)
+  ;<  ~  bind:m  (start-ucal-store i.ships)
+  ;<  ~  bind:m  (start-ucal-pull-hook i.ships)
+  ;<  ~  bind:m  (start-ucal-push-hook i.ships)
+  ::  TODO figure out how to make this use $ and not explicit recursion
+  ;<  ~  bind:m  (start-fleet t.ships)
+  (pure:m ~)
 ::
 ++  start-ucal-store
   |=  on=@p
