@@ -52,23 +52,34 @@ An obvious improvement to this would be ~zod being able to see what calendars ~n
 Not yet implemented.
 
 ## Current Roadmap
-These are the current big tasks to undertake (and their relative priorities)
+These are the current big tasks to undertake (in no particular order). If you think any of these
 
-1. hook development
-2. pH testing
-3. almanac update to use ordered map, dovetails with gall agent enrichment to support date-range queries for events
+1. almanac update to use ordered map (and potentially implementing an interval tree)
+2. timezones
+3. invites
+4. more ph tests
 
-### pH Testing
-branch: aqua-testing
-
-We want tests to verify calendar/event creation, destruction, and updating. There should also be tests for rsvping, event permissions, etc. once the hook is in more robust shape.
 
 ### almanac update
-branch: none yet
+branch: none
 
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
 
-### hook development
-branch: pull-push-hooks
+### timezones
+branch: none
 
-use lib-hook to implement the push/pull hook pattern
+As of this moment there's just some stub code and ideas for how to handle timezones. The current model of "just make everything UTC" is not particularly compelling - improvements can certainly be made. There are a few approaches, the most involved being to parse the IANA timezone database (a potentially herculean effort). There may be a middle ground where certain timezones can be hardcoded in some way, but ultimately parsing the db is probably the best way to go.
+
+### invites
+branch: none
+
+The data types for invites are floating around and through the code, but they aren't used in any way. This will involve work at the hook level and some store changes.
+
+### pH Testing
+branch: none
+
+We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
+
+
+##  Doesn't this need a frontend?
+Yes, it does! I'm not sure I have the time/expertise/motivation to make one so if you're interested _please_ submit a PR. I'm happy to answer any questions about the stores/hooks and can make any changes that're necessary.

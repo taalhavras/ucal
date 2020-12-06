@@ -1,4 +1,4 @@
-/-  spider, ucal
+/-  spider, *ucal, *ucal-store
 /+  *ph-io, ph-util, test-util=ucal-test-util
 =,  strand=strand:spider
 ^-  thread:spider
@@ -10,27 +10,34 @@
 ::  now start ucal on zod
 ;<  ~  bind:m  (start-ucal-store:test-util ~zod)
 ::  create a calendar
-=/  a1=action:ucal  [%create-calendar %a 'First Cal' ~]
+=/  cc=calendar-code  %a
+=/  a1=action  [%create-calendar 'First Cal' `cc]
 ;<  ~  bind:m  (ucal-poke:test-util ~zod a1)
 ::  create an event on it
-=/  start=@da  ~2020.7.22
-=/  end=@da  (add start ~h1)
-=/  desc=(unit @t)  `'amazing!'
-=/  a2=action:ucal
-    [%create-event %a 'First Event' %e1 start [%span ~h1] desc]
-;<  ~  bind:m  (ucal-poke:test-util ~zod a2)
+=/  det=detail  ['first event!' `'a test event.' ~]
+=/  when=moment  [%block ~2020.12.4 ~h1]
+=/  ec=event-code  %b
+::  cannot construct an action and then use <> because the invites map prints as \{} and not ~
+=/  literal=tape  "[%create-event {<cc>} `{<ec>} ~zod {<det>} {<when>} ~ ~ \"utc\"]"
+;<  ~  bind:m  (dojo ~zod (weld ":ucal-store &ucal-action " literal))
+;<  bol=bowl:spider  bind:m  get-bowl
 ::  now verify the event's properties
 ;<  res=vase  bind:m
     %:  validate-event-basic-properties:test-util
       ~zod
       ~zod
       ~zod
-      %a
-      %e1
-      'First Event'
-      start
-      end
-      desc
+      :*
+        ec
+        cc
+        [~zod now.bol now.bol]
+        det
+        when
+        ~
+        %yes
+        "utc"
+      ==
+      ~
     ==
 ~&  [%validation-result-is !<(flag res)]
 ?>  !<(flag res)

@@ -140,7 +140,6 @@
 ++  get-specific-event
   |=  [=path =almanac]
   ^-  (unit event)
-  ~&  [%specific-event-path path]
   ?.  =((lent path) 2)
     ~
   =/  =calendar-code  `term`(snag 0 path)
@@ -150,7 +149,6 @@
 ++  get-events-bycal
   |=  [=path =almanac]
   ^-  (unit (list event))
-  ~&  [%bycal-path path]
   ?.  =((lent path) 1)
     ~
   =/  code=calendar-code  `term`(snag 0 path)
@@ -296,6 +294,7 @@
 ++  poke-ucal-to-subscriber
   |=  ts=to-subscriber:ucal-store
   ^-  (quip card _state)
+  ~&  [%got-to-sub ts]
   ::  TODO do we want to produce cards for these? I don't think so.
   :-  ~
   =/  from=entity  entity.resource.ts
@@ -343,7 +342,6 @@
 ++  handle-on-peek
   |=  [=path =almanac]
   ^-  (unit (unit cage))
-  ~&  [%handle-on-peek path]
   ?+  path  [~ ~] :: unhandled
   ::
       :: y the y???
@@ -378,7 +376,6 @@
     ``noun+!>(u.res)
   ::
       [%events %inrange *]
-    ~&  [%inrange t.t.path]
     =/  res  (get-events-inrange t.t.path almanac)
     ?~  res
       ~
