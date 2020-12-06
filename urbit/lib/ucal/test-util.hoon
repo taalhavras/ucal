@@ -28,8 +28,9 @@
   |=  [on=@p =action:ucal-store]
   =/  m  (strand ,~)
   ^-  form:m
-  =/  t=tape  (weld ":ucal-store &ucal-action " <action>)
+  =/  t=tape  ":ucal-store &ucal-action {<action>}"
   ~&  >  [%poking-ucal on action]
+  ~&  >  [%tape-is t]
   ;<  ~  bind:m  (dojo on t)
   ;<  ~  bind:m  (wait-for-output on ">=")
   (pure:m ~)
@@ -92,10 +93,34 @@
   (validate-cal on target code validator)
 ::
 ++  event-basic-properties-match
-  |=  [=event:ucal owner=@p =event-data:ucal era=(unit era:hora)]
+  =>
+  |%
+  ++  epsilon  ^-  @dr  ~s1
+  ++  das-equal
+    |=  [a=@da b=@da]
+    ^-  flag
+    ?:  (gth a b)
+      (lte (sub a b) epsilon)
+    (lte (sub b a) epsilon)
+  --
+  |=  [=event:ucal owner=@p data=event-data:ucal era=(unit era:hora)]
   ^-  flag
   ?&
-    =(data.event event-data)
+    ::  don't check the event's modification time or creation time since
+    ::  they won't be the same as whatever time is used to verify. instead, check
+    ::  that they're within 1 second.
+    ?&
+      =(event-code.data.event event-code.data)
+      =(calendar-code.data.event calendar-code.data)
+      =(detail.data.event detail.data)
+      =(when.data.event when.data)
+      =(invites.data.event invites.data)
+      =(rsvp.data.event rsvp.data)
+      =(tzid.data.event tzid.data)
+      =(organizer.about.data.event organizer.about.data)
+      (das-equal date-created.about.data.event date-created.about.data)
+      (das-equal last-updated.about.data.event last-updated.about.data)
+    ==
     =(era.event era)
   ==
 ::

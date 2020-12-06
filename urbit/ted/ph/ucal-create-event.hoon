@@ -17,28 +17,29 @@
 =/  det=detail  ['first event!' `'a test event.' ~]
 =/  when=moment  [%block ~2020.12.4 ~h1]
 =/  ec=event-code  %b
-=/  a2=action  [%create-event cc `ec ~zod det when ~ ~ "utc"]
-::  ;<  ~  bind:m  (ucal-poke:test-util ~zod a2)
-~&  >  [%str-is <a2>]
-::  ;<  ~  bind:m  (dojo ~zod ":ucal-store &ucal-action {<a2>}")
-;<  ~  bind:m  (dojo ~zod ":ucal-store|create-event {<cc>} 'first event!' [%block ~2020.12.4 ~h1], =event-code `{<ec>}")
+::  cannot construct an action and then use <> because the invites map prints as \{} and not ~
+=/  literal=tape  "[%create-event {<cc>} `{<ec>} ~zod {<det>} {<when>} ~ ~ \"utc\"]"
+;<  ~  bind:m  (dojo ~zod (weld ":ucal-store &ucal-action " literal))
 ;<  bol=bowl:spider  bind:m  get-bowl
-=/  ev=event  (scry-ucal:test-util ~zod bol event /~zod/events/specific/a/b)
-~&  >  [%ev-is ev]
 ::  now verify the event's properties
-::  ;<  res=vase  bind:m
-::      %:  validate-event-basic-properties:test-util
-::        ~zod
-::        ~zod
-::        ~zod
-::        %a
-::        %b
-::        'First Event'
-::        start
-::        end
-::        desc
-::      ==
-::  ~&  [%validation-result-is !<(flag res)]
-::  ?>  !<(flag res)
+;<  res=vase  bind:m
+    %:  validate-event-basic-properties:test-util
+      ~zod
+      ~zod
+      ~zod
+      :*
+        ec
+        cc
+        [~zod now.bol now.bol]
+        det
+        when
+        ~
+        %yes
+        "utc"
+      ==
+      ~
+    ==
+~&  [%validation-result-is !<(flag res)]
+?>  !<(flag res)
 ;<  ~  bind:m  end-simple
 (pure:m *vase)
