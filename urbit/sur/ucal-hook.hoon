@@ -1,22 +1,20 @@
-/-  ucal
+/-  *ucal-store
 |%
+::  $metadata: metadata for a given calendar
+::
++$  metadata
+  $:
+    title=cord
+    =calendar-code
+  ==
+::  $action: poke for the pull-hook to retrieve
+::
 +$  action
-  $%  $:  %subscribe-all
-          =ship
-      ==
-      ::
-      $:  %subscribe-specific
-          =ship
-          =calendar-code:ucal
-      ==
-      ::
-      $:  %unsubscribe-all
-          =ship
-      ==
-      ::
-      $:  %unsubscribe-specific
-          =ship
-          =calendar-code:ucal
-      ==
+  $%  [%query-cals who=@p]
+  ==
+::  $update: sent by the push-hook in response to an action
+::
++$  update
+  $%  [%metadata source=@p items=(list metadata)]
   ==
 --

@@ -1,5 +1,5 @@
 :: pull hook
-/-  *pull-hook, *resource, ucal-store
+/-  *pull-hook, *resource, ucal-store, ucal-hook, *ucal
 /+  pull-hook, default-agent
 =>
 |%
@@ -12,7 +12,23 @@
       %ucal-to-subscriber
       %ucal-push-hook
   ==
+::
+::
++$  state-zero
+  $:
+    entries=(jar entity metadata:ucal-hook)
+  ==
+::
++$  versioned-state
+  $%
+    [%0 state-zero]
+  ==
 --
+::
+::::  state
+::
+=|  state=versioned-state
+::
 ^-  agent:gall
 %-  (agent:pull-hook config)
 ^-  (pull-hook:pull-hook config)
@@ -25,7 +41,15 @@
 ++  on-init  on-init:def
 ++  on-save  !>(~)
 ++  on-load  on-load:def
-++  on-poke  on-poke:def
+++  on-poke
+  |=  [=mark =vase]
+  ^-  (quip card _this)
+  ?+    mark  `this
+      %ucal-pull-hook-action
+    =/  act=action:ucal-hook  !<(action:ucal-hook vase)
+    :-  this
+    !!
+  ==
 ++  on-agent
   |~  [=wire =sign:agent:gall]
   ~&  [%ucal-pull-hook-on-agent wire sign]
