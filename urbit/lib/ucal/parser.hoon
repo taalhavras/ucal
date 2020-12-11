@@ -119,7 +119,7 @@
   =/  res=(unit tape)  (~(get by props) "VALUE")
   ::  value sig or not period, it's a date or datetime
   ::
-  ?:  |(?=($~ res) !=(u.res "PERIOD"))
+  ?:  |(?=(~ res) !=(u.res "PERIOD"))
     |=(tok=tape [%time (parse-date-or-datetime tok)])
   |=(tok=tape [%period (parse-period tok)])
   (turn tokens f)
@@ -915,12 +915,12 @@
     ::  if we don't have a "VALUE" or it's duration,
     ::  then we have a duration to parse.
     ::
-    ?:  |(?=($~ value-unit) =(u.value-unit "DURATION"))
+    ?:  |(?=(~ value-unit) =(u.value-unit "DURATION"))
       =/  related-unit=(unit tape)  (~(get by props) "RELATED")
       =/  related=valarm-related
           ::  if we don't have a "RELATED" it defaults to start
           ::
-          ?:  |(?=($~ related-unit) =(u.related-unit "START"))
+          ?:  |(?=(~ related-unit) =(u.related-unit "START"))
             %start
           ?>  =(u.related-unit "END")
           %end
@@ -937,12 +937,12 @@
         (~(get ja j) %duration)
     =/  repeat-list=(list [tape (map tape tape)])
         (~(get ja j) %repeat)
-    ?:  &(?=($~ duration-list) ?=($~ repeat-list))
+    ?:  &(?=(~ duration-list) ?=(~ repeat-list))
       ::  duration and repeat not specified
       ::
       ~
     ::  if only one of duration or repeat specified, error
-    ?:  |(?=($~ duration-list) ?=($~ repeat-list))
+    ?:  |(?=(~ duration-list) ?=(~ repeat-list))
       !!
     ::  both specified, now assert that they're only
     ::  specified once
