@@ -1,5 +1,5 @@
-/-  ucal-store, *resource, *ucal-almanac
-/+  default-agent, push-hook, resource
+/-  ucal-store, *resource, *ucal-almanac, ucal-hook
+/+  default-agent, push-hook, *resource, *ucal-almanac
 =>
 |%
 +$  card  card:agent:gall
@@ -57,7 +57,7 @@
     `this
   ?.  ?=([%calendar-removed *] update.ts)
     `this
-  =/  =card  [%give %kick ~[(en-path:resource resource.ts)] ~]
+  =/  =card  [%give %kick ~[(en-path resource.ts)] ~]
   :_  this
   ~[card]
 ::
@@ -67,9 +67,25 @@
   ~&  [%ucal-push-hook-initial-watch path rid]
   ::  TODO do we want any initial state in the path?
   ::  don't think so atm, but can be revisited
-  ::  TODO ok so what about the resource? since we're
-  ::  just dumping the whole almanac it also doesn't
-  ::  matter...
+  ?:  =(rid [our.bowl public-calendars:ucal-hook])
+    !>  ^-  update:ucal-hook
+    :+  %metadata
+      our.bowl
+    =/  us=@tas  (scot %p our.bowl)
+    =/  cals=(list calendar)
+        .^  (list calendar)
+          %gy
+          us
+          %ucal-store
+          (scot %da now.bowl)
+          us
+          /calendars
+        ==
+    %+  turn
+      cals
+    |=  cal=calendar
+    ^-  metadata:ucal-hook
+    [owner.cal title.cal calendar-code.cal]
   !>  ^-  to-subscriber:ucal-store
   ::  get the whole almanac, then do our lookups on it
   =/  us=@tas  (scot %p our.bowl)
@@ -84,7 +100,7 @@
       ==
   =/  cc=calendar-code  name.rid
   :^  rid  %initial
-    (~(got by cals.alma) cc)
-  (~(get ja events.alma) cc)
+    (need (~(get-calendar al alma) cc))
+  (need (~(get-events-bycal al alma) cc))
 ::
 --

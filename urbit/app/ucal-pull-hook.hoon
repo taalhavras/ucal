@@ -44,12 +44,8 @@
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  ?+    mark  `this
-      %ucal-pull-hook-action
-    =/  act=action:ucal-hook  !<(action:ucal-hook vase)
-    :-  this
-    !!
-  ==
+  ~&  [%ucal-pull-hook-on-poke mark vase]
+  (on-poke:def mark vase)
 ++  on-agent
   |~  [=wire =sign:agent:gall]
   ~&  [%ucal-pull-hook-on-agent wire sign]
@@ -66,5 +62,9 @@
 ++  on-pull-kick
   |=  =resource
   ^-  (unit path)
+  ::  the metadata resource sends an initial update and then kicks
+  ::  immediately, so we don't want to resubscribe
+  ?:  =(resource [our.bowl public-calendars:ucal-hook])
+    ~
   `/
 --
