@@ -1,4 +1,8 @@
-:: pull hook
+::  pull hook
+::  additional pokes: see action:ucal-hook
+::  additional scrys: /metadata/[ship] for the current public
+::  calendars on [ship].
+::
 /-  *pull-hook, *resource, ucal-store, ucal-hook, *ucal
 /+  pull-hook, default-agent
 =>
@@ -44,15 +48,47 @@
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  ~&  [%ucal-pull-hook-on-poke mark vase]
-  (on-poke:def mark vase)
+  ?+  mark  `this
+        %ucal-hook-action
+      :_  this
+      =/  act=action:ucal-hook  !<(action:ucal-hook vase)
+      ?.  ?=(%query-cals -.act)
+        !!
+      =/  pax=path  ~[(scot %p who.act) public-calendars:ucal-hook]
+      ::  TODO why does using push-hook-name.config fail here?
+      [%pass `wire`pax %agent [who.act %ucal-push-hook] %watch pax]~
+    ::
+  ==
 ++  on-agent
   |~  [=wire =sign:agent:gall]
-  ~&  [%ucal-pull-hook-on-agent wire sign]
-  (on-agent:def wire sign)
+  ^-  (quip card _this)
+  ?+    wire  (on-agent:def wire sign)
+      [@p %public-calendars *]
+    ::  update metadata on facts, ignore everything else
+    ?.  ?=([%fact *] sign)
+      `this
+    =/  who=@p  `@p`(slav %p `@tas`i.wire)
+    =/  cag=cage  cage.sign
+    ?>  =(p.cag %ucal-hook-update)
+    =/  =update:ucal-hook  !<(update:ucal-hook q.cag)
+    ?.  ?=([%metadata *] update)
+      !!
+    ?>  =(who source.update)
+    =.  state  state(entries (~(put by entries.state) who items.update))
+    `this
+  ==
 ++  on-watch  on-watch:def
 ++  on-leave  on-leave:def
-++  on-peek   on-peek:def
+++  on-peek
+  |=  pax=path
+  ^-  (unit (unit cage))
+  ?+    pax  (on-peek:def pax)
+      [%y %metadata @p *]
+    =/  target=entity  `entity`(slav %p `@tas`i.t.t.pax)
+    ?.  (~(has by entries.state) target)
+      ~
+    ``noun+!>((~(get ja entries.state) target))
+  ==
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
 ++  on-pull-nack
@@ -62,9 +98,5 @@
 ++  on-pull-kick
   |=  =resource
   ^-  (unit path)
-  ::  the metadata resource sends an initial update and then kicks
-  ::  immediately, so we don't want to resubscribe
-  ?:  =(resource [our.bowl public-calendars:ucal-hook])
-    ~
   `/
 --

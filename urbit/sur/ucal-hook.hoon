@@ -1,7 +1,7 @@
 /-  *ucal-store
 |%
 ::  +public-calendars: reserved term used in the resource that represents calendar metadata
-++  public-calendars  %public-calendars
+++  public-calendars  `term`%public-calendars
 ::
 ::  $metadata: metadata for a given calendar
 ::
