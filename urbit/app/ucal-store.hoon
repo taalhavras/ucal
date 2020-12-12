@@ -170,10 +170,11 @@
       %create-calendar
     =/  input  +.action
     =/  new=cal
-      %:  cal                                             :: new calendar
+      :*
         our.bowl                                          :: ship
         (fall calendar-code.input (make-uuid eny.bowl 8)) :: unique code
         title.input                                       :: title
+        permissions.input                                 :: permissions
         now.bowl                                          :: created
         now.bowl                                          :: last modified
       ==
@@ -214,8 +215,9 @@
     =/  input  +.action
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
-      %:  event
-        %:  event-data
+      :*
+        ^-  event-data
+        :*
           (fall event-code.input (make-uuid eny.bowl 8))
           calendar-code.input
           about

@@ -94,10 +94,11 @@
   |=  [=vcalendar:components =calendar-code owner=@p now=@da]
   ^-  [calendar (list event)]
   =/  cal=calendar
-    %:  calendar
+    :*
       owner
       calendar-code
       (crip prodid.vcalendar)
+      [`~ `~]  :: default permissions are private
       now
       now
     ==
@@ -122,8 +123,10 @@
   ?~  res
     ~
   %-  some
-  %:  event
-    %:  event-data
+  ^-  event
+  :*
+    ^-  event-data
+    :*
       event-code
       calendar-code
       %:  about

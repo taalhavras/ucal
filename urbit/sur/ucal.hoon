@@ -9,6 +9,7 @@
   $:  owner=@p
       =calendar-code                                    :: internal name, unique
       =title                                            :: external name
+      permisssions=calendar-permissions
       date-created=@da
       last-modified=@da
   ==
@@ -79,4 +80,13 @@
   ==
 ::
 +$  invites  (map @p invite)
+::  $calendar-permissions: different permission settings a calendar can have.
+::  readers/writers being unit means everyone is permissioned for those actions.
+::  otherwise only the ships in the sets have access (the owner implicitly does).
+::  a ship being a writer implies read permissions.
+::
++$  calendar-permissions
+  $:  readers=(unit (set @p))
+      writers=(unit (set @p))
+  ==
 --

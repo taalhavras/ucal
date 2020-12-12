@@ -19,8 +19,7 @@
 ::
 ::
 +$  state-zero
-  $:
-    entries=(jar entity metadata:ucal-hook)
+  $:  entries=(jar entity metadata:ucal-hook)
   ==
 ::
 +$  versioned-state

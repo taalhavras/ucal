@@ -38,6 +38,7 @@
           title=@t
           :: should be used for testing only
           calendar-code=(unit calendar-code)
+          permissions=calendar-permissions
       ==
       ::
       $:  %update-calendar
