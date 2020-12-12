@@ -1,6 +1,26 @@
 /-  *ucal, *hora, components=ucal-components, ucal-timezone
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
+::  +can-read-cal: check if a particular ship has read access to a calendar.
+::
+++  can-read-cal
+  |=  [=calendar =ship]
+  ^-  flag
+  ?~  readers.permissions.calendar
+    &
+  ?~  writers.permissions.calendar
+    &
+  ?|  (~(has in readers.permissions.calendar) ship)
+      (~(has in writers.permissions.calendar) ship)
+  ==
+::  +can-write-cal: check if a particular ship has write access to a calendar.
+::
+++  can-write-cal
+  |=  [=calendar =ship]
+  ^-  flag
+  ?~  writers.permissions.calendar
+    &
+  (~(has in writers.permissions.calendar) ship)
 ::  +events-overlapping-in-range: given an event and a range, produces
 ::  a unit event (representing whether the input event overlaps with
 ::  the target range) and a list of projected events (if the event is

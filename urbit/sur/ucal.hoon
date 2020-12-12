@@ -9,7 +9,7 @@
   $:  owner=@p
       =calendar-code                                    :: internal name, unique
       =title                                            :: external name
-      permisssions=calendar-permissions
+      permissions=calendar-permissions
       date-created=@da
       last-modified=@da
   ==
