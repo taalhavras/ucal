@@ -7,7 +7,7 @@
 =/  them=@tas
     ?~  who
       ::  if we're checking our own metadata, 'local'
-      ::  shouldn't be passed
+      ::  shouldn't be false.
       ?>  local
       us
     (scot %p u.who)
