@@ -1,6 +1,9 @@
 /-  *ucal, *hora, components=ucal-components, ucal-timezone
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
+::  TODO for can-{read, write}-cal do we want to allow moons the
+::  same permissions as ships? (team:title original-ship potential-moon)
+::
 ::  +can-read-cal: check if a particular ship has read access to a calendar.
 ::
 ++  can-read-cal
