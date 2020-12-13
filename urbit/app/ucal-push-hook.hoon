@@ -1,5 +1,5 @@
 /-  ucal-store, *resource, *ucal-almanac, ucal-hook
-/+  default-agent, push-hook, *resource, *ucal-almanac
+/+  default-agent, push-hook, *resource, *ucal-almanac, ucal-util
 =>
 |%
 +$  card  card:agent:gall
@@ -53,7 +53,10 @@
               /calendars
             ==
         %+  turn
-          cals
+          ::  only expose calendars the querying ship can access
+          %+  skim
+            cals
+          (bake (curr can-read-cal:ucal-util src.bowl) calendar)
         |=  cal=calendar
         ^-  metadata:ucal-hook
         [owner.cal title.cal calendar-code.cal]
