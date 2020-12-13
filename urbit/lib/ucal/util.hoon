@@ -14,10 +14,8 @@
     &
   ?~  readers.permissions.calendar
     &
-  ?~  writers.permissions.calendar
-    &
   ?|  (~(has in u.readers.permissions.calendar) ship)
-      (~(has in u.writers.permissions.calendar) ship)
+      (~(has in writers.permissions.calendar) ship)
       (~(has in acolytes.permissions.calendar) ship)
   ==
 ::  +can-write-cal: check if a particular ship has write access to a calendar.
@@ -27,9 +25,7 @@
   ^-  flag
   ?:  (team:title owner.calendar ship)
     &
-  ?~  writers.permissions.calendar
-    &
-  ?|  (~(has in u.writers.permissions.calendar) ship)
+  ?|  (~(has in writers.permissions.calendar) ship)
       (~(has in acolytes.permissions.calendar) ship)
   ==
 ::  +can-change-permissions: check if a particular ship can change

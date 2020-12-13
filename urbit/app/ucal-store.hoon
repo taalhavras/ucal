@@ -314,6 +314,9 @@
     %=  state
       alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
     ==
+    ::
+      %change-permissions
+    !!
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
 ::

@@ -84,14 +84,19 @@
 ::  readers: ships that can subscribe to the calendar
 ::  writers: ships that can edit the calendar and create events
 ::  acolytes: ships that can change permissions for a calendar
-::  readers/writers being unit means any ship can take those actions,
+::  readers being unit means any ship can read the calendar,
 ::  otherwise only the ships in the sets have access.
-::  a ship being a writer implies read permissions and a ship being an acolyte
-::  implies write permissions.
+::  a ship being a writer implies read permissions and a ship
+::  being an acolyte implies write permissions.
 ::
 +$  calendar-permissions
   $:  readers=(unit (set @p))
-      writers=(unit (set @p))
+      writers=(set @p)
       acolytes=(set @p)
   ==
+::  $calendar-role: enumeration of the different roles a ship can have
+::  with respect to a calendar. see $calendar-permissions for an
+::  explanation of what these each signify.
+::
++$  calendar-role  $?(%reader %writer %acolyte)
 --
