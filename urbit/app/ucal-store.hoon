@@ -168,6 +168,8 @@
   ^-  (quip card _state)
   ?-    -.action
       %create-calendar
+    ::  only the ship (or a moon) ucal-store is running on can create new calendars
+    ?>  (team:title [our src]:bowl)
     =/  input  +.action
     =/  new=cal
       :*
@@ -188,8 +190,13 @@
     =/  [new-cal=(unit cal) new-alma=almanac]
         (~(update-calendar al alma.state) input now.bowl)
     ?~  new-cal
-      ::  nonexistant update
+      ::  updating nonexistant calendar
       `state
+    ::  now verify that this ship actually had permissions to edit
+    ::  the calendar in question before updating our almanac. since
+    ::  the permissions can't be updated in this path it's fine to
+    ::  check after applying the update.
+    ?>  (can-write-cal u.new-cal src.bowl)
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
     =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
@@ -197,6 +204,8 @@
     state(alma new-alma)
     ::
       %delete-calendar
+    ::  only the ship (or a moon) ucal-store is running on can delete calendars
+    ?>  (team:title [our src]:bowl)
     =/  code  calendar-code.+.action
     ?<  =(~ (~(get-calendar al alma.state) code))
     ::  produce cards
@@ -213,6 +222,12 @@
     ::
       %create-event
     =/  input  +.action
+    =/  target=(unit cal)  (~(get-calendar al alma.state) calendar-code.input)
+    ::  target calendar must exist
+    ?~  target
+      !!
+    ::  must have write access to calendar to create an event
+    ?>  (can-write-cal u.target src.bowl)
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
       :*
@@ -229,8 +244,6 @@
         ==
         era.input
       ==
-    :: calendar must exist
-    ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[/almanac]
     =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
@@ -241,6 +254,13 @@
     ::
       %update-event
     =/  input  +.action
+    =/  target=(unit cal)
+        (~(get-calendar al alma.state) calendar-code.patch.input)
+    ::  target calendar must exist
+    ?~  target
+      !!
+    ::  must have write access to calendar to update an event
+    ?>  (can-write-cal u.target src.bowl)
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
@@ -254,6 +274,13 @@
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
+    =/  target=(unit cal)
+        (~(get-calendar al alma.state) cal-code)
+    ::  target calendar must exist
+    ?~  target
+      !!
+    ::  must have write access to calendar to delete an event
+    ?>  (can-write-cal u.target src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     :-
@@ -273,6 +300,8 @@
     state(alma new-alma)
     ::
       %import-from-ics
+    ::  only the ship (or a moon) ucal-store is running on can import calendars
+    ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
