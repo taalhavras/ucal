@@ -20,15 +20,6 @@
       era=(unit (unit era))
       tzid=(unit tape)
   ==
-::  $permissions-change: adjust the permissions for who to whatever new-role specifies.
-::  unit for new-role revokes all permissions for the target ship.
-::  unit for who signifies a change to global permissions (toggling global permissions on)
-::
-+$  permissions-change
-  $:  =calendar-code
-      who=(unit ship)
-      new-role=(unit calendar-role)
-  ==
 ::
 +$  rsvp-change
   $:  =calendar-code
@@ -86,7 +77,13 @@
       ==
       ::
       $:  %change-permissions
-          change=permissions-change
+          $:  =calendar-code
+              ::  %change with unit means revoke all permissions for the @p
+              $%  [%change who=@p role=(unit calendar-role)]
+                  [%make-public ~]
+                  [%make-private ~]
+              ==
+          ==
       ==
   ==
 ::

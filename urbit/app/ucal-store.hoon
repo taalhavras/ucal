@@ -316,7 +316,30 @@
     ==
     ::
       %change-permissions
-    !!
+    =/  input  +.action
+    =/  change  +.input
+    =/  target=cal  (need (~(get-calendar al alma.state) calendar-code.input))
+    ::  whoever is changing permissions must be an acolyte or the owner
+    ?>  (can-change-permissions target src.bowl)
+    ::
+    =/  old-permissions=calendar-permissions  permissions.target
+    =/  new-permissions=calendar-permissions
+        ?-    -.change
+            %change
+          (set-permissions old-permissions who.change role.change)
+        ::
+            %make-public
+          old-permissions(readers ~)
+        ::
+            %make-private
+          ::  need to kick all readers? how to track them?
+          old-permissions(readers [~ ~])
+        ==
+    =/  updated=cal  target(permissions new-permissions)
+    :-  ~
+    %=  state
+      alma  (~(add-calendar al alma.state) updated)
+    ==
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
 ::
