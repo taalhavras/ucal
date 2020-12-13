@@ -87,15 +87,35 @@
   |=  =vase
   ^-  [(list card) agent]
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
-  ::  if a calendar is removed, kick subs for the resource.
-  ::  otherwise do nothing?
   ?.  ?=([%update *] +.ts)
     `this
-  ?.  ?=([%calendar-removed *] update.ts)
+  ::  watch path for the calendar we got an update for
+  =/  pax=path  (en-path resource.ts)
+  ?:  ?=([%calendar-removed *] update.ts)
+    ::  if a calendar is removed, kick subs for the resource.
+    =/  =card  [%give %kick ~[pax] ~]
+    :_  this
+    ~[card]
+  ?:  ?=([%permissions-changed *] update.ts)
+    ::  If this change revokes permissions we must kick
+    ::  all current subscribers for the calendar who've
+    ::  lost permissions. We can't just kick everyone who
+    ::  is removed since they might not be subscribed in
+    ::  the first place.
+    ~&  [%sup sup.bowl]
+    ::  get list of ships subscribed to this calendar
+    =/  subscribed=(list ship)
+        %+  turn
+          %+  skim
+            ~(tap by sup.bowl)
+          |=  [=duct who=ship sub=path]
+          ^-  flag
+          =(sub pax)
+        |=  [=duct who=ship sub=path]
+        ^-  ship
+        who
     `this
-  =/  =card  [%give %kick ~[(en-path resource.ts)] ~]
-  :_  this
-  ~[card]
+  `this
 ::
 ++  initial-watch
   |=  [=path rid=resource]
