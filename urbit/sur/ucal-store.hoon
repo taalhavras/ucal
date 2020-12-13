@@ -4,7 +4,6 @@
 ::
 +$  calendar-patch
   $:
-    owner=(unit @p)
     =calendar-code
     title=(unit @t)
   ==

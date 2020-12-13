@@ -57,7 +57,6 @@
       [~ alma]
     =/  new=calendar
         %=  u.cal
-          owner  (fall owner.patch owner.u.cal)
           title  (fall title.patch title.u.cal)
           last-modified  now
         ==
