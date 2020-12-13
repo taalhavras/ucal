@@ -115,8 +115,14 @@
         /almanac
       ==
   =/  cc=calendar-code  name.rid
-  :^  rid  %initial
-    (need (~(get-calendar al alma) cc))
+  =/  cal=calendar  (need (~(get-calendar al alma) cc))
+  ::  subscribers must have read permissions. since they're
+  ::  kicked on a permissions change, the will be stopped
+  ::  from resubscribing here.
+  ?>  (can-read-cal:ucal-util cal src.bowl)
+  :^    rid
+      %initial
+    cal
   (need (~(get-events-bycal al alma) cc))
 ::
 --
