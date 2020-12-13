@@ -3,6 +3,7 @@
 |%
 ::  TODO for can-{read, write}-cal do we want to allow moons the
 ::  same permissions as ships? (team:title original-ship potential-moon)
+::  maybe just for the owner, but not other ships.
 ::
 ::  +can-read-cal: check if a particular ship has read access to a calendar.
 ::
@@ -17,6 +18,7 @@
     &
   ?|  (~(has in u.readers.permissions.calendar) ship)
       (~(has in u.writers.permissions.calendar) ship)
+      (~(has in acolytes.permissions.calendar) ship)
   ==
 ::  +can-write-cal: check if a particular ship has write access to a calendar.
 ::
@@ -27,7 +29,18 @@
     &
   ?~  writers.permissions.calendar
     &
-  (~(has in u.writers.permissions.calendar) ship)
+  ?|  (~(has in u.writers.permissions.calendar) ship)
+      (~(has in acolytes.permissions.calendar) ship)
+  ==
+::  +can-change-permissions: check if a particular ship can change
+::  calendar permissions.
+::
+++  can-change-permissions
+  |=  [=calendar =ship]
+  ^-  flag
+  ?|  (team:title owner.calendar ship)
+      (~(has in acolytes.permissions.calendar) ship)
+  ==
 ::  +events-overlapping-in-range: given an event and a range, produces
 ::  a unit event (representing whether the input event overlaps with
 ::  the target range) and a list of projected events (if the event is

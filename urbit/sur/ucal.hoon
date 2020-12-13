@@ -81,12 +81,17 @@
 ::
 +$  invites  (map @p invite)
 ::  $calendar-permissions: different permission settings a calendar can have.
-::  readers/writers being unit means everyone is permissioned for those actions.
-::  otherwise only the ships in the sets have access (the owner implicitly does).
-::  a ship being a writer implies read permissions.
+::  readers: ships that can subscribe to the calendar
+::  writers: ships that can edit the calendar and create events
+::  acolytes: ships that can change permissions for a calendar
+::  readers/writers being unit means any ship can take those actions,
+::  otherwise only the ships in the sets have access.
+::  a ship being a writer implies read permissions and a ship being an acolyte
+::  implies write permissions.
 ::
 +$  calendar-permissions
   $:  readers=(unit (set @p))
       writers=(unit (set @p))
+      acolytes=(set @p)
   ==
 --
