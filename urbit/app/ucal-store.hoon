@@ -316,26 +316,12 @@
     ==
     ::
       %change-permissions
-    =/  input  +.action
-    =/  change  +.input
-    =/  target=cal  (need (~(get-calendar al alma.state) calendar-code.input))
+    =/  input=permission-change:ucal-store  +.action
+    =/  cc=calendar-code  calendar-code.input
+    =/  target=cal  (need (~(get-calendar al alma.state) cc))
     ::  whoever is changing permissions must be an acolyte or the owner
     ?>  (can-change-permissions target src.bowl)
-    ::
-    =/  old-permissions=calendar-permissions  permissions.target
-    =/  new-permissions=calendar-permissions
-        ?-    -.change
-            %change
-          (set-permissions old-permissions who.change role.change)
-        ::
-            %make-public
-          old-permissions(readers ~)
-        ::
-            %make-private
-          ::  need to kick all readers? how to track them?
-          old-permissions(readers [~ ~])
-        ==
-    =/  updated=cal  target(permissions new-permissions)
+    =/  updated=cal  (apply-permissions-update target input)
     :-  ~
     %=  state
       alma  (~(add-calendar al alma.state) updated)
@@ -384,6 +370,12 @@
             %rsvp-changed
           %-  tail
           (~(update-rsvp al old-alma) rsvp-change.update.ts)
+        ::
+            %permissions-changed
+          =/  pc=permission-change:ucal-store  +.update.ts
+          =/  target=cal  (need (~(get-calendar al old-alma) calendar-code.pc))
+          =/  updated=cal  (apply-permissions-update target pc)
+          (~(add-calendar al old-alma) updated)
         ==
     %=  state
       external  (~(put by external.state) from new-alma)
@@ -433,6 +425,25 @@
       ~
     ``noun+!>(u.res)
   ==
+::  +apply-permissions-update: updates calendar permissions
+::
+++  apply-permissions-update
+  |=  [target=cal =permission-change:ucal-store]
+  ^-  cal
+  =/  change  +.permission-change
+  =/  old-permissions=calendar-permissions  permissions.target
+  =/  new-permissions=calendar-permissions
+      ?-    -.change
+          %change
+        (set-permissions old-permissions who.change role.change)
+      ::
+          %make-public
+        old-permissions(readers ~)
+      ::
+          %make-private
+        old-permissions(readers [~ ~])
+      ==
+  target(permissions new-permissions)
 ::  +resource-for-calendar: get resource for a given calendar
 ::
 ++  resource-for-calendar

@@ -29,6 +29,15 @@
       status=(unit rsvp)
   ==
 ::
++$  permission-change
+  $:  =calendar-code
+      ::  %change with unit means revoke all permissions for the @p
+      $%  [%change who=@p role=(unit calendar-role)]
+          [%make-public ~]
+          [%make-private ~]
+      ==
+  ==
+::
 +$  action
   $%  $:  %create-calendar
           title=@t
@@ -77,13 +86,7 @@
       ==
       ::
       $:  %change-permissions
-          $:  =calendar-code
-              ::  %change with unit means revoke all permissions for the @p
-              $%  [%change who=@p role=(unit calendar-role)]
-                  [%make-public ~]
-                  [%make-private ~]
-              ==
-          ==
+          change=permission-change
       ==
   ==
 ::
@@ -109,5 +112,6 @@
     [%event-changed =event-patch modify-time=@da]
     [%event-removed =calendar-code =event-code]
     [%rsvp-changed =rsvp-change]
+    [%permissions-changed =permission-change]
   ==
 --
