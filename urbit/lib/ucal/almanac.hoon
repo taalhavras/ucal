@@ -9,7 +9,10 @@
   ++  add-calendar
     |=  =calendar
     ^-  almanac
-    alma(cals (~(put by cals.alma) calendar-code.calendar calendar))
+    %=  alma
+      cals  (~(put by cals.alma) calendar-code.calendar calendar)
+      events  (~(put by events.alma) calendar-code.calendar ~)
+    ==
   ::
   ++  add-event
     |=  =event
