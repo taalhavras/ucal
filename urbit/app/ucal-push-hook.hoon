@@ -31,7 +31,7 @@
   |=  pax=path
   ^-  (quip card _this)
   :_  this
-  ?+    pax  ~
+  ?+    pax  !!
       [@p %public-calendars ~]
     =/  who=@p  `@p`(slav %p `@tas`i.pax)
     ::  shouldn't get asked for another ship's public calendars
