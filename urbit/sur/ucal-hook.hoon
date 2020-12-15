@@ -1,22 +1,24 @@
-/-  ucal
+/-  *ucal-store
 |%
+::  +public-calendars: reserved term used in the resource that represents calendar metadata
+++  public-calendars  `term`%public-calendars
+::
+::  $metadata: metadata for a given calendar
+::
++$  metadata
+  $:
+    owner=@p
+    title=cord
+    =calendar-code
+  ==
+::  $action: poke for the pull-hook to retrieve
+::
 +$  action
-  $%  $:  %subscribe-all
-          =ship
-      ==
-      ::
-      $:  %subscribe-specific
-          =ship
-          =calendar-code:ucal
-      ==
-      ::
-      $:  %unsubscribe-all
-          =ship
-      ==
-      ::
-      $:  %unsubscribe-specific
-          =ship
-          =calendar-code:ucal
-      ==
+  $%  [%query-cals who=@p]
+  ==
+::  $update: sent by the push-hook in response to an action
+::
++$  update
+  $%  [%metadata source=@p items=(list metadata)]
   ==
 --

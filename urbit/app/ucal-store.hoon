@@ -1,8 +1,3 @@
-:: TODO:
-:: - set up scry paths
-:: - poke
-:: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
-::
 /-  ucal, ucal-almanac, ucal-store, *resource
 /+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
 ::
