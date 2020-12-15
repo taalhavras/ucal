@@ -123,7 +123,11 @@
     =/  lost-access=(list ship)
         %+  skip
           subscribed
-        (bake (cury can-read-cal:ucal-util [our.bowl calendar-permissions.update.ts]) ship)
+        %+  bake
+          %+  cury
+            can-read-cal:ucal-util
+          [our.bowl calendar-permissions.update.ts]
+        ship
     :_  this
     %+  turn
       lost-access
@@ -154,7 +158,7 @@
   ::  subscribers must have read permissions. since they're
   ::  kicked on a permissions change, they will be stopped
   ::  from resubscribing here.
-  ?>  (can-read-cal:ucal-util [owner.cal permissions.cal] src.bowl)
+  ?>  (can-read-cal:ucal-util [owner permissions]:cal src.bowl)
   :^    rid
       %initial
     cal

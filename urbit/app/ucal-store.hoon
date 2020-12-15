@@ -196,7 +196,7 @@
     ::  the calendar in question before updating our almanac. since
     ::  the permissions can't be updated in this path it's fine to
     ::  check after applying the update.
-    ?>  (can-write-cal [owner.u.new-cal permissions.u.new-cal] src.bowl)
+    ?>  (can-write-cal [owner permissions]:u.new-cal src.bowl)
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
     =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
@@ -227,7 +227,7 @@
     ?~  target
       !!
     ::  must have write access to calendar to create an event
-    ?>  (can-write-cal [owner.u.target permissions.u.target] src.bowl)
+    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
       :*
@@ -260,7 +260,7 @@
     ?~  target
       !!
     ::  must have write access to calendar to update an event
-    ?>  (can-write-cal [owner.u.target permissions.u.target] src.bowl)
+    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
@@ -280,7 +280,7 @@
     ?~  target
       !!
     ::  must have write access to calendar to delete an event
-    ?>  (can-write-cal [owner.u.target permissions.u.target] src.bowl)
+    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     :-
@@ -320,7 +320,7 @@
     =/  cc=calendar-code  calendar-code.input
     =/  target=cal  (need (~(get-calendar al alma.state) cc))
     ::  whoever is changing permissions must be an acolyte or the owner
-    ?>  (can-change-permissions [owner.target permissions.target] src.bowl)
+    ?>  (can-change-permissions [owner permissions]:target src.bowl)
     =/  updated=calendar-permissions
         (apply-permissions-update permissions.target input)
     =/  rid=resource  (resource-for-calendar cc)
