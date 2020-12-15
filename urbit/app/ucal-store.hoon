@@ -196,7 +196,7 @@
     ::  the calendar in question before updating our almanac. since
     ::  the permissions can't be updated in this path it's fine to
     ::  check after applying the update.
-    ?>  (can-write-cal u.new-cal src.bowl)
+    ?>  (can-write-cal [owner.u.new-cal permissions.u.new-cal] src.bowl)
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
     =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
@@ -227,7 +227,7 @@
     ?~  target
       !!
     ::  must have write access to calendar to create an event
-    ?>  (can-write-cal u.target src.bowl)
+    ?>  (can-write-cal [owner.u.target permissions.u.target] src.bowl)
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
       :*
@@ -260,7 +260,7 @@
     ?~  target
       !!
     ::  must have write access to calendar to update an event
-    ?>  (can-write-cal u.target src.bowl)
+    ?>  (can-write-cal [owner.u.target permissions.u.target] src.bowl)
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
@@ -280,7 +280,7 @@
     ?~  target
       !!
     ::  must have write access to calendar to delete an event
-    ?>  (can-write-cal u.target src.bowl)
+    ?>  (can-write-cal [owner.u.target permissions.u.target] src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     :-
@@ -320,11 +320,14 @@
     =/  cc=calendar-code  calendar-code.input
     =/  target=cal  (need (~(get-calendar al alma.state) cc))
     ::  whoever is changing permissions must be an acolyte or the owner
-    ?>  (can-change-permissions target src.bowl)
-    =/  updated=cal  (apply-permissions-update target input)
-    :-  ~
+    ?>  (can-change-permissions [owner.target permissions.target] src.bowl)
+    =/  updated=calendar-permissions
+        (apply-permissions-update permissions.target input)
+    =/  rid=resource  (resource-for-calendar cc)
+    =/  ts=to-subscriber:ucal-store  [rid %update %permissions-changed cc updated]
+    :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     %=  state
-      alma  (~(add-calendar al alma.state) updated)
+      alma  (~(add-calendar al alma.state) target(permissions updated))
     ==
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
@@ -372,10 +375,11 @@
           (~(update-rsvp al old-alma) rsvp-change.update.ts)
         ::
             %permissions-changed
-          =/  pc=permission-change:ucal-store  +.update.ts
-          =/  target=cal  (need (~(get-calendar al old-alma) calendar-code.pc))
-          =/  updated=cal  (apply-permissions-update target pc)
-          (~(add-calendar al old-alma) updated)
+          =/  target=cal
+              (need (~(get-calendar al old-alma) calendar-code.update.ts))
+          =/  new-permissions=calendar-permissions
+              calendar-permissions.update.ts
+          (~(add-calendar al old-alma) target(permissions new-permissions))
         ==
     %=  state
       external  (~(put by external.state) from new-alma)
@@ -428,22 +432,19 @@
 ::  +apply-permissions-update: updates calendar permissions
 ::
 ++  apply-permissions-update
-  |=  [target=cal =permission-change:ucal-store]
-  ^-  cal
+  |=  [old-permissions=calendar-permissions =permission-change:ucal-store]
+  ^-  calendar-permissions
   =/  change  +.permission-change
-  =/  old-permissions=calendar-permissions  permissions.target
-  =/  new-permissions=calendar-permissions
-      ?-    -.change
-          %change
-        (set-permissions old-permissions who.change role.change)
-      ::
-          %make-public
-        old-permissions(readers ~)
-      ::
-          %make-private
-        old-permissions(readers [~ ~])
-      ==
-  target(permissions new-permissions)
+  ?-    -.change
+      %change
+    (set-permissions old-permissions who.change role.change)
+  ::
+      %make-public
+    old-permissions(readers ~)
+  ::
+      %make-private
+    old-permissions(readers [~ ~])
+  ==
 ::  +resource-for-calendar: get resource for a given calendar
 ::
 ++  resource-for-calendar

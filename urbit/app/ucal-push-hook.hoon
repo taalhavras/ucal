@@ -56,7 +56,9 @@
           ::  only expose calendars the querying ship can access
           %+  skim
             cals
-          (bake (curr can-read-cal:ucal-util src.bowl) calendar)
+          |=  cal=calendar
+          ^-  flag
+          (can-read-cal:ucal-util [owner permissions]:cal src.bowl)
         |=  cal=calendar
         ^-  metadata:ucal-hook
         [owner.cal title.cal calendar-code.cal]
@@ -89,10 +91,12 @@
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
   ?.  ?=([%update *] +.ts)
     `this
-  ::  watch path for the calendar we got an update for
-  =/  pax=path  (en-path resource.ts)
+  ::  watch path for the calendar we got an update for.
+  ::  the hook library uses /resource/(en-path:resource resource)
+  ::  as the subscription wires so we prepend /resource here.
+  =/  pax=path  resource+(en-path resource.ts)
   ?:  ?=([%calendar-removed *] update.ts)
-    ::  if a calendar is removed, kick subs for the resource.
+    ::  if a calendar is removed, kick all subs.
     =/  =card  [%give %kick ~[pax] ~]
     :_  this
     ~[card]
@@ -103,7 +107,8 @@
     ::  is removed since they might not be subscribed in
     ::  the first place.
     ~&  [%sup sup.bowl]
-    ::  get list of ships subscribed to this calendar
+    ~&  [%pax pax]
+    ::  get all ships subscribed to this calendar
     =/  subscribed=(list ship)
         %+  turn
           %+  skim
@@ -114,7 +119,17 @@
         |=  [=duct who=ship sub=path]
         ^-  ship
         who
-    `this
+    ::  now filter subscribers into those who have lost read access
+    =/  lost-access=(list ship)
+        %+  skip
+          subscribed
+        (bake (cury can-read-cal:ucal-util [our.bowl calendar-permissions.update.ts]) ship)
+    :_  this
+    %+  turn
+      lost-access
+    |=  who=@p
+    ^-  card
+    [%give %kick ~[pax] `who]
   `this
 ::
 ++  initial-watch
@@ -139,7 +154,7 @@
   ::  subscribers must have read permissions. since they're
   ::  kicked on a permissions change, they will be stopped
   ::  from resubscribing here.
-  ?>  (can-read-cal:ucal-util cal src.bowl)
+  ?>  (can-read-cal:ucal-util [owner.cal permissions.cal] src.bowl)
   :^    rid
       %initial
     cal

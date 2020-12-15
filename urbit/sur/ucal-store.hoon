@@ -112,6 +112,6 @@
     [%event-changed =event-patch modify-time=@da]
     [%event-removed =calendar-code =event-code]
     [%rsvp-changed =rsvp-change]
-    [%permissions-changed =permission-change]
+    [%permissions-changed =calendar-code =calendar-permissions]
   ==
 --

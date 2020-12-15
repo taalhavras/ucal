@@ -8,34 +8,34 @@
 ::  +can-read-cal: check if a particular ship has read access to a calendar.
 ::
 ++  can-read-cal
-  |=  [=calendar =ship]
+  |=  [[owner=ship permissions=calendar-permissions] =ship]
   ^-  flag
-  ?:  (team:title owner.calendar ship)
+  ?:  (team:title owner ship)
     &
-  ?~  readers.permissions.calendar
+  ?~  readers.permissions
     &
-  ?|  (~(has in u.readers.permissions.calendar) ship)
-      (~(has in writers.permissions.calendar) ship)
-      (~(has in acolytes.permissions.calendar) ship)
+  ?|  (~(has in u.readers.permissions) ship)
+      (~(has in writers.permissions) ship)
+      (~(has in acolytes.permissions) ship)
   ==
 ::  +can-write-cal: check if a particular ship has write access to a calendar.
 ::
 ++  can-write-cal
-  |=  [=calendar =ship]
+  |=  [[owner=ship permissions=calendar-permissions] =ship]
   ^-  flag
-  ?:  (team:title owner.calendar ship)
+  ?:  (team:title owner ship)
     &
-  ?|  (~(has in writers.permissions.calendar) ship)
-      (~(has in acolytes.permissions.calendar) ship)
+  ?|  (~(has in writers.permissions) ship)
+      (~(has in acolytes.permissions) ship)
   ==
 ::  +can-change-permissions: check if a particular ship can change
 ::  calendar permissions.
 ::
 ++  can-change-permissions
-  |=  [=calendar =ship]
+  |=  [[owner=ship permissions=calendar-permissions] =ship]
   ^-  flag
-  ?|  (team:title owner.calendar ship)
-      (~(has in acolytes.permissions.calendar) ship)
+  ?|  (team:title owner ship)
+      (~(has in acolytes.permissions) ship)
   ==
 ::  +set-permissions: change the permissions for a target ship
 ::  to the specified role. if role is unit, revoke permissions
