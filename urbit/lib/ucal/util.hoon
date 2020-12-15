@@ -1,6 +1,79 @@
 /-  *ucal, *hora, components=ucal-components, ucal-timezone
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
+::  TODO for can-{read, write}-cal do we want to allow moons the
+::  same permissions as ships? (team:title original-ship potential-moon)
+::  maybe just for the owner, but not other ships.
+::
+::  +can-read-cal: check if a particular ship has read access to a calendar.
+::
+++  can-read-cal
+  |=  [[owner=ship permissions=calendar-permissions] =ship]
+  ^-  flag
+  ?:  (team:title owner ship)
+    &
+  ?~  readers.permissions
+    &
+  ?|  (~(has in u.readers.permissions) ship)
+      (~(has in writers.permissions) ship)
+      (~(has in acolytes.permissions) ship)
+  ==
+::  +can-write-cal: check if a particular ship has write access to a calendar.
+::
+++  can-write-cal
+  |=  [[owner=ship permissions=calendar-permissions] =ship]
+  ^-  flag
+  ?:  (team:title owner ship)
+    &
+  ?|  (~(has in writers.permissions) ship)
+      (~(has in acolytes.permissions) ship)
+  ==
+::  +can-change-permissions: check if a particular ship can change
+::  calendar permissions.
+::
+++  can-change-permissions
+  |=  [[owner=ship permissions=calendar-permissions] =ship]
+  ^-  flag
+  ?|  (team:title owner ship)
+      (~(has in acolytes.permissions) ship)
+  ==
+::  +set-permissions: change the permissions for a target ship
+::  to the specified role. if role is unit, revoke permissions
+::  for the target ship instead.
+::
+++  set-permissions
+  |=  [permissions=calendar-permissions =ship role=(unit calendar-role)]
+  ^-  calendar-permissions
+  =/  new-perms=calendar-permissions  (revoke-permissions permissions ship)
+  ?~  role
+    new-perms
+  ?-    u.role
+      %reader
+    ::  it doesn't make sense to add a reader to a public calendar so
+    ::  we can use need.
+    %=  new-perms
+      readers  `(~(put in (need readers.new-perms)) ship)
+    ==
+  ::
+      %writer
+    %=  new-perms
+      writers  (~(put in writers.new-perms) ship)
+    ==
+  ::
+      %acolyte
+    %=  new-perms
+      acolytes  (~(put in acolytes.new-perms) ship)
+    ==
+  ==
+::  +revoke-permissions: revoke all of ship's permisisons (unless the calendar
+::  is public - then they'll still be able to read).
+::
+++  revoke-permissions
+  |=  [permissions=calendar-permissions =ship]
+  ^-  calendar-permissions
+  :+  ?~  readers.permissions  ~  `(~(del in u.readers.permissions) ship)
+    (~(del in writers.permissions) ship)
+  (~(del in acolytes.permissions) ship)
 ::  +events-overlapping-in-range: given an event and a range, produces
 ::  a unit event (representing whether the input event overlaps with
 ::  the target range) and a list of projected events (if the event is
@@ -94,10 +167,11 @@
   |=  [=vcalendar:components =calendar-code owner=@p now=@da]
   ^-  [calendar (list event)]
   =/  cal=calendar
-    %:  calendar
+    :*
       owner
       calendar-code
       (crip prodid.vcalendar)
+      [`~ `~]  :: default permissions are private
       now
       now
     ==
@@ -122,8 +196,10 @@
   ?~  res
     ~
   %-  some
-  %:  event
-    %:  event-data
+  ^-  event
+  :*
+    ^-  event-data
+    :*
       event-code
       calendar-code
       %:  about

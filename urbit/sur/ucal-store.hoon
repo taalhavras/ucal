@@ -3,34 +3,39 @@
 ::
 ::
 +$  calendar-patch
-  $:
-    owner=(unit @p)
-    =calendar-code
-    title=(unit @t)
+  $:  =calendar-code
+      title=(unit @t)
   ==
 ::
 +$  event-patch
-  $:
-    =calendar-code
-    =event-code
-    title=(unit title)
-    ::  fields of detail
-    desc=(unit (unit @t))
-    loc=(unit (unit location))
-    description=(unit (unit @t))
-    ::
-    when=(unit moment)
-    era=(unit (unit era))
-    tzid=(unit tape)
+  $:  =calendar-code
+      =event-code
+      title=(unit title)
+      ::  fields of detail
+      desc=(unit (unit @t))
+      loc=(unit (unit location))
+      description=(unit (unit @t))
+      ::
+      when=(unit moment)
+      era=(unit (unit era))
+      tzid=(unit tape)
   ==
 ::
 +$  rsvp-change
-  $:
-    =calendar-code
-    =event-code
-    who=@p
-    :: if ~, then uninvite the @p
-    status=(unit rsvp)
+  $:  =calendar-code
+      =event-code
+      who=@p
+      :: if ~, then uninvite the @p
+      status=(unit rsvp)
+  ==
+::
++$  permission-change
+  $:  =calendar-code
+      ::  %change with unit means revoke all permissions for the @p
+      $%  [%change who=@p role=(unit calendar-role)]
+          [%make-public ~]
+          [%make-private ~]
+      ==
   ==
 ::
 +$  action
@@ -38,6 +43,7 @@
           title=@t
           :: should be used for testing only
           calendar-code=(unit calendar-code)
+          permissions=calendar-permissions
       ==
       ::
       $:  %update-calendar
@@ -78,6 +84,10 @@
       $:  %import-from-ics
           =path
       ==
+      ::
+      $:  %change-permissions
+          change=permission-change
+      ==
   ==
 ::
 ::  $to-subscriber: sent to subscribers - union of initial
@@ -102,5 +112,6 @@
     [%event-changed =event-patch modify-time=@da]
     [%event-removed =calendar-code =event-code]
     [%rsvp-changed =rsvp-change]
+    [%permissions-changed =calendar-code =calendar-permissions]
   ==
 --

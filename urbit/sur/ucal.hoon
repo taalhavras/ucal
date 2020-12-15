@@ -9,6 +9,7 @@
   $:  owner=@p
       =calendar-code                                    :: internal name, unique
       =title                                            :: external name
+      permissions=calendar-permissions
       date-created=@da
       last-modified=@da
   ==
@@ -79,4 +80,23 @@
   ==
 ::
 +$  invites  (map @p invite)
+::  $calendar-permissions: different permission settings a calendar can have.
+::  readers: ships that can subscribe to the calendar
+::  writers: ships that can edit the calendar and create events
+::  acolytes: ships that can change permissions for a calendar
+::  readers being unit means any ship can read the calendar,
+::  otherwise only the ships in the sets have access.
+::  a ship being a writer implies read permissions and a ship
+::  being an acolyte implies write permissions.
+::
++$  calendar-permissions
+  $:  readers=(unit (set @p))
+      writers=(set @p)
+      acolytes=(set @p)
+  ==
+::  $calendar-role: enumeration of the different roles a ship can have
+::  with respect to a calendar. see $calendar-permissions for an
+::  explanation of what these each signify.
+::
++$  calendar-role  $?(%reader %writer %acolyte)
 --
