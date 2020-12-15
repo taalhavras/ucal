@@ -106,12 +106,6 @@
     ::  lost permissions. We can't just kick everyone who
     ::  is removed since they might not be subscribed in
     ::  the first place.
-    ::  TODO this could be more efficient - currently we're
-    ::  checking every subscriber every time the permissions
-    ::  change at all. through some combination of forwarding
-    ::  the change-permissions and a set of removed ships along
-    ::  with the new permissions, we can only check the subs if
-    ::  necessary.
     ~&  [%sup sup.bowl]
     ~&  [%pax pax]
     ::  get all ships subscribed to this calendar
