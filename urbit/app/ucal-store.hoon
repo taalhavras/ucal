@@ -1,8 +1,3 @@
-:: TODO:
-:: - set up scry paths
-:: - poke
-:: - ucal.hoon -> ucal-store.hoon/calendar-store.hoon
-::
 /-  ucal, ucal-almanac, ucal-store, *resource
 /+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
 ::
@@ -173,12 +168,15 @@
   ^-  (quip card _state)
   ?-    -.action
       %create-calendar
+    ::  only the ship (or a moon) ucal-store is running on can create new calendars
+    ?>  (team:title [our src]:bowl)
     =/  input  +.action
     =/  new=cal
-      %:  cal                                             :: new calendar
+      :*
         our.bowl                                          :: ship
         (fall calendar-code.input (make-uuid eny.bowl 8)) :: unique code
         title.input                                       :: title
+        permissions.input                                 :: permissions
         now.bowl                                          :: created
         now.bowl                                          :: last modified
       ==
@@ -192,8 +190,13 @@
     =/  [new-cal=(unit cal) new-alma=almanac]
         (~(update-calendar al alma.state) input now.bowl)
     ?~  new-cal
-      ::  nonexistant update
+      ::  updating nonexistant calendar
       `state
+    ::  now verify that this ship actually had permissions to edit
+    ::  the calendar in question before updating our almanac. since
+    ::  the permissions can't be updated in this path it's fine to
+    ::  check after applying the update.
+    ?>  (can-write-cal [owner permissions]:u.new-cal src.bowl)
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
     =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
     =/  cag=cage  [%ucal-to-subscriber !>(ts)]
@@ -201,6 +204,8 @@
     state(alma new-alma)
     ::
       %delete-calendar
+    ::  only the ship (or a moon) ucal-store is running on can delete calendars
+    ?>  (team:title [our src]:bowl)
     =/  code  calendar-code.+.action
     ?<  =(~ (~(get-calendar al alma.state) code))
     ::  produce cards
@@ -217,10 +222,17 @@
     ::
       %create-event
     =/  input  +.action
+    =/  target=(unit cal)  (~(get-calendar al alma.state) calendar-code.input)
+    ::  target calendar must exist
+    ?~  target
+      !!
+    ::  must have write access to calendar to create an event
+    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  =about:ucal  [our.bowl now.bowl now.bowl]
     =/  new=event
-      %:  event
-        %:  event-data
+      :*
+        ^-  event-data
+        :*
           (fall event-code.input (make-uuid eny.bowl 8))
           calendar-code.input
           about
@@ -232,8 +244,6 @@
         ==
         era.input
       ==
-    :: calendar must exist
-    ?<  =(~ (~(get-calendar al alma.state) calendar-code.input))
     =/  paths=(list path)  ~[/almanac]
     =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
@@ -244,6 +254,13 @@
     ::
       %update-event
     =/  input  +.action
+    =/  target=(unit cal)
+        (~(get-calendar al alma.state) calendar-code.patch.input)
+    ::  target calendar must exist
+    ?~  target
+      !!
+    ::  must have write access to calendar to update an event
+    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
@@ -257,6 +274,13 @@
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
+    =/  target=(unit cal)
+        (~(get-calendar al alma.state) cal-code)
+    ::  target calendar must exist
+    ?~  target
+      !!
+    ::  must have write access to calendar to delete an event
+    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     :-
@@ -276,6 +300,8 @@
     state(alma new-alma)
     ::
       %import-from-ics
+    ::  only the ship (or a moon) ucal-store is running on can import calendars
+    ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
@@ -287,6 +313,21 @@
     :-  ~
     %=  state
       alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
+    ==
+    ::
+      %change-permissions
+    =/  input=permission-change:ucal-store  +.action
+    =/  cc=calendar-code  calendar-code.input
+    =/  target=cal  (need (~(get-calendar al alma.state) cc))
+    ::  whoever is changing permissions must be an acolyte or the owner
+    ?>  (can-change-permissions [owner permissions]:target src.bowl)
+    =/  updated=calendar-permissions
+        (apply-permissions-update permissions.target input)
+    =/  rid=resource  (resource-for-calendar cc)
+    =/  ts=to-subscriber:ucal-store  [rid %update %permissions-changed cc updated]
+    :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+    %=  state
+      alma  (~(add-calendar al alma.state) target(permissions updated))
     ==
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
@@ -301,8 +342,8 @@
   =/  old-alma=almanac  (~(gut by external.state) from *almanac)
   ?-  +<.ts
       %initial
-    ::  shouldn't be any state
-    ?>  =(old-alma *almanac)
+    ::  shouldn't be any state for this calendar prior to the update.
+    ?>  =(~ (~(get-calendar al old-alma) calendar-code.calendar.ts))
     =/  old-alma=almanac  (~(add-calendar al old-alma) calendar.ts)
     %=  state
       external  (~(put by external.state) from (~(add-events al old-alma) events.ts))
@@ -332,6 +373,13 @@
             %rsvp-changed
           %-  tail
           (~(update-rsvp al old-alma) rsvp-change.update.ts)
+        ::
+            %permissions-changed
+          =/  target=cal
+              (need (~(get-calendar al old-alma) calendar-code.update.ts))
+          =/  new-permissions=calendar-permissions
+              calendar-permissions.update.ts
+          (~(add-calendar al old-alma) target(permissions new-permissions))
         ==
     %=  state
       external  (~(put by external.state) from new-alma)
@@ -380,6 +428,22 @@
     ?~  res
       ~
     ``noun+!>(u.res)
+  ==
+::  +apply-permissions-update: updates calendar permissions
+::
+++  apply-permissions-update
+  |=  [old-permissions=calendar-permissions =permission-change:ucal-store]
+  ^-  calendar-permissions
+  =/  change  +.permission-change
+  ?-    -.change
+      %change
+    (set-permissions old-permissions who.change role.change)
+  ::
+      %make-public
+    old-permissions(readers ~)
+  ::
+      %make-private
+    old-permissions(readers [~ ~])
   ==
 ::  +resource-for-calendar: get resource for a given calendar
 ::

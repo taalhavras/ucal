@@ -9,7 +9,10 @@
   ++  add-calendar
     |=  =calendar
     ^-  almanac
-    alma(cals (~(put by cals.alma) calendar-code.calendar calendar))
+    %=  alma
+      cals  (~(put by cals.alma) calendar-code.calendar calendar)
+      events  (~(put by events.alma) calendar-code.calendar ~)
+    ==
   ::
   ++  add-event
     |=  =event
@@ -57,7 +60,6 @@
       [~ alma]
     =/  new=calendar
         %=  u.cal
-          owner  (fall owner.patch owner.u.cal)
           title  (fall title.patch title.u.cal)
           last-modified  now
         ==
