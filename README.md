@@ -51,16 +51,26 @@ Now if ~nel creates events on this calendar, they'll be sent to ~zod's store (th
 ### Inviting ships to your events
 Not yet implemented.
 
-### Calendar permissions
-Not yet implemented.
+### Permissions
+Permissions are implemented at the calendar level. Ships fall into three
+roles: readers, writers, and acolytes. These correspond to allowing ships
+to {subscribe to, edit, change permissions of} a calendar respectively.
+Being an acolyte implies being a writer, and being a writer implies being
+a reader. If a ship loses read access it will be kicked from its current
+subscription (if it has one) and will be prevented from resubscribing until
+it's readded. Calendars can also be specified to be public, giving every
+ship read access to it. It's also worth noting that if a ship doesn't have
+read access to a calendar they won't be aware of its existence (unless they
+were previously kicked from it) - `query-cals` will not report any
+calendars the querying ship isn't allowed to read.
 
 ## Current Roadmap
 These are the current big tasks to undertake (in no particular order).
 
 1. almanac update to use ordered map (and potentially implementing an interval tree)
 2. timezones
-3. invites + permissions
-4. more ph tests
+3. invites
+4. more ph tests (sadly broken atm)
 
 
 ### almanac update
@@ -73,12 +83,12 @@ branch: none
 
 As of this moment there's just some stub code and ideas for how to handle timezones. The current model of "just make everything UTC" is not particularly compelling - improvements can certainly be made. There are a few approaches, the most involved being to parse the IANA timezone database (a potentially herculean effort). There may be a middle ground where certain timezones can be hardcoded in some way, but ultimately parsing the db is probably the best way to go.
 
-### invites + permissions
+### invites
 branch: none
 
-The data types for invites are floating around and through the code, but they aren't used in any way. This will involve work at the hook level and some store changes. While we're doing invites we might as well add a permission system (possibly leveraging permission-store?) at the calendar level - event level permissions can come later.
+The data types for invites are floating around and through the code, but they aren't used in any way. This will involve work at the hook level and some store changes.
 
-### pH Testing
+### pH Testing (broken as of network breach)
 branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
