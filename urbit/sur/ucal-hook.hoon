@@ -6,9 +6,10 @@
 ::  $metadata: metadata for a given calendar
 ::
 +$  metadata
-  $:  owner=@p
-      title=cord
-      =calendar-code:ucal-store
+  $:
+    owner=@p
+    title=cord
+    =calendar-code:ucal-store
   ==
 ::  $action: poke for the pull-hook
 ::
