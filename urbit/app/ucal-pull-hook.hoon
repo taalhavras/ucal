@@ -47,15 +47,18 @@
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
+  ::  TODO why does using team:title lead to -find.team here?
+  ?>  =(our.bowl src.bowl)
   ?+  mark  `this
         %ucal-hook-action
       :_  this
       =/  act=action:ucal-hook  !<(action:ucal-hook vase)
-      ?.  ?=(%query-cals -.act)
-        !!
-      =/  pax=path  ~[(scot %p who.act) public-calendars:ucal-hook]
-      ::  TODO why does using push-hook-name.config fail here?
-      [%pass `wire`pax %agent [who.act %ucal-push-hook] %watch pax]~
+      ?:  ?=([%query-cals *] act)
+        =/  pax=path  ~[(scot %p who.act) public-calendars:ucal-hook]
+        [%pass `wire`pax %agent [who.act push-hook-name:config] %watch pax]~
+      ?:  ?=([%proxy-poke *] act)
+        [%pass [%proxy-poke (scot %p target.act) ~] %agent [target.act store-name:config] %poke %ucal-action !>(store-action.act)]~
+      !!
     ::
   ==
 ++  on-agent
