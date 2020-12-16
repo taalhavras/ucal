@@ -5,7 +5,6 @@
 ::
 /-  *pull-hook, *resource, ucal-store, ucal-hook, *ucal
 /+  pull-hook, default-agent
-=>
 |%
 +$  card  card:agent:gall
 ::
@@ -64,7 +63,7 @@
 ++  on-agent
   |~  [=wire =sign:agent:gall]
   ^-  (quip card _this)
-  ?+    wire  (on-agent:def wire sign)
+  ?+    wire  `this
       [@p %public-calendars *]
     ::  update metadata on facts, ignore everything else
     ?.  ?=([%fact *] sign)
