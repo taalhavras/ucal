@@ -94,24 +94,21 @@
 ::  payload and periodic updates
 ::
 +$  to-subscriber
-  $:
-    =resource
-    $%
-      [%initial =calendar events=(list event)]
-      [%update =update]
-    ==
+  $:  =resource
+      $%  [%initial =calendar events=(list event)]
+          [%update =update]
+      ==
   ==
 ::
 ::  $update: updates sent to subscribers
 ::
 +$  update
-  $%
-    [%calendar-changed =calendar-patch modify-time=@da]
-    [%calendar-removed =calendar-code]
-    [%event-added =event]
-    [%event-changed =event-patch modify-time=@da]
-    [%event-removed =calendar-code =event-code]
-    [%rsvp-changed =rsvp-change]
-    [%permissions-changed =calendar-code =calendar-permissions]
+  $%  [%calendar-changed =calendar-patch modify-time=@da]
+      [%calendar-removed =calendar-code]
+      [%event-added =event]
+      [%event-changed =event-patch modify-time=@da]
+      [%event-removed =calendar-code =event-code]
+      [%rsvp-changed =rsvp-change]
+      [%permissions-changed =calendar-code =calendar-permissions]
   ==
 --

@@ -22,8 +22,7 @@
   ==
 ::
 +$  versioned-state
-  $%
-    [%0 state-zero]
+  $%  [%0 state-zero]
   ==
 --
 ::

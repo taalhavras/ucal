@@ -16,16 +16,14 @@
 ++  al  al:alma-door
 ::
 +$  state-zero
-  $:
-    ::  maintains calendar and event states
-    alma=almanac
-    ::  map of entity to almanac, to track almanacs pulled from remote ships
-    external=(map entity almanac)
+  $:  ::  maintains calendar and event states
+      alma=almanac
+      ::  map of entity to almanac, to track almanacs pulled from remote ships
+      external=(map entity almanac)
   ==
 ::
 +$  versioned-state
-  $%
-    [%0 state-zero]
+  $%  [%0 state-zero]
   ==
 --
 ::
@@ -460,14 +458,4 @@
   ?:  (lth b a)
     [b a]
   [a b]
-::
-++  give
-  |*  [=mark =noun]
-  ^-  (list card)
-  [%give %fact ~ mark !>(noun)]~
-::
-++  give-single
-  |*  [=mark =noun]
-  ^-  card
-  [%give %fact ~ mark !>(noun)]
 --

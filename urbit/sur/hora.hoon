@@ -2,14 +2,13 @@
 ::  $weekday: days of the week
 ::
 +$  weekday
-  $?
-    %mon
-    %tue
-    %wed
-    %thu
-    %fri
-    %sat
-    %sun
+  $?  %mon
+      %tue
+      %wed
+      %thu
+      %fri
+      %sat
+      %sun
   ==
 ::
 ::  When the event will occur. Can be all day, relative to a start date, or have
@@ -28,9 +27,8 @@
 ::  either on a specific date (i.e. 27th) or on the nth weekday of a month
 ::
 +$  monthly
-  $%
-    [%on ~]
-    [%weekday instance=weekday-instance]
+  $%  [%on ~]
+      [%weekday instance=weekday-instance]
   ==
 ::
 +$  rrule
@@ -66,9 +64,8 @@
 ::  the type determines the era's bounds.
 ::
 +$  era
-  $:
-    type=era-type
-    interval=$~(1 @ud)
-    =rrule
+  $:  type=era-type
+      interval=$~(1 @ud)
+      =rrule
   ==
 --
