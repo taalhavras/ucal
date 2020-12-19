@@ -18,22 +18,21 @@
       ;~  plug
         optional-sign
         one-or-two
-        (stun [1 2] ;~(plug col one-or-two))
+        (stun [1 2] (cook tail ;~(plug col one-or-two)))
       ==
-  ~&  [%res-is res]
-  ::  now res is [sign hours ~[[':' minutes] [':' seconds]]
+  ::  now res is [sign=flag hours=@ud ~[minutes=@ud seconds=@ud]
   ::  seconds might not be present though.
   =/  hours=@dr  (mul +<:res ~h1)
-  =/  l=(list [@ta @ud])  +>:res
+  =/  l=(list @ud)  +>:res
   ?~  l
     !!
-  =/  minutes=@dr  (mul +:i.l ~m1)
+  =/  minutes=@dr  (mul i.l ~m1)
   :-  -:res
   ;:  add
     hours
     minutes
     ?~  t.l
       ~s0
-    (mul +:i.t.l ~s1)
+    (mul i.t.l ~s1)
   ==
 --
