@@ -15,4 +15,19 @@
   |=  [time=@da =delta]
   ^-  @da
   (add-delta time delta(sign !sign.delta))
+::  +is-zero: check if delta is zero (sign irrelevant)
+::
+++  is-zero
+  |=  =delta
+  ^-  flag
+  =(d.delta 0)
+::
+++  in-range
+  |=  [[from=@da to=(unit @da)] target=@da]
+  ^-  flag
+  ?.  (gte target from)
+    |
+  ?~  to
+    &
+  (lte target u.to)
 --
