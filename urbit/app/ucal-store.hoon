@@ -106,7 +106,7 @@
     ?+  path
       (on-peek:def path)
     ::
-        [%y @p *]
+        [%x @p *]
       =/  who=@p  `@p`(slav %p `@tas`+<:path)
       ?:  =(who our.bowl)
         (handle-on-peek t.t.path alma.state)
