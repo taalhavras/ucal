@@ -351,4 +351,38 @@
   ?~  r
     ~
   ``[u.et interval.u.rr u.r]
+::
+++  calendar-to-json
+  =<
+  |=  cal=calendar
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['owner' (ship:enjs owner.cal)]
+      ['calendar-code' (tape:enjs (trip calendar-code.cal))]
+      ['title' (tape:enjs (trip title.cal))]
+      :-  'permissions'
+      %-  pairs:enjs
+      :~  ['acolytes' (ships-to-json acolytes.permissions.cal)]
+          ['writers' (ships-to-json writers.permissions.cal)]
+          ['readers' (ships-to-json (fall readers.permissions.cal ~))]
+          ['public' [%b =(readers.permissions.cal ~)]]
+      ==
+      ['date-created' (time:enjs date-created.cal)]
+      ['last-modified' (time:enjs last-modified.cal)]
+  ==
+  |%
+  ++  ships-to-json
+    |=  ships=(set @p)
+    ^-  json
+    :-  %a
+    %+  turn
+      ~(tap in ships)
+    ship:enjs:format
+  --
+::
+++  json-to-calendar
+  |=  jon=json
+  ^-  calendar
+  !!
 --
