@@ -1,7 +1,7 @@
 /-  *iana-components, hora
 /+  *parser-util, *iana-util
 |%
-::  +parse-time: parse signed time cord in HH:MM or HH:MM:SS format.
+::  +parse-delta: rule for parsing signed time cord in HH:MM or HH:MM:SS format.
 ::  doesn't assume leading zeros (will parse 1:00 and 01:00 identically)
 ::
 ++  parse-delta
@@ -62,7 +62,7 @@
   =<
   |=  lines=wall
   ^-  [rule wall]
-  =/  r  (turn parse-rule-entry lines)
+  =/  r  (turn lines parse-rule-entry)
   !!
   |%
   ++  parse-on
@@ -116,20 +116,20 @@
             whitespace
             ::  IN, month code
             %+  cook
-              (plus alf)
-            |=  x=tape
-            ^-  @ud
-            (~(got by month-to-idx:hora) ;;(month:hora (crip (cass x))))
+              |=  x=tape
+              ^-  @ud
+              (~(got by month-to-idx:hora) ;;(month:hora (crip (cass x))))
+            (plus alf)
             whitespace
             ::  ON, specific date
             parse-on
             whitespace
             ::  AT, time offset - can be specified to be local, wallclock,
             ::  or UTC
-            !!
+::            !!
             whitespace
             ::  SAVE, delta to apply
-            parse-delta
+::            parse-delta
             whitespace
             ::  LETTER, char
             alf
