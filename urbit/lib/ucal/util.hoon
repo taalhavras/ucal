@@ -391,6 +391,7 @@
   ^-  json
   =,  format
   =/  [start=@da end=@da]  (moment-to-range when.data)
+  ::  TODO handle invites once code supports them
   %-  pairs:enjs
   :~  ['event-code' (tape:enjs (trip event-code.data))]
       ['calendar-code' (tape:enjs (trip calendar-code.data))]
@@ -412,7 +413,19 @@
   |=  ev=event
   ^-  json
   =,  format
-  !!
+  %-  pairs:enjs
+  :~  ['data' (event-data-to-json data.ev)]
+      ['era' ?~(era.ev ~ (era-to-json u.era.ev))]
+  ==
+::
+++  projected-event-to-json
+  |=  proj=projected-event
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['data' (event-data-to-json data.proj)]
+      ['era' (era-to-json source.proj)]
+  ==
 ::
 ::
 ++  era-to-json
