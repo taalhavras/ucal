@@ -88,7 +88,7 @@
     =/  new-event=event
         %=  cur
           detail.data  new-detail
-          about.data  about.data.cur(last-updated now)
+          about.data  about.data.cur(last-modified now)
           when.data  (fall when.patch when.data.cur)
           tzid.data  (fall tzid.patch tzid.data.cur)
           era  (fall era.patch era.cur)

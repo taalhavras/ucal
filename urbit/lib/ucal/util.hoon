@@ -385,4 +385,31 @@
   |=  jon=json
   ^-  calendar
   !!
+::
+++  event-data-to-json
+  |=  data=event-data
+  ^-  json
+  =,  format
+  =/  [start=@da end=@da]  (moment-to-range when.data)
+  %-  pairs:enjs
+  :~  ['event-code' (tape:enjs (trip event-code.data))]
+      ['calendar-code' (tape:enjs (trip calendar-code.data))]
+      ::  about
+      ['organizer' (ship:enjs organizer.about.data)]
+      ['date-created' (time:enjs date-created.about.data)]
+      ['last-modified' (time:enjs last-modified.about.data)]
+      ::  detail
+      ['title' (tape:enjs (trip title.detail.data))]
+      ['desc' (tape:enjs (trip (fall desc.detail.data '')))]
+      ::  TODO parse and send lat/lon as well
+      ['location' (tape:enjs (trip ?~(loc.detail.data '' address.u.loc.detail.data)))]
+      ['start' (time:enjs start)]
+      ['end' (time:enjs end)]
+      ['tzid' (tape:enjs tzid.data)]
+  ==
+::
+++  event-to-json
+  |=  ev=event
+  ^-  json
+  !!
 --
