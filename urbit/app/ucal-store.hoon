@@ -398,7 +398,7 @@
     ``noun+!>(almanac)
   ::
       [%calendars ~]
-    ``noun+!>((~(get-calendars al almanac)))
+    ``ucal-calendars+!>((~(get-calendars al almanac)))
   ::
       [%events ~]
     ``noun+!>((~(get-events al almanac)))
@@ -407,7 +407,7 @@
     =/  res  (get-calendar t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-calendar+!>(u.res)
   ::
       [%events %specific *]
     =/  res  (get-specific-event t.t.path almanac)
