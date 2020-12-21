@@ -411,5 +411,57 @@
 ++  event-to-json
   |=  ev=event
   ^-  json
+  =,  format
   !!
+::
+::
+++  era-to-json
+  =,  format
+  =<
+  |=  =era
+  ^-  json
+  %-  pairs:enjs
+  :~  ['interval' (numb:enjs interval.era)]
+      ['type' (era-type-to-json type.era)]
+      ['rrule' (rrule-to-json rrule.era)]
+  ==
+  |%
+  ++  era-type-to-json
+    |=  et=era-type
+    ^-  json
+    %-  frond:enjs
+    ?:  ?=([%until *] et)
+      ['until' (time:enjs end.et)]
+    ?:  ?=([%instances *] et)
+      ['instances' (numb:enjs num.et)]
+    ?:  ?=([%infinite *] et)
+      ['infinite' ~]
+    !!
+  ::
+  ++  rrule-to-json
+    |=  rr=rrule
+    ^-  json
+    %-  frond:enjs
+    ?:  ?=([%daily *] rr)
+      ['daily' ~]
+    ?:  ?=([%weekly *] rr)
+      :-  'weekly'
+      ^-  json
+      :-  %a
+      %+  turn
+        ~(tap in days.rr)
+      |=  w=weekday
+      ^-  json
+      (tape:enjs (trip w))
+    ?:  ?=([%monthly *] rr)
+      :-  'monthly'
+      ?:  ?=([%on *] form.rr)
+        (tape:enjs "on")
+      ?:  ?=([%weekday *] form.rr)
+        (tape:enjs (trip instance.form.rr))
+      !!
+    ?:  ?=([%yearly *] rr)
+      ['yearly' ~]
+    !!
+  --
 --
