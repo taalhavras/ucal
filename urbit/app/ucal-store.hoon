@@ -401,7 +401,7 @@
     ``ucal-calendars+!>((~(get-calendars al almanac)))
   ::
       [%events ~]
-    ``noun+!>((~(get-events al almanac)))
+    ``ucal-events+!>((~(get-events al almanac)))
   ::
       [%calendars *]
     =/  res  (get-calendar t.path almanac)
@@ -413,19 +413,19 @@
     =/  res  (get-specific-event t.t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-event+!>(u.res)
   ::
       [%events %bycal *]
     =/  res  (get-events-bycal t.t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-events+!>(u.res)
   ::
       [%events %inrange *]
     =/  res  (get-events-inrange t.t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-events-in-range+!>(u.res)
   ==
 ::  +apply-permissions-update: updates calendar permissions
 ::
