@@ -1,4 +1,4 @@
-/-  *ucal, *hora, components=ucal-components, ucal-timezone
+/-  *ucal, *hora, components=ucal-components, ucal-timezone, ucal-store
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
 ::  TODO for can-{read, write}-cal do we want to allow moons the
@@ -352,24 +352,14 @@
     ~
   ``[u.et interval.u.rr u.r]
 ::
-++  calendar-to-json
+++  permissions-to-json
   =<
-  |=  cal=calendar
-  ^-  json
-  =,  format
-  %-  pairs:enjs
-  :~  ['owner' (ship:enjs owner.cal)]
-      ['calendar-code' (tape:enjs (trip calendar-code.cal))]
-      ['title' (tape:enjs (trip title.cal))]
-      :-  'permissions'
-      %-  pairs:enjs
-      :~  ['acolytes' (ships-to-json acolytes.permissions.cal)]
-          ['writers' (ships-to-json writers.permissions.cal)]
-          ['readers' (ships-to-json (fall readers.permissions.cal ~))]
-          ['public' [%b =(readers.permissions.cal ~)]]
-      ==
-      ['date-created' (time:enjs date-created.cal)]
-      ['last-modified' (time:enjs last-modified.cal)]
+  |=  permissions=calendar-permissions
+  %-  pairs:enjs:format
+  :~  ['acolytes' (ships-to-json acolytes.permissions)]
+      ['writers' (ships-to-json writers.permissions)]
+      ['readers' (ships-to-json (fall readers.permissions ~))]
+      ['public' [%b =(readers.permissions ~)]]
   ==
   |%
   ++  ships-to-json
@@ -380,6 +370,19 @@
       ~(tap in ships)
     ship:enjs:format
   --
+::
+++  calendar-to-json
+  |=  cal=calendar
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['owner' (ship:enjs owner.cal)]
+      ['calendar-code' (tape:enjs (trip calendar-code.cal))]
+      ['title' (tape:enjs (trip title.cal))]
+      ['permissions' (permissions-to-json permissions.cal)]
+      ['date-created' (time:enjs date-created.cal)]
+      ['last-modified' (time:enjs last-modified.cal)]
+  ==
 ::
 ++  json-to-calendar
   |=  jon=json
@@ -475,6 +478,70 @@
       !!
     ?:  ?=([%yearly *] rr)
       ['yearly' ~]
+    !!
+  --
+::
+++  ucal-action-to-json
+  |=  act=action:ucal-store
+  ^-  json
+  !!
+::
+++  ucal-action-from-json
+  =<
+  |=  jon=json
+  ^-  action:ucal-store
+  =,  format
+  ::  Format should be key -> json of fields
+  %-  tail
+  %.  jon
+  %-  of:dejs
+  :~  [%create-calendar convert-create-calendar]
+      [%update-calendar convert-update-calendar]
+      [%delete-calendar convert-delete-calendar]
+      [%create-event convert-create-event]
+      [%update-event convert-update-event]
+      [%delete-event convert-delete-event]
+      [%change-rsvp convert-change-rsvp]
+      [%import-from-ics convert-import]
+      [%change-permissions convert-change-permissions]
+  ==
+  |%
+  ++  convert-create-calendar
+    |=  jon=json
+    ^-  action:ucal-store
+    :-  %create-calendar
+    !!
+  ++  convert-update-calendar
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-delete-calendar
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-create-event
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-update-event
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-delete-event
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-change-rsvp
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-import
+    |=  jon=json
+    ^-  action:ucal-store
+    !!
+  ++  convert-change-permissions
+    |=  jon=json
+    ^-  action:ucal-store
     !!
   --
 --
