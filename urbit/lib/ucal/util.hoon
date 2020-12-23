@@ -371,6 +371,30 @@
     ship:enjs:format
   --
 ::
+++  permissions-from-json
+  =<
+  |=  jon=json
+  ^-  calendar-permissions
+  ?>  ?=([%o *] jon)
+  =/  acolytes=(set @p)  (json-to-ships (~(got by p.jon) 'acolytes'))
+  =/  writers=(set @p)  (json-to-ships (~(got by p.jon) 'writers'))
+  :+  ?:  (bo:dejs:format (~(got by p.jon) 'public'))
+        ~
+      `(json-to-ships (~(got by p.jon) 'readers'))
+    writers
+  acolytes
+  |%
+  ++  json-to-ships
+    |=  jon=json
+    ^-  (set @p)
+    ?>  ?=([%a *] jon)
+    %-  silt
+    ^-  (list @p)
+    %+  turn
+      p.jon
+    (se:dejs:format %p)
+  --
+::
 ++  calendar-to-json
   |=  cal=calendar
   ^-  json
@@ -384,7 +408,7 @@
       ['last-modified' (time:enjs last-modified.cal)]
   ==
 ::
-++  json-to-calendar
+++  calendar-from-json
   |=  jon=json
   ^-  calendar
   !!
@@ -492,36 +516,45 @@
   ^-  action:ucal-store
   =,  format
   ::  Format should be key -> json of fields
-  %-  tail
   %.  jon
   %-  of:dejs
   :~  [%create-calendar convert-create-calendar]
       [%update-calendar convert-update-calendar]
       [%delete-calendar convert-delete-calendar]
       [%create-event convert-create-event]
-      [%update-event convert-update-event]
-      [%delete-event convert-delete-event]
-      [%change-rsvp convert-change-rsvp]
-      [%import-from-ics convert-import]
-      [%change-permissions convert-change-permissions]
+::      [%update-event convert-update-event]
+::      [%delete-event convert-delete-event]
+::      [%change-rsvp convert-change-rsvp]
+::      [%import-from-ics convert-import]
+::      [%change-permissions convert-change-permissions]
   ==
   |%
   ++  convert-create-calendar
     |=  jon=json
-    ^-  action:ucal-store
-    :-  %create-calendar
-    !!
+    ^-  [@t (unit calendar-code) calendar-permissions]
+    =,  format
+    ?>  ?=([%o *] jon)
+    =/  m=(map @t json)  p.jon
+    =/  cc-json=(unit json)  (~(get by m) 'calendar-code')
+    =/  cc=(unit calendar-code)
+        ?~  cc-json
+          ~
+        ?>  ?=([%s *] u.cc-json)
+        (some `calendar-code`p.u.cc-json)
+    :+  (so:dejs (~(got by m) 'title'))
+      cc
+    (permissions-from-json (~(got by m) 'permissions'))
   ++  convert-update-calendar
     |=  jon=json
-    ^-  action:ucal-store
+    ^-  calendar-patch:ucal-store
     !!
   ++  convert-delete-calendar
     |=  jon=json
-    ^-  action:ucal-store
+    ^-  calendar-code
     !!
   ++  convert-create-event
     |=  jon=json
-    ^-  action:ucal-store
+    ^-  [calendar-code (unit event-code) @p detail moment (unit era) invites tape]
     !!
   ++  convert-update-event
     |=  jon=json
