@@ -639,11 +639,11 @@
       [%update-calendar convert-update-calendar]
       [%delete-calendar convert-delete-calendar]
       [%create-event convert-create-event]
-::      [%update-event convert-update-event]
-::      [%delete-event convert-delete-event]
-::      [%change-rsvp convert-change-rsvp]
-::      [%import-from-ics convert-import]
-::      [%change-permissions convert-change-permissions]
+      [%update-event convert-update-event]
+      [%delete-event convert-delete-event]
+      [%change-rsvp convert-change-rsvp]
+      [%import-from-ics convert-import]
+      [%change-permissions convert-change-permissions]
   ==
   |%
   ++  convert-create-calendar
