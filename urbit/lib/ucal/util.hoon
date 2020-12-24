@@ -413,6 +413,35 @@
   ^-  calendar
   !!
 ::
+++  location-to-json
+  =<
+  |=  loc=location
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['address' [%s address.loc]]
+      :-  'geo'
+      ?~  geo.loc
+        ~
+      %-  pairs:enjs
+      :~  ['lat' [%s (rd-to-cord lat.u.geo.loc)]]
+          ['lon' [%s (rd-to-cord lon.u.geo.loc)]]
+      ==
+  ==
+  |%
+  ::  produce a signed cord in scientific notation
+  ++  rd-to-cord
+    |=  val=@rd
+    ^-  cord
+    =,  rd
+    (crip (r-co:co (rlyd val)))
+  --
+::
+++  location-from-json
+  |=  jon=json
+  ^-  location
+  !!
+::
 ++  event-data-to-json
   |=  data=event-data
   ^-  json
@@ -429,8 +458,7 @@
       ::  detail
       ['title' (tape:enjs (trip title.detail.data))]
       ['desc' (tape:enjs (trip (fall desc.detail.data '')))]
-      ::  TODO parse and send lat/lon as well
-      ['location' (tape:enjs (trip ?~(loc.detail.data '' address.u.loc.detail.data)))]
+      ['location' ?~(loc.detail.data ~ (location-to-json u.loc.detail.data))]
       ['start' (time:enjs start)]
       ['end' (time:enjs end)]
       ['tzid' (tape:enjs tzid.data)]
@@ -548,11 +576,17 @@
         [%weekday (cu:dejs weekday-instance so:dejs)]
     ==
   --
+::  +moment-from-json: parse a moment from a json. only supports
+::  %period moments (explicit start/end time).
 ::
 ++  moment-from-json
   |=  jon=json
   ^-  moment
-  !!
+  =,  format
+  ?>  ?=([%o *] jon)
+  :+  %period
+    (di:dejs (~(got by p.jon) 'start'))
+  (di:dejs (~(got by p.jon) 'end'))
 ::
 ++  ucal-action-to-json
   |=  act=action:ucal-store
@@ -612,12 +646,11 @@
         ::  detail
         :+  (so:dejs (~(got by p.jon) 'title'))
           (bind (~(get by p.jon) 'desc') so:dejs)
-        !!
-        ::  moment
-        ::  era
+        (bind (~(get by p.jon) 'location') location-from-json)
+        (moment-from-json (~(got by p.jon) 'when'))
+        (bind (~(get by p.jon) 'era') era-from-json)
         ::  TODO handle invites
         ~
-        ::  tzid
         (sa:dejs (~(got by p.jon) 'tzid'))
     ==
   ++  convert-update-event
