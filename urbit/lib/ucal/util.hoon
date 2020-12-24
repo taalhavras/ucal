@@ -605,11 +605,11 @@
       [%update-calendar convert-update-calendar]
       [%delete-calendar convert-delete-calendar]
       [%create-event convert-create-event]
-::      [%update-event convert-update-event]
-::      [%delete-event convert-delete-event]
-::      [%change-rsvp convert-change-rsvp]
-::      [%import-from-ics convert-import]
-::      [%change-permissions convert-change-permissions]
+      [%update-event convert-update-event]
+      [%delete-event convert-delete-event]
+      [%change-rsvp convert-change-rsvp]
+      [%import-from-ics convert-import]
+      [%change-permissions convert-change-permissions]
   ==
   |%
   ++  convert-create-calendar
@@ -655,23 +655,61 @@
     ==
   ++  convert-update-event
     |=  jon=json
-    ^-  action:ucal-store
-    !!
+    ^-  event-patch:ucal-store
+    =,  format
+    ?>  ?=([%o *] jon)
+    :*  (so:dejs (~(got by p.jon) 'calendar-code'))
+        (so:dejs (~(got by p.jon) 'event-code'))
+        (bind (~(get by p.jon) 'title') so:dejs)
+        %+  bind
+          (~(get by p.jon) 'desc')
+        |=(jon=json `(unit @t)`?~(jon ~ `(so:dejs jon)))
+        %+  bind
+          (~(get by p.jon) 'loc')
+        |=(jon=json `(unit location)`?~(jon ~ `(location-from-json jon)))
+        (bind (~(get by p.jon) 'when') moment-from-json)
+        %+  bind
+          (~(get by p.jon) 'era')
+        |=(jon=json `(unit era)`?~(jon ~ `(era-from-json jon)))
+        (bind (~(get by p.jon) 'tzid') sa:dejs)
+    ==
   ++  convert-delete-event
     |=  jon=json
-    ^-  action:ucal-store
-    !!
+    ^-  [calendar-code event-code]
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (so:dejs (~(got by p.jon) 'calendar-code'))
+    (so:dejs (~(got by p.jon) 'event-code'))
   ++  convert-change-rsvp
     |=  jon=json
-    ^-  action:ucal-store
-    !!
+    ^-  rsvp-change:ucal-store
+    =,  format
+    ?>  ?=([%o *] jon)
+    :^    (so:dejs (~(got by p.jon) 'calendar-code'))
+        (so:dejs (~(got by p.jon) 'event-code'))
+      ((se:dejs %p) (~(got by p.jon) 'who'))
+    (bind (~(get by p.jon) 'status') (corl rsvp so:dejs))
   ++  convert-import
     |=  jon=json
-    ^-  action:ucal-store
-    !!
+    ^-  path
+    ?>  ?=([%o *] jon)
+    (pa:dejs:format (~(got by p.jon) 'path'))
   ++  convert-change-permissions
     |=  jon=json
-    ^-  action:ucal-store
-    !!
+    ^-  permission-change:ucal-store
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (so:dejs (~(got by p.jon) 'calendar-code'))
+    %.  jon
+    %-  of:dejs
+    :~  :-  %change
+        |=  jon=json
+        ^-  [@p (unit calendar-role)]
+        ?>  ?=([%o *] jon)
+        :-  ((se:dejs %p) (~(got by p.jon) 'who'))
+        (bind (~(get by p.jon) 'role') (corl calendar-role so:dejs))
+        [%make-public |=(jon=json ~)]
+        [%make-private |=(jon=json ~)]
+    ==
   --
 --

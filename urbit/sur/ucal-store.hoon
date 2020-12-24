@@ -10,11 +10,10 @@
 +$  event-patch
   $:  =calendar-code
       =event-code
-      title=(unit title)
       ::  fields of detail
+      title=(unit title)
       desc=(unit (unit @t))
       loc=(unit (unit location))
-      description=(unit (unit @t))
       ::
       when=(unit moment)
       era=(unit (unit era))
