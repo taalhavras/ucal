@@ -408,11 +408,6 @@
       ['last-modified' (time:enjs last-modified.cal)]
   ==
 ::
-++  calendar-from-json
-  |=  jon=json
-  ^-  calendar
-  !!
-::
 ++  location-to-json
   =<
   |=  loc=location
@@ -438,9 +433,22 @@
   --
 ::
 ++  location-from-json
+  =<
   |=  jon=json
   ^-  location
-  !!
+  ?>  ?=([%o *] jon)
+  =,  format
+  :-  (so:dejs (~(got by p.jon) 'address'))
+  (bind (~(get by p.jon) 'geo') coord-from-json)
+  |%
+  ++  coord-from-json
+    |=  jon=json
+    ^-  coordinate
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (ne:dejs (~(got by p.jon) 'lat'))
+    (ne:dejs (~(got by p.jon) 'lon'))
+  --
 ::
 ++  event-data-to-json
   |=  data=event-data
@@ -587,11 +595,6 @@
   :+  %period
     (di:dejs (~(got by p.jon) 'start'))
   (di:dejs (~(got by p.jon) 'end'))
-::
-++  ucal-action-to-json
-  |=  act=action:ucal-store
-  ^-  json
-  !!
 ::
 ++  ucal-action-from-json
   =<
