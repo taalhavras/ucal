@@ -475,9 +475,22 @@
   --
 ::
 ++  location-from-json
+  =<
   |=  jon=json
   ^-  location
-  !!
+  ?>  ?=([%o *] jon)
+  =,  format
+  :-  (so:dejs (~(got by p.jon) 'address'))
+  (bind (~(get by p.jon) 'geo') coord-from-json)
+  |%
+  ++  coord-from-json
+    |=  jon=json
+    ^-  coordinate
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (ne:dejs (~(got by p.jon) 'lat'))
+    (ne:dejs (~(got by p.jon) 'lon'))
+  --
 ::
 ++  event-data-to-json
   |=  data=event-data
