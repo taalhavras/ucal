@@ -9,7 +9,7 @@
 ++  grab
   |%
   ++  noun  action:ucal-store
-  ++  json  ucal-action-to-json:ucal-util
+  ++  json  ucal-action-from-json:ucal-util
   --
 ::
 ++  grad  %noun
