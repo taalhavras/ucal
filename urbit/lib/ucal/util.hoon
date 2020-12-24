@@ -495,15 +495,64 @@
       (tape:enjs (trip w))
     ?:  ?=([%monthly *] rr)
       :-  'monthly'
+      %-  frond:enjs
       ?:  ?=([%on *] form.rr)
-        (tape:enjs "on")
+        ['on' ~]
       ?:  ?=([%weekday *] form.rr)
-        (tape:enjs (trip instance.form.rr))
+        ['weekday' (tape:enjs (trip instance.form.rr))]
       !!
     ?:  ?=([%yearly *] rr)
       ['yearly' ~]
     !!
   --
+::
+++  era-from-json
+  =<
+  |=  jon=json
+  ^-  era
+  ?>  ?=([%o *] jon)
+  :+  (era-type-from-json (~(got by p.jon) 'type'))
+    (ni:dejs:format (~(got by p.jon) 'interval'))
+  (rrule-from-json (~(got by p.jon) 'rrule'))
+  |%
+  ++  era-type-from-json
+    |=  jon=json
+    ^-  era-type
+    =,  format
+    %.  jon
+    %-  of:dejs
+    :~  [%until di:dejs]
+        [%instances ni:dejs]
+        [%infinite |=(=json ~)]
+    ==
+  ::
+  ++  rrule-from-json
+    |=  jon=json
+    ^-  rrule
+    =,  format
+    %.  jon
+    %-  of:dejs
+    :~  [%daily |=(jon=json ~)]
+        [%weekly |=(jon=json ((as:dejs (cu:dejs weekday so:dejs)) jon))]
+        [%monthly monthly-from-json]
+        [%yearly |=(jon=json ~)]
+    ==
+  ::
+  ++  monthly-from-json
+    |=  jon=json
+    ^-  monthly
+    =,  format
+    %.  jon
+    %-  of:dejs
+    :~  [%on |=(jon=json ~)]
+        [%weekday (cu:dejs weekday-instance so:dejs)]
+    ==
+  --
+::
+++  moment-from-json
+  |=  jon=json
+  ^-  moment
+  !!
 ::
 ++  ucal-action-to-json
   |=  act=action:ucal-store
@@ -535,27 +584,42 @@
     =,  format
     ?>  ?=([%o *] jon)
     =/  m=(map @t json)  p.jon
-    =/  cc-json=(unit json)  (~(get by m) 'calendar-code')
-    =/  cc=(unit calendar-code)
-        ?~  cc-json
-          ~
-        ?>  ?=([%s *] u.cc-json)
-        (some `calendar-code`p.u.cc-json)
+    =/  cc=(unit calendar-code)  (bind (~(get by m) 'calendar-code') so:dejs)
     :+  (so:dejs (~(got by m) 'title'))
       cc
     (permissions-from-json (~(got by m) 'permissions'))
   ++  convert-update-calendar
     |=  jon=json
     ^-  calendar-patch:ucal-store
-    !!
+    ?>  ?=([%o *] jon)
+    =,  format
+    =/  cc=calendar-code  (so:dejs (~(got by p.jon) 'calendar-code'))
+    =/  title=(unit @t)  (bind (~(get by p.jon) 'title') so:dejs)
+    [cc title]
   ++  convert-delete-calendar
     |=  jon=json
     ^-  calendar-code
-    !!
+    ?>  ?=([%o *] jon)
+    (so:dejs:format (~(got by p.jon) 'calendar-code'))
   ++  convert-create-event
     |=  jon=json
     ^-  [calendar-code (unit event-code) @p detail moment (unit era) invites tape]
-    !!
+    =,  format
+    ?>  ?=([%o *] jon)
+    :*  (so:dejs (~(got by p.jon) 'calendar-code'))
+        (bind (~(get by p.jon) 'event-code') so:dejs)
+        ((se:dejs:format %p) (~(got by p.jon) 'organizer'))
+        ::  detail
+        :+  (so:dejs (~(got by p.jon) 'title'))
+          (bind (~(get by p.jon) 'desc') so:dejs)
+        !!
+        ::  moment
+        ::  era
+        ::  TODO handle invites
+        ~
+        ::  tzid
+        (sa:dejs (~(got by p.jon) 'tzid'))
+    ==
   ++  convert-update-event
     |=  jon=json
     ^-  action:ucal-store
