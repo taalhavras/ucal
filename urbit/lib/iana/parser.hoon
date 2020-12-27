@@ -44,14 +44,35 @@
   ?|  (matches line whitespace)
       (matches line ;~(plug (jest '#') (star prn)))
   ==
+::  +is-rule-line: checks if a line is part of a rule section
+::
+++  is-rule-line
+  |=  line=tape
+  ^-  flag
+  (startswith line (jest 'Rule')
+::
+++  is-zone-line
+  |=  line=tape
+  ^-  flag
+  (startswith line (jest 'Zone'))
 ::  +parse-zone: given lines, produce zone and continuation
 ::
 ++  parse-zone
   =<
   |=  lines=wall
   ^-  [zone wall]
+  ::  first line is different than continuation line
+  =|  name=@t
+  =|  entries=(list zone-entry)
+  |-
+  ?~  lines
+    :: TODO check that the last entry (head of 'entries') is terminal?
+    [[name entries] ~]
+  ?:  (can-skip i.lines)
+    $(lines t.lines)
   !!
   |%
+  ::  +parse-zone-entry: parses a continuation line
   ++  parse-zone-entry
     |=  line=tape
     ^-  zone-entry
@@ -85,11 +106,6 @@
       (skid `(list rule-entry)`entries |=(re=rule-entry =(d.save.re ~s0)))
   [tzr continuation]
   |%
-  ++  is-rule-line
-    |=  line=tape
-    ^-  flag
-    (matches line ;~(plug (jest 'Rule') (star prn)))
-  ::
   ++  parse-on
     ;~  pose
       ::  a specified day of the month

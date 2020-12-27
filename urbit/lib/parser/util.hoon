@@ -14,6 +14,13 @@
   ^-  flag
   =/  res  (rust t rul)
   !=(res ~)
+::  +startswith: checks if a given tape has a prefix matching a given
+::  rule
+::
+++  startswith
+    |*  [t=tape rul=rule]
+    ^-  flag
+    (matches t ;~(plug rul (star next)))
 ::  +whut:  rule builder for matching 0 or 1 time. regex '?'
 ::
 ++  whut  |*(rul=rule (stun [0 1] rul))
