@@ -164,6 +164,7 @@
             whitespace
             ::  NAME
             (plus alf)
+            whitespace
             ::  FROM, year
             digits
             whitespace
@@ -195,7 +196,7 @@
           ==
           ::  now there might be trailing whitespace and stuff so
           ::  just parse it and ignore.
-          (plus prn)
+          (star prn)
         ==
     ~&  [%res res]
     !!
