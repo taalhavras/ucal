@@ -79,11 +79,7 @@
   ::  request lines from clay
   ::
   =/  lines=tang  (pretty-file .^(noun %cx pax))
-  =/  tapes=wall
   %+  turn
     lines
   |=(t=tank ~(ram re t))
-  ::  now drop last item from list as it's a sig
-  ::
-  (oust [(dec (lent tapes)) 1] tapes)
 --
