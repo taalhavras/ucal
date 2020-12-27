@@ -58,10 +58,33 @@
 ++  parse-rule
   =<
   |=  lines=wall
-  ^-  [rule wall]
-  =/  r  (turn lines parse-rule-entry)
-  !!
+  ^-  [tz-rule wall]
+  =/  [entries=(list rule-entry) name=@ta continuation=wall]
+      =|  entries=(list rule-entry)
+      =|  rule-name=@ta
+      |-
+      ?~  lines
+        [entries rule-name ~]
+      ?:  (can-skip i.lines)
+        $(lines t.lines)
+      ?.  (is-rule-line i.lines)
+        [entries rule-name lines]
+      =/  [entry=rule-entry name=@ta]  (parse-rule-entry i.lines)
+      $(lines t.lines, entries [entry entries], rule-name name)
+  ::  must have at least one entry
+  ?~  entries
+    !!
+  =/  tzr=tz-rule
+      :-  name
+      ::  standard time rules have a delta of 0
+      (skid `(list rule-entry)`entries |=(re=rule-entry =(d.save.re ~s0)))
+  [tzr continuation]
   |%
+  ++  is-rule-line
+    |=  line=tape
+    ^-  flag
+    (matches line ;~(plug (jest 'Rule') (star prn)))
+  ::
   ++  parse-on
     ;~  pose
       ::  a specified day of the month
@@ -92,9 +115,46 @@
       ==
     ==
   ::
+  ++  parse-at
+    ;~  plug
+      %+  cook
+        |=  [hours=(list @) @t minutes=(list @)]
+        ^-  @dr
+        (add (mul (from-digits hours) ~h1) (mul (from-digits minutes) ~m1))
+      ;~  plug
+        digits
+        col
+        digits
+      ==
+      %+  cook
+        |=  l=(list @t)
+        ^-  @tas
+        ?~  l
+          %wallclock
+        =/  type=@t  i.l
+        ?:  =(type 'w')
+          %wallclock
+        ?:  =(type 's')
+          %standard
+        %utc
+      %+  stun
+        [0 1]
+      ;~  pose
+        ::  'u', 'g', 'z' are UTC/Greenwich/Zulu
+        (jest 'u')
+        (jest 'g')
+        (jest 'z')
+        ::  's' is standard local time
+        (jest 's')
+        ::  'w' is wall clock time (default)
+        (jest 'w')
+      ==
+    ==
+  ::  +parse-rule-entry: produce rule entry and name from a line
+  ::
   ++  parse-rule-entry
     |=  line=tape
-    ^-  rule-entry
+    ^-  [rule-entry @ta]
     =/  res
         %+  scan
           line
@@ -102,6 +162,8 @@
           ;~  plug
             (jest 'Rule')
             whitespace
+            ::  NAME
+            (plus alf)
             ::  FROM, year
             digits
             whitespace
@@ -123,7 +185,7 @@
             whitespace
             ::  AT, time offset - can be specified to be local, wallclock,
             ::  or UTC
-::            !!
+            parse-at
             whitespace
             ::  SAVE, delta to apply
             parse-delta

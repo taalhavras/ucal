@@ -3,9 +3,9 @@
 ::  $delta: signed time - sign is & for positive and | for negative
 ::
 +$  delta  [sign=flag d=@dr]
-::  $rule: parsed 'Rule' component
+::  $tz-rule: parsed 'Rule' component
 ::
-+$  rule
++$  tz-rule
   $:  name=@ta
       ::  rules for local standard time
       standard=(list rule-entry)
