@@ -3,6 +3,7 @@
 |%
 ::  +parse-delta: rule for parsing signed time cord in HH:MM or HH:MM:SS format.
 ::  doesn't assume leading zeros (will parse 1:00 and 01:00 identically)
+::  also parses "0" as ~s0
 ::
 ++  parse-delta
   ::  rule for parsing one or two digit numbers
@@ -15,7 +16,9 @@
     ^-  delta
     =/  hours=@dr  (mul hr ~h1)
     ?~  l
-      !!
+      ::  only support "0" in this manner
+      ?>  =(hr 0)
+      [| ~s0]
     =/  minutes=@dr  (mul i.l ~m1)
     :-  sign
     ;:  add
@@ -30,7 +33,7 @@
   ;~  plug
     optional-sign
     one-or-two
-    (stun [1 2] (cook tail ;~(plug col one-or-two)))
+    (stun [0 2] (cook tail ;~(plug col one-or-two)))
   ==
 ::  +can-skip: skip lines that are all whitespace and comments (start
 ::  with '#')
@@ -65,11 +68,13 @@
       |-
       ?~  lines
         [entries rule-name ~]
+      ~&  [%parsing i.lines]
       ?:  (can-skip i.lines)
         $(lines t.lines)
       ?.  (is-rule-line i.lines)
         [entries rule-name lines]
       =/  [entry=rule-entry name=@ta]  (parse-rule-entry i.lines)
+      ~&  [%entry entry %name name]
       $(lines t.lines, entries [entry entries], rule-name name)
   ::  must have at least one entry
   ?~  entries
@@ -94,7 +99,7 @@
       ::  a specific weekday
       %+  cook
         |=  [a=tape monthday=@ud]
-        =/  day=weekday:hora  ;;(weekday:hora (crip a))
+        =/  day=weekday:hora  ;;(weekday:hora (crip (cass a)))
         ::  TODO is it worth parsing 1, 8, 15, 22 as first, second,
         ::  third, fourth here? if we have to handle other things anyway
         ::  does it really matter?
@@ -107,7 +112,7 @@
       :: last weekday in a month, i.e. lastSun
       %+  cook
         |=  a=tape
-        =/  day=weekday:hora  ;;(weekday:hora (crip a))
+        =/  day=weekday:hora  ;;(weekday:hora (crip (cass a)))
         [day [%instance %last]]
       ;~  pfix
         (jest 'last')
@@ -128,7 +133,7 @@
       ==
       %+  cook
         |=  l=(list @t)
-        ^-  @tas
+        ^-  rule-at-type
         ?~  l
           %wallclock
         =/  type=@t  i.l
@@ -155,7 +160,7 @@
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
-    =/  res
+    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr rule-at-type] save=delta letter=char]
         %+  scan
           line
         ;~  sfix
@@ -166,7 +171,11 @@
             ::  FROM, year
             (cook from-digits digits)
             ::  TO, year, 'only', or 'max'
-            ;~(pose (jest 'only') (jest 'max') digits)
+            ;~  pose
+              (cook |=(* [%only ~]) (jest 'only'))
+              (cook |=(* [%max ~]) (jest 'max'))
+              (cook from-digits digits)
+            ==
             ::  deprecated column, always '-'
             hep
             ::  IN, month code
@@ -182,14 +191,27 @@
             parse-at
             ::  SAVE, delta to apply
             parse-delta
-            ::  LETTER, char
-            alf
+            ::  LETTER/S, cord
+            (cook crip (plus alf))
           ==
           ::  now there might be trailing whitespace and stuff so
           ::  just parse it and ignore.
           (star prn)
         ==
-    ~&  [%res res]
-    !!
+    =/  to=(unit @ud)
+        ?@  to
+          `to
+        ?:  =(%only -:to)
+          `from
+        ~
+    :_  `@ta`(crip name)
+    :*  from
+        to
+        month-code
+        on
+        at
+        save
+        letter
+    ==
   --
 --

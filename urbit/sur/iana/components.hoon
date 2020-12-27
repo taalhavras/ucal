@@ -22,17 +22,25 @@
 ::      after a given day (i.e. first Monday >= 16th)
 ::  at: offset on the specific day that the entry becomes valid.
 ::  save: delta we apply to local standard time under this entry.
-::  letter: variable part of zone's name determined by entry
+::  letter: variable part of zone's name determined by entry. despite
+::          the name it can be more than one letter in rare cases.
 ::
 +$  rule-entry
   $:  from=@ud
       to=(unit @ud)
       in=@ud
-      on=$@(@ud [weekday:hora $%([%instance weekday-instance:hora] [%on @ud])])
-      at=[offset=@dr type=?(%standard %utc %wallclock)]
+      on=rule-on
+      at=[offset=@dr type=rule-at-type]
       save=delta
-      letter=(unit char)
+      letter=@t
   ==
+::
++$  rule-on
+  $@
+    @ud
+    [weekday:hora $%([%instance weekday-instance:hora] [%on @ud])]
+::
++$  rule-at-type  ?(%standard %utc %wallclock)
 ::  $zone: parsed 'Zone' component
 
 ::

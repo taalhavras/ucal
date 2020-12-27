@@ -1,6 +1,5 @@
 /-  *ucal-components
 /+  *parser-util
-/+  pretty-file
 ::  Core for parsing .ics files containing VEVENTs and VALARMs
 ::
 |%
@@ -1285,21 +1284,6 @@
     ut(url &)
     rest
   --
-::  +read-file:  get lines of a file in order
-::
-++  read-file
-  |=  pax=path
-  ^-  wall
-  ::  request lines from clay
-  ::
-  =/  lines=tang  (pretty-file .^(noun %cx pax))
-  =/  tapes=wall
-  %+  turn
-    lines
-  |=(t=tank ~(ram re t))
-  ::  now drop last item from list as it's a sig
-  ::
-  (oust [(dec (lent tapes)) 1] tapes)
 ::  +unfold-lines:  "unfold" lines, as per the rfc.
 ::
 ::    CRLF and then a whitespace signifies a fold, so we
