@@ -159,38 +159,29 @@
         %+  scan
           line
         ;~  sfix
-          ;~  plug
+          ;~  (glue whitespace)
             (jest 'Rule')
-            whitespace
             ::  NAME
             (plus alf)
-            whitespace
             ::  FROM, year
-            digits
-            whitespace
+            (cook from-digits digits)
             ::  TO, year, 'only', or 'max'
             ;~(pose (jest 'only') (jest 'max') digits)
-            whitespace
             ::  deprecated column, always '-'
             hep
-            whitespace
             ::  IN, month code
             %+  cook
               |=  x=tape
               ^-  @ud
               (~(got by month-to-idx:hora) ;;(month:hora (crip (cass x))))
             (plus alf)
-            whitespace
             ::  ON, specific date
             parse-on
-            whitespace
             ::  AT, time offset - can be specified to be local, wallclock,
             ::  or UTC
             parse-at
-            whitespace
             ::  SAVE, delta to apply
             parse-delta
-            whitespace
             ::  LETTER, char
             alf
           ==
