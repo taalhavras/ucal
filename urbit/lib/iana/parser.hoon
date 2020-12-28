@@ -49,7 +49,7 @@
 ++  is-rule-line
   |=  line=tape
   ^-  flag
-  (startswith line (jest 'Rule')
+  (startswith line (jest 'Rule'))
 ::
 ++  is-zone-line
   |=  line=tape
@@ -93,7 +93,7 @@
   ++  parse-first-line
     |=  line=tape
     ^-  [@t tape]
-    =/  [@t @t name=tape continuation=tape]
+    =/  [@t ~ name=tape continuation=tape]
         %+  scan
           line
         ;~  plug
@@ -108,16 +108,21 @@
   ::
   ++  parse-until
     |=  line=tape
-    ^-  @da
-    =/  segments=wall  (split line whitespace)
+    ^-  (unit @da)
+    ?:  |(=(line "") (matches line whitespace))
+      ~
+    ::  drop leaving whitespace
+    =/  segments=wall
+        (split (scan line ;~(pfix whitespace (star next))) whitespace)
     =/  n=@ud  (lent segments)
     =/  y=@ud  (scan (snag 0 segments) (cook from-digits digits))
     =/  d=date  [[& y] m=1 t=[d=1 h=0 m=0 s=0 f=~]]
+    %-  some
     ?:  =(n 1)
       ::  just year
       (year d)
     =/  month-idx=@ud
-        %-  ~(get by month-to-idx:hora)
+        %-  ~(got by month-to-idx:hora)
         ;;(month:hora (crip (cass (snag 1 segments))))
     =/  d=date  d(m month-idx)
     ?:  =(n 2)
@@ -138,9 +143,9 @@
   ::  +parse-zone-entry: parses a continuation line
   ::
   ++  parse-zone-entry
-    |=  line=tape
+    |=  [from=@da line=tape]
     ^-  (unit zone-entry)
-    =/  res
+    =/  res=(unit [d=delta rules=zone-rules-type format=@t until=(unit @da)])
         %+  rust
           line
         ;~  pfix
@@ -154,21 +159,21 @@
               (cook |=(d=delta `zone-rules-type`[%delta d]) parse-delta)
               %+  cook
                 |=  name=tape
-                `zone-rules-type`[%rule `@ta`(crip name)])
+                `zone-rules-type`[%rule `@ta`(crip name)]
               (plus alf)
             ==
-            ::  FORMAT, arbitrary tape. sometimes contains %s
-            (plus ;~(pose alf cen))
+            ::  FORMAT, arbitrary cord. sometimes contains '%s'
+            (cook crip (plus ;~(pose alf cen)))
             ::  UNTIL, optional, end of entry. if omitted, entry
             ::  is valid until the present.
             %+  cook
               parse-until
-            (plus next)
+            (star next)
           ==
         ==
     ?~  res
       ~
-    !!
+    `[d.u.res rules.u.res format.u.res from until.u.res]
   --
 ::
 ++  parse-rule
