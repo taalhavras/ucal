@@ -82,11 +82,11 @@
   ::  if entry is ~, then the line was not parseable as a continuation
   ::  to the current zone - bail out.
   ?~  entry
-    [[name entries] lines]
+    [[name entries] t.lines]
   ?~  to.u.entry
     ::  if this is none we can bail out (assuming these are always
     ::  in chronological order).
-    [[name [u.entry entries]] lines]
+    [[name [u.entry entries]] t.lines]
   ::  otherwise recur onto remaining lines, updating "from"
   $(lines t.lines, entries [u.entry entries], from u.to.u.entry)
   |%
@@ -109,7 +109,6 @@
   ++  parse-until
     |=  line=tape
     ^-  (unit @da)
-    ~&  [%until-line line]
     ?:  |(=(line "") (matches line whitespace))
       ~
     ::  TODO drop leading whitespace? will we have any?
@@ -146,14 +145,15 @@
   ++  parse-zone-entry
     |=  [from=@da line=tape]
     ^-  (unit zone-entry)
-    =/  res=(unit [d=delta rules=zone-rules-type format=@t until=(unit @da)])
+    =/  res=(unit [d=delta ~ rules=zone-rules-type ~ format=@t (list ~) until=(unit @da)])
         %+  rust
           line
         ;~  pfix
           whitespace
-          ;~  (glue whitespace)
+          ;~  plug
             ::  STDOFF, delta from utc
             parse-delta
+            whitespace
             ::  RULE, nothing, delta, or name of tz-rule
             ;~  pose
               (cook |=(* `zone-rules-type`[%nothing ~]) hep)
@@ -163,8 +163,10 @@
                 `zone-rules-type`[%rule `@ta`(crip name)]
               (plus alf)
             ==
+            whitespace
             ::  FORMAT, arbitrary cord. sometimes contains '%s'
             (cook crip (plus ;~(pose alf cen)))
+            (stun [0 1] whitespace)
             ::  UNTIL, optional, end of entry. if omitted, entry
             ::  is valid until the present.
             %+  cook
@@ -187,13 +189,11 @@
       |-
       ?~  lines
         [entries rule-name ~]
-      ~&  [%parsing i.lines]
       ?:  (can-skip i.lines)
         $(lines t.lines)
       ?.  (is-rule-line i.lines)
         [entries rule-name lines]
       =/  [entry=rule-entry name=@ta]  (parse-rule-entry i.lines)
-      ~&  [%entry entry %name name]
       $(lines t.lines, entries [entry entries], rule-name name)
   ::  must have at least one entry
   ?~  entries
