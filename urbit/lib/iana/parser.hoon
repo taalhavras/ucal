@@ -61,21 +61,113 @@
   =<
   |=  lines=wall
   ^-  [zone wall]
-  ::  first line is different than continuation line
-  =|  name=@t
+  ::  first line is different than continuation line so we process it
+  ::  separately.
+  ?~  lines
+    !!
+  =/  [name=@t first-line=tape]  (parse-first-line i.lines)
   =|  entries=(list zone-entry)
+  ::  track beginning of zone entries.
+  =|  from=@da
+  ::  now replace first line
+  =/  lines=wall  [first-line t.lines]
   |-
   ?~  lines
     :: TODO check that the last entry (head of 'entries') is terminal?
+    :: if a zone is deprecated that check won't be valid I think.
     [[name entries] ~]
   ?:  (can-skip i.lines)
     $(lines t.lines)
-  !!
+  =/  entry=(unit zone-entry)  (parse-zone-entry from i.lines)
+  ::  if entry is ~, then the line was not parseable as a continuation
+  ::  to the current zone - bail out.
+  ?~  entry
+    [[name entries] lines]
+  ?~  to.u.entry
+    ::  if this is none we can bail out (assuming these are always
+    ::  in chronological order).
+    [[name [u.entry entries]] lines]
+  ::  otherwise recur onto remaining lines, updating "from"
+  $(lines t.lines, entries [u.entry entries], from from.u.entry)
   |%
+  ++  parse-first-line
+    |=  line=tape
+    ^-  [@t tape]
+    =/  [@t @t name=tape continuation=tape]
+        %+  scan
+          line
+        ;~  plug
+          (jest 'Zone')
+          whitespace
+          ::  NAME
+          (plus ;~(pose alf cab fas))
+          ::  now we have whitespace and the continuation
+          (plus next)
+        ==
+    [(crip name) continuation]
+  ::
+  ++  parse-until
+    |=  line=tape
+    ^-  @da
+    =/  segments=wall  (split line whitespace)
+    =/  n=@ud  (lent segments)
+    =/  y=@ud  (scan (snag 0 segments) (cook from-digits digits))
+    =/  d=date  [[& y] m=1 t=[d=1 h=0 m=0 s=0 f=~]]
+    ?:  =(n 1)
+      ::  just year
+      (year d)
+    =/  month-idx=@ud
+        %-  ~(get by month-to-idx:hora)
+        ;;(month:hora (crip (cass (snag 1 segments))))
+    =/  d=date  d(m month-idx)
+    ?:  =(n 2)
+      ::  year and month
+      (year d)
+    =/  day=@ud  (slav %ud (crip (snag 2 segments)))
+    =/  d=date  d(d.t day)
+    ?:  =(n 3)
+      ::  year, month, and day
+      (year d)
+    ::  use delta rule, but this must be positive
+    =/  =delta  (scan (snag 3 segments) parse-delta)
+    ?>  sign.delta
+    ?:  =(n 4)
+      ::  year, month, day, time
+      (add d.delta (year d))
+    !!
   ::  +parse-zone-entry: parses a continuation line
+  ::
   ++  parse-zone-entry
     |=  line=tape
-    ^-  zone-entry
+    ^-  (unit zone-entry)
+    =/  res
+        %+  rust
+          line
+        ;~  pfix
+          whitespace
+          ;~  (glue whitespace)
+            ::  STDOFF, delta from utc
+            parse-delta
+            ::  RULE, nothing, delta, or name of tz-rule
+            ;~  pose
+              (cook |=(* `zone-rules-type`[%nothing ~]) hep)
+              (cook |=(d=delta `zone-rules-type`[%delta d]) parse-delta)
+              %+  cook
+                |=  name=tape
+                `zone-rules-type`[%rule `@ta`(crip name)])
+              (plus alf)
+            ==
+            ::  FORMAT, arbitrary tape. sometimes contains %s
+            (plus ;~(pose alf cen))
+            ::  UNTIL, optional, end of entry. if omitted, entry
+            ::  is valid until the present.
+            %+  cook
+              parse-until
+            (plus next)
+          ==
+        ==
+    ?~  res
+      ~
     !!
   --
 ::

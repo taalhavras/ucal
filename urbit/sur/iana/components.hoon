@@ -55,16 +55,22 @@
 ::         can be %nothing (no additional offset), %delta (a specific offset)
 ::         or %rule (offset depends on a rule component)
 ::  abbreviation: abbreviation for timezone.
-::  from/to: entry is valid in the range [from, to]. if 'to' is unit, valid from
+::  from/to: entry is valid in the range [from, to). if 'to' is unit, valid from
 ::           indefinitely starting at 'from'.
 +$  zone-entry
   $:  stdoff=delta
-      rules=$%([%nothing ~] [%delta =delta] [%rule name=@ta])
+      rules=zone-rules-type
       ::  TODO might be worth handling each case here separately and
       ::  exposing some get-abbreviation function for a zone (takes
       ::  a local time).
       abbreviation=@t
       from=@da
       to=(unit @da)
+  ==
+::
++$  zone-rules-type
+  $%  [%nothing ~]
+      [%delta =delta]
+      [%rule name=@ta]
   ==
 --
