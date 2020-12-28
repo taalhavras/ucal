@@ -73,8 +73,8 @@
   =/  lines=wall  [first-line t.lines]
   |-
   ?~  lines
-    :: TODO check that the last entry (head of 'entries') is terminal?
-    :: if a zone is deprecated that check won't be valid I think.
+    :: we cannot check that the last entry (head of 'entries') is
+    :: terminal because a zone might be deprecated
     [[name entries] ~]
   ?:  (can-skip i.lines)
     $(lines t.lines)
@@ -113,7 +113,6 @@
       ~
     ::  TODO drop leading whitespace? will we have any?
     =/  segments=wall  (split line whitespace)
-::        (split (scan line ;~(pfix whitespace (plus next))) whitespace)
     =/  n=@ud  (lent segments)
     =/  y=@ud  (scan (snag 0 segments) (cook from-digits digits))
     =/  d=date  [[& y] m=1 t=[d=1 h=0 m=0 s=0 f=~]]
