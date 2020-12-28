@@ -30,9 +30,9 @@
 ++  two-dit  ;~(plug dit dit)
 ::
 ++  four-dit  ;~(plug dit dit dit dit)
-::  +whitespace: terran whitespace (includess newlines)
+::  +whitespace: terran whitespace (includes newlines)
 ::
-++  whitespace  (cold ~ (star ;~(pose vul gah (jest '\\n'))))
+++  whitespace  (cold ~ (plus ;~(pose vul gah (jest '\\n'))))
 ::  +optional-sign:  rule for parsing optional signs.
 ::
 ++  optional-sign

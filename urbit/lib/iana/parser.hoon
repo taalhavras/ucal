@@ -67,8 +67,8 @@
     !!
   =/  [name=@t first-line=tape]  (parse-first-line i.lines)
   =|  entries=(list zone-entry)
-  ::  track beginning of zone entries.
-  =|  from=@da
+  ::  track beginning of zone entries. chosen to be before any other @da
+  =/  from=@da  `@da`0
   ::  now replace first line
   =/  lines=wall  [first-line t.lines]
   |-
@@ -88,7 +88,7 @@
     ::  in chronological order).
     [[name [u.entry entries]] lines]
   ::  otherwise recur onto remaining lines, updating "from"
-  $(lines t.lines, entries [u.entry entries], from from.u.entry)
+  $(lines t.lines, entries [u.entry entries], from u.to.u.entry)
   |%
   ++  parse-first-line
     |=  line=tape
@@ -109,11 +109,12 @@
   ++  parse-until
     |=  line=tape
     ^-  (unit @da)
+    ~&  [%until-line line]
     ?:  |(=(line "") (matches line whitespace))
       ~
-    ::  drop leaving whitespace
-    =/  segments=wall
-        (split (scan line ;~(pfix whitespace (star next))) whitespace)
+    ::  TODO drop leading whitespace? will we have any?
+    =/  segments=wall  (split line whitespace)
+::        (split (scan line ;~(pfix whitespace (plus next))) whitespace)
     =/  n=@ud  (lent segments)
     =/  y=@ud  (scan (snag 0 segments) (cook from-digits digits))
     =/  d=date  [[& y] m=1 t=[d=1 h=0 m=0 s=0 f=~]]
