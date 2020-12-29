@@ -30,9 +30,9 @@
 ++  two-dit  ;~(plug dit dit)
 ::
 ++  four-dit  ;~(plug dit dit dit dit)
-::  +whitespace: terran whitespace (includes newlines)
+::  +whitespace: terran whitespace (includes newlines and tabs)
 ::
-++  whitespace  (cold ~ (plus ;~(pose vul gah (jest '\\n'))))
+++  whitespace  (cold ~ (plus ;~(pose vul gah (jest '\\n') (jest '\09'))))
 ::  +optional-sign:  rule for parsing optional signs.
 ::
 ++  optional-sign
@@ -78,6 +78,24 @@
   |=  l=(list @)
   ^-  @ud
   (roll l |=([cur=@ud acc=@ud] (add (mul 10 acc) cur)))
+::  +strip-trailing-whitespace: delete trailing whitespace from a line
+::
+++  strip-trailing-whitespace
+  |=  line=tape
+  ^-  tape
+  =/  res=(unit tape)  (rust (flop line) ;~(pfix whitespace (star next)))
+  ?~  res
+    line
+  (flop u.res)
+::  +remove-inline-comments: remove '#' prefixed comments
+::
+++  remove-inline-comments
+  |=  line=tape
+  ^-  tape
+  =/  comment-ind=(unit @)  (find "#" line)
+  ?~  comment-ind
+    line
+  (scag u.comment-ind line)
 ::  +read-file:  get lines of a file in order
 ::
 ++  read-file

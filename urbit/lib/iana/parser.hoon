@@ -36,13 +36,14 @@
     (stun [0 2] (cook tail ;~(plug col one-or-two)))
   ==
 ::  +can-skip: skip lines that are all whitespace and comments (start
-::  with '#')
+::  with '#') as well as blank lines.
 ::
 ++  can-skip
   |=  line=tape
   ^-  flag
   ?|  (matches line whitespace)
-      (matches line ;~(plug (jest '#') (star prn)))
+      (startswith line (jest '#'))
+      =(line "")
   ==
 ::  +is-rule-line: checks if a line is part of a rule section
 ::
@@ -144,6 +145,7 @@
   ++  parse-zone-entry
     |=  [from=@da line=tape]
     ^-  (unit zone-entry)
+    ~&  [%zone-entry line]
     =/  res=(unit [d=delta ~ rules=zone-rules-type ~ format=@t (list ~) until=(unit @da)])
         %+  rust
           line
@@ -273,6 +275,7 @@
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
+    ~&  [%rule-entry line]
     =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr rule-at-type] save=delta letter=char]
         %+  scan
           line
@@ -309,7 +312,7 @@
           ==
           ::  now there might be trailing whitespace and stuff so
           ::  just parse it and ignore.
-          (star prn)
+          (star next)
         ==
     =/  to=(unit @ud)
         ?@  to
@@ -331,8 +334,14 @@
 ::  tzrules and zones (keyed by name)
 ::
 ++  parse-timezones
-  |=  lines=wall
+  |=  input=wall
   ^-  [(map @t zone) (map @t tz-rule)]
+  =/  lines=wall
+      %+  turn
+        input
+      |=  line=tape
+      ^-  tape
+      (strip-trailing-whitespace (remove-inline-comments line))
   =|  zones=(map @t zone)
   =|  rules=(map @t tz-rule)
   |-
