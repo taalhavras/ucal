@@ -327,4 +327,25 @@
         letter
     ==
   --
+::  +parse-timezones: top level parser to go from file contents to
+::  tzrules and zones (keyed by name)
+::
+++  parse-timezones
+  |=  lines=wall
+  ^-  [(map @t zone) (map @t tz-rule)]
+  =|  zones=(map @t zone)
+  =|  rules=(map @t tz-rule)
+  |-
+  ?~  lines
+    [zones rules]
+  ?:  (can-skip i.lines)
+    $(lines t.lines)
+  ?:  (is-rule-line i.lines)
+    =/  [tzr=tz-rule continuation=wall]  (parse-rule lines)
+    $(rules (~(put by rules) name.tzr tzr), lines continuation)
+  ?:  (is-zone-line i.lines)
+    =/  [zon=zone continuation=wall]  (parse-zone lines)
+    $(zones (~(put by zones) name.zon zon), lines continuation)
+  ~&  [%unparseable-timezone-line i.lines]
+  !!
 --
