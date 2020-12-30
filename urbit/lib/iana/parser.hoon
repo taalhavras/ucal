@@ -1,26 +1,25 @@
 /-  *iana-components, hora
 /+  *parser-util, *iana-util
 |%
-::  +parse-delta: rule for parsing signed time cord in HH:MM or HH:MM:SS format.
-::  doesn't assume leading zeros (will parse 1:00 and 01:00 identically)
-::  also parses "0" as ~s0
+::  +parse-time: rule for parsing time in HH:MM or HH:MM:SS format. does
+::  not assume leading zeros (will parse 1:00 and 01:00 identically).
+::  parses 0 as ~s0.
 ::
-++  parse-delta
+++  parse-time
   ::  rule for parsing one or two digit numbers
   =/  one-or-two
       %+  cook
         from-digits
       (stun [1 2] dit)
   %+  cook
-    |=  [sign=flag hr=@ud l=(list @ud)]
-    ^-  delta
+    |=  [hr=@ud l=(list @ud)]
+    ^-  @dr
     =/  hours=@dr  (mul hr ~h1)
     ?~  l
       ::  only support "0" in this manner
       ?>  =(hr 0)
-      [| ~s0]
+      ~s0
     =/  minutes=@dr  (mul i.l ~m1)
-    :-  sign
     ;:  add
       hours
       minutes
@@ -28,12 +27,44 @@
         ~s0
       (mul i.t.l ~s1)
     ==
-  ::  parse into [sign=flag hours=@ud ~[minutes=@ud seconds=@ud]
+  ::  parse into [hours=@ud ~[minutes=@ud seconds=@ud]
   ::  seconds might not be present though.
   ;~  plug
-    optional-sign
     one-or-two
     (stun [0 2] (cook tail ;~(plug col one-or-two)))
+  ==
+
+::  +parse-delta: rule for parsing signed time cord in HH:MM or HH:MM:SS format.
+::  see +parse-time for specifics.
+::
+++  parse-delta  ;~(plug optional-sign parse-time)
+::
+++  parse-offset-and-flavor
+  ;~  plug
+    parse-time
+    %+  cook
+      |=  l=(list @t)
+      ^-  time-flavor
+      ?~  l
+        %wallclock
+      =/  type=@t  i.l
+      ?:  =(type 'w')
+        %wallclock
+      ?:  =(type 's')
+        %standard
+      %utc
+    %+  stun
+      [0 1]
+    ;~  pose
+      ::  'u', 'g', 'z' are UTC/Greenwich/Zulu
+      (jest 'u')
+      (jest 'g')
+      (jest 'z')
+      ::  's' is standard local time
+      (jest 's')
+      ::  'w' is wall clock time (default)
+      (jest 'w')
+    ==
   ==
 ::  +can-skip: skip lines that are all whitespace and comments (start
 ::  with '#') as well as blank lines.
@@ -68,8 +99,8 @@
     !!
   =/  [name=@t first-line=tape]  (parse-first-line i.lines)
   =|  entries=(list zone-entry)
-  ::  track beginning of zone entries. chosen to be before any other @da
-  =/  from=@da  `@da`0
+  ::  track beginning of zone entries. time chosen to be before any other @da
+  =/  from=seasoned-time  [`@da`0 %wallclock]
   ::  now replace first line
   =/  lines=wall  [first-line t.lines]
   |-
@@ -101,7 +132,7 @@
           (jest 'Zone')
           whitespace
           ::  NAME
-          (plus ;~(pose alf cab fas))
+          (plus ;~(pose alf cab fas hep))
           ::  now we have whitespace and the continuation
           (plus next)
         ==
@@ -109,7 +140,7 @@
   ::
   ++  parse-until
     |=  line=tape
-    ^-  (unit @da)
+    ^-  (unit seasoned-time)
     ?:  |(=(line "") (matches line whitespace))
       ~
     ::  TODO drop leading whitespace? will we have any?
@@ -120,33 +151,33 @@
     %-  some
     ?:  =(n 1)
       ::  just year
-      (year d)
+      [(year d) %wallclock]
     =/  month-idx=@ud
         %-  ~(got by month-to-idx:hora)
         ;;(month:hora (crip (cass (snag 1 segments))))
     =/  d=date  d(m month-idx)
     ?:  =(n 2)
       ::  year and month
-      (year d)
+      [(year d) %wallclock]
     =/  day=@ud  (slav %ud (crip (snag 2 segments)))
     =/  d=date  d(d.t day)
     ?:  =(n 3)
       ::  year, month, and day
-      (year d)
+      [(year d) %wallclock]
     ::  use delta rule, but this must be positive
-    =/  =delta  (scan (snag 3 segments) parse-delta)
-    ?>  sign.delta
+    =/  [offset=@dr flavor=time-flavor]
+        (scan (snag 3 segments) parse-offset-and-flavor)
     ?:  =(n 4)
       ::  year, month, day, time
-      (add d.delta (year d))
+      [(add offset (year d)) flavor]
     !!
   ::  +parse-zone-entry: parses a continuation line
   ::
   ++  parse-zone-entry
-    |=  [from=@da line=tape]
+    |=  [from=seasoned-time line=tape]
     ^-  (unit zone-entry)
     ~&  [%zone-entry line]
-    =/  res=(unit [d=delta ~ rules=zone-rules-type ~ format=@t (list ~) until=(unit @da)])
+    =/  res=(unit [d=delta ~ rules=zone-rules-type ~ format=@t (list ~) until=(unit seasoned-time)])
         %+  rust
           line
         ;~  pfix
@@ -234,49 +265,13 @@
         (plus alf)
       ==
     ==
-  ::
-  ++  parse-at
-    ;~  plug
-      %+  cook
-        |=  [hours=(list @) @t minutes=(list @)]
-        ^-  @dr
-        (add (mul (from-digits hours) ~h1) (mul (from-digits minutes) ~m1))
-      ;~  plug
-        digits
-        col
-        digits
-      ==
-      %+  cook
-        |=  l=(list @t)
-        ^-  rule-at-type
-        ?~  l
-          %wallclock
-        =/  type=@t  i.l
-        ?:  =(type 'w')
-          %wallclock
-        ?:  =(type 's')
-          %standard
-        %utc
-      %+  stun
-        [0 1]
-      ;~  pose
-        ::  'u', 'g', 'z' are UTC/Greenwich/Zulu
-        (jest 'u')
-        (jest 'g')
-        (jest 'z')
-        ::  's' is standard local time
-        (jest 's')
-        ::  'w' is wall clock time (default)
-        (jest 'w')
-      ==
-    ==
   ::  +parse-rule-entry: produce rule entry and name from a line
   ::
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
     ~&  [%rule-entry line]
-    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr rule-at-type] save=delta letter=char]
+    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=char]
         %+  scan
           line
         ;~  sfix
@@ -304,7 +299,7 @@
             parse-on
             ::  AT, time offset - can be specified to be local, wallclock,
             ::  or UTC
-            parse-at
+            parse-offset-and-flavor
             ::  SAVE, delta to apply
             parse-delta
             ::  LETTER/S, cord

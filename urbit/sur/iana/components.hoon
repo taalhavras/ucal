@@ -30,7 +30,7 @@
       to=(unit @ud)
       in=@ud
       on=rule-on
-      at=[offset=@dr type=rule-at-type]
+      at=[offset=@dr type=time-flavor]
       save=delta
       letter=@t
   ==
@@ -39,10 +39,14 @@
   $@
     @ud
     [weekday:hora $%([%instance weekday-instance:hora] [%on @ud])]
+::  $time-flavor: times can either be %standard (local standard time),
+::  %utc, or %wallclock.
 ::
-+$  rule-at-type  ?(%standard %utc %wallclock)
++$  time-flavor  ?(%standard %utc %wallclock)
+::  $seasoned-time: time with flavor!
+::
++$  seasoned-time  [when=@da flavor=time-flavor]
 ::  $zone: parsed 'Zone' component
-
 ::
 +$  zone
   $:  name=@ta
@@ -64,8 +68,8 @@
       ::  exposing some get-abbreviation function for a zone (takes
       ::  a local time).
       abbreviation=@t
-      from=@da
-      to=(unit @da)
+      from=seasoned-time
+      to=(unit seasoned-time)
   ==
 ::
 +$  zone-rules-type
