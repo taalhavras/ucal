@@ -30,7 +30,7 @@
       to=(unit @ud)
       in=@ud
       on=rule-on
-      at=[offset=@dr type=time-flavor]
+      at=[offset=@dr flavor=time-flavor]
       save=delta
       letter=@t
   ==

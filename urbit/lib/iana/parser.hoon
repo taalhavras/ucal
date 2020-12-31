@@ -232,8 +232,7 @@
     !!
   =/  tzr=tz-rule
       :-  name
-      ::  standard time rules have a delta of 0
-      (skid `(list rule-entry)`entries |=(re=rule-entry =(d.save.re ~s0)))
+      (skid `(list rule-entry)`entries is-standard)
   [tzr continuation]
   |%
   ++  parse-on
