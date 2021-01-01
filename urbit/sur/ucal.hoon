@@ -38,7 +38,7 @@
 +$  about
   $:  organizer=@p
       date-created=@da
-      last-updated=@da
+      last-modified=@da
   ==
 ::  $detail: Details about the event itself.
 ::

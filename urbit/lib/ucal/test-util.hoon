@@ -142,7 +142,7 @@
       =(tzid.data.event tzid.data)
       =(organizer.about.data.event organizer.about.data)
       (das-equal date-created.about.data.event date-created.about.data)
-      (das-equal last-updated.about.data.event last-updated.about.data)
+      (das-equal last-modified.about.data.event last-modified.about.data)
     ==
     =(era.event era)
   ==
