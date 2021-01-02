@@ -5,10 +5,9 @@
 ::    a date OR a date-time. this type contains both
 ::
 +$  ical-time
-  $%
-    ::  timezone unspecified means floating
-    [%date d=@da]
-    [%date-time d=@da utc=?]
+  $%  ::  timezone unspecified means floating
+      [%date d=@da]
+      [%date-time d=@da utc=?]
   ==
 ::  $ical-date:  type for ics dates
 ::
@@ -18,38 +17,27 @@
 +$  ical-datetime  $>(%date-time ical-time)
 ::  $ical-duration:  a signed duration
 ::
-+$  ical-duration  $:(sign=? duration=@dr)
++$  ical-duration  [sign=? duration=@dr]
 ::  $event-ending:  we either have end date or positive duration
 ::
 +$  event-ending
-  $%
-    [%dtend end=ical-time]
-    [%duration duration=@dr] ::  always a positive duration
+  $%  [%dtend end=ical-time]
+      [%duration duration=@dr] ::  always a positive duration
   ==
 ::  $event-class:  the different classes of event per the rfc
 ::
-+$  event-class
-  $?
-    %public
-    %private
-    %confidential
-  ==
++$  event-class  ?(%public %private %confidential)
 ::  $event-status:  event statuses per the rfc
 ::
 +$  event-status  ?(%tentative %confirmed %cancelled)
 ::  $latlon:  type for a latitude and a longitude, two floating points
 ::
-+$  latlon
-  $:
-    lat=dn
-    lon=dn
-  ==
++$  latlon  [lat=dn lon=dn]
 ::  $period:  ics period per the rfc
 ::
 +$  period
-  $%
-    [%explicit begin=ical-datetime end=ical-datetime]
-    [%start begin=ical-datetime duration=@dr] ::  always a positive duration
+  $%  [%explicit begin=ical-datetime end=ical-datetime]
+      [%start begin=ical-datetime duration=@dr] ::  always a positive duration
   ==
 ::  $rdate:  definition for an ics rdate
 ::
@@ -58,77 +46,69 @@
 ::    additional dates to include in the set.
 ::
 +$  rdate
-  $%
-    [%time t=ical-time]
-    [%period p=period]
+  $%  [%time t=ical-time]
+      [%period p=period]
   ==
 ::  $rrule:  a recurrence rule as defined by the rfc. used to compute the
 ::  recurrence set for an event.
 ::
 +$  rrule
-  $:
-    ::  freq is the only required part
-    ::
-    freq=rrule-freq
-    ::  ending date for event
-    ::
-    until=(unit ical-time)
-    ::  number of occurrences
-    ::
-    count=(unit @)
-    ::  interval times freq gives the intervals at which
-    ::  the recurrence occurs. The default is 1
-    ::
-    interval=$~(1 @)
-    ::  These lists contain intervals that (depending on freq) either
-    ::  increase or constrain the size of the recurrence set. See
-    ::  rfc 5545 page 44 for more info
-    ::
-    bysecond=(list @)
-    byminute=(list @)
-    byhour=(list @)
-    byweekday=(list rrule-weekdaynum)
-    bymonthday=(list rrule-monthdaynum)
-    byyearday=(list rrule-yeardaynum)
-    byweek=(list rrule-weeknum)
-    bymonth=(list rrule-monthnum)
-    bysetpos=(list rrule-setpos)
-    ::  start of workweek, default is monday
-    ::
-    weekstart=$~(%mo rrule-day)
+  $:  ::  freq is the only required part
+      ::
+      freq=rrule-freq
+      ::  ending date for event
+      ::
+      until=(unit ical-time)
+      ::  number of occurrences
+      ::
+      count=(unit @)
+      ::  interval times freq gives the intervals at which
+      ::  the recurrence occurs. The default is 1
+      ::
+      interval=$~(1 @)
+      ::  These lists contain intervals that (depending on freq) either
+      ::  increase or constrain the size of the recurrence set. See
+      ::  rfc 5545 page 44 for more info
+      ::
+      bysecond=(list @)
+      byminute=(list @)
+      byhour=(list @)
+      byweekday=(list rrule-weekdaynum)
+      bymonthday=(list rrule-monthdaynum)
+      byyearday=(list rrule-yeardaynum)
+      byweek=(list rrule-weeknum)
+      bymonth=(list rrule-monthnum)
+      bysetpos=(list rrule-setpos)
+      ::  start of workweek, default is monday
+      ::
+      weekstart=$~(%mo rrule-day)
   ==
 ::  $rrule-freq:  frequency an rrule can repeat at
 ::
 +$  rrule-freq
-  $?
-    %secondly
-    %minutely
-    %hourly
-    %daily
-    %weekly
-    %monthly
-    %yearly
+  $?  %secondly
+      %minutely
+      %hourly
+      %daily
+      %weekly
+      %monthly
+      %yearly
   ==
 ::  $rrule-day:  days of the week, sunday to saturday
 ::
 +$  rrule-day
-  $?
-    %su
-    %mo
-    %tu
-    %we
-    %th
-    %fr
-    %sa
+  $?  %su
+      %mo
+      %tu
+      %we
+      %th
+      %fr
+      %sa
   ==
 ::  $rrule-weekdaynum: specifies a day of the week and an optional
 ::  nth occurrence within a monthday or yearday rule
 ::
-+$  rrule-weekdaynum
-  $:
-    day=rrule-day
-    weeknum=(unit rrule-weeknum)
-  ==
++$  rrule-weekdaynum  [day=rrule-day weeknum=(unit rrule-weeknum)]
 ::  $rrule-monthdaynum:  a signed day of the month
 ::
 ::    -10 would represent 10 days from the end of the month,
@@ -158,90 +138,85 @@
 +$  rrule-setpos  @s
 ::  $vevent-transparency:  vevent transparencies, opaque is default
 ::
-+$  vevent-transparency
-  $?
-    %transparent
-    %opaque
-  ==
++$  vevent-transparency  ?(%transparent %opaque)
 ::  $vevent:  definition of a vevent per the rfc
 ::
 +$  vevent
-    $:
-      ::  Required Fields
-      ::  date event was created (always a date-time)
-      ::
-      dtstamp=ical-datetime
-      ::  unique id
-      ::
-      uid=cord
-      ::  start of event
-      ::
-      dtstart=[=ical-time tzid=(unit tzid)]
-      ::  end of our event
-      ::
-      end=event-ending
-      ::
-      ::  Optional Fields, all either unit or lists?
-      ::
-      ::  event organizer
-      ::
-      organizer=(unit tape)
-      ::  categories the event falls under
-      ::
-      categories=wall :: (list tape)
-      ::  Access classifications for calendar event (basically permissions)
-      ::
-      classification=(unit event-class)
-      ::  comments from event creator on the event
-      ::
-      comment=wall :: (list tape)
-      ::  description of the event
-      ::
-      description=(unit tape)
-      ::  summary of event
-      ::
-      summary=(unit tape)
-      ::  lat/lon where the event is occurring
-      ::
-      geo=(unit latlon)
-      ::  a location of the event
-      ::
-      location=(unit tape)
-      ::  event status
-      ::
-      status=(unit event-status)
-      ::  nested components - for vevents only valarms can be nested
-      ::
-      alarms=(list valarm)
-      ::  recurrence rule
-      ::
-      rrule=(unit rrule)
-      ::  list of dates to include in the recurrence set
-      ::
-      rdate=(list rdate)
-      ::  list of dates to exclude from the recurrence set
-      ::
-      exdate=(list ical-time)
-      ::  creation and update times - these must be UTC date-times
-      ::  since they must be UTC, we can just store the date
-      ::
-      created=(unit @da)
-      ::  time event was last modified
-      ::
-      last-modified=(unit @da)
-      ::  revision sequence number, defaults to 0
-      ::
-      sequence=@
-      ::  event transparency, how it appears to others who
-      ::  look at your schedule.
-      ::
-      transparency=vevent-transparency
-      ::  event priority, 0-9. 0 is undefined, 1 is highest prio, 9 lowest
-      ::
-      priority=@
-      ::  url associated w/event
-      ::
-      url=(unit tape)
+    $:  ::  Required Fields
+        ::  date event was created (always a date-time)
+        ::
+        dtstamp=ical-datetime
+        ::  unique id
+        ::
+        uid=cord
+        ::  start of event
+        ::
+        dtstart=[=ical-time tzid=(unit tzid)]
+        ::  end of our event
+        ::
+        end=event-ending
+        ::
+        ::  Optional Fields, all either unit or lists?
+        ::
+        ::  event organizer
+        ::
+        organizer=(unit tape)
+        ::  categories the event falls under
+        ::
+        categories=wall :: (list tape)
+        ::  Access classifications for calendar event (basically permissions)
+        ::
+        classification=(unit event-class)
+        ::  comments from event creator on the event
+        ::
+        comment=wall :: (list tape)
+        ::  description of the event
+        ::
+        description=(unit tape)
+        ::  summary of event
+        ::
+        summary=(unit tape)
+        ::  lat/lon where the event is occurring
+        ::
+        geo=(unit latlon)
+        ::  a location of the event
+        ::
+        location=(unit tape)
+        ::  event status
+        ::
+        status=(unit event-status)
+        ::  nested components - for vevents only valarms can be nested
+        ::
+        alarms=(list valarm)
+        ::  recurrence rule
+        ::
+        rrule=(unit rrule)
+        ::  list of dates to include in the recurrence set
+        ::
+        rdate=(list rdate)
+        ::  list of dates to exclude from the recurrence set
+        ::
+        exdate=(list ical-time)
+        ::  creation and update times - these must be UTC date-times
+        ::  since they must be UTC, we can just store the date
+        ::
+        created=(unit @da)
+        ::  time event was last modified
+        ::
+        last-modified=(unit @da)
+        ::  revision sequence number, defaults to 0
+        ::
+        sequence=@
+        ::  event transparency, how it appears to others who
+        ::  look at your schedule.
+        ::
+        transparency=vevent-transparency
+        ::  event priority, 0-9. 0 is undefined, 1 is highest prio, 9 lowest
+        ::
+        priority=@
+        ::  url associated w/event
+        ::
+        url=(unit tape)
     ==
 ::  $valarm-action:  actions assosiated with valarms. each one has
 ::  different data associated with it.
@@ -254,72 +229,67 @@
 ::  $valarm-trigger:  trigger for a valarm, determines when the alarm fires
 ::
 +$  valarm-trigger
-  $%
-    [%rel related=valarm-related duration=ical-duration]
-    [%abs dt=ical-datetime]
+  $%  [%rel related=valarm-related duration=ical-duration]
+      [%abs dt=ical-datetime]
   ==
 ::  $valarm-duration-repeat:  the positive duration to repeat an alarm on
 ::  along with the count.
 ::
-+$  valarm-duration-repeat  $:(duration=@dr repeat=@)
++$  valarm-duration-repeat  [duration=@dr repeat=@]
 ::  $valarm-audio:  audio alarm component
 ::
 +$  valarm-audio
-  $:
-    ::  Required fields
-    ::
-    trigger=valarm-trigger
-    ::  Optional fields
-    ::
-    duration-repeat=(unit valarm-duration-repeat)
-    ::  a url that points to an audio resource to be played
-    ::  when the alarm triggers
-    ::
-    attach=(unit tape)
+  $:  ::  Required fields
+      ::
+      trigger=valarm-trigger
+      ::  Optional fields
+      ::
+      duration-repeat=(unit valarm-duration-repeat)
+      ::  a url that points to an audio resource to be played
+      ::  when the alarm triggers
+      ::
+      attach=(unit tape)
   ==
 ::  $valarm-display:  text display alarm component
 ::
 +$  valarm-display
-  $:
-    ::  Required fields
-    ::
-    trigger=valarm-trigger
-    ::  text to display
-    ::
-    description=tape
-    ::  Optional fields
-    ::
-    duration-repeat=(unit valarm-duration-repeat)
+  $:  ::  Required fields
+      ::
+      trigger=valarm-trigger
+      ::  text to display
+      ::
+      description=tape
+      ::  Optional fields
+      ::
+      duration-repeat=(unit valarm-duration-repeat)
   ==
 ::  $valarm-email:  email alarm component
 ::
 +$  valarm-email
-  $:
-    ::  Required fields
-    ::
-    trigger=valarm-trigger
-    ::  email body
-    ::
-    description=tape
-    ::  email subject
-    ::
-    summary=tape
-    ::  email addresses to send to - must be at least one
-    ::
-    attendees=(lest tape)
-    ::  Optional fields
-    ::
-    ::  list of urls to attach to the email
-    ::
-    attach=(list tape)
+  $:  ::  Required fields
+      ::
+      trigger=valarm-trigger
+      ::  email body
+      ::
+      description=tape
+      ::  email subject
+      ::
+      summary=tape
+      ::  email addresses to send to - must be at least one
+      ::
+      attendees=(lest tape)
+      ::  Optional fields
+      ::
+      ::  list of urls to attach to the email
+      ::
+      attach=(list tape)
   ==
 ::  $valarm:  definition of a valarm per the rfc
 ::
 +$  valarm
-  $%
-    [%audio audio=valarm-audio]
-    [%display display=valarm-display]
-    [%email email=valarm-email]
+  $%  [%audio audio=valarm-audio]
+      [%display display=valarm-display]
+      [%email email=valarm-email]
   ==
 ::  $tzid:  uniquely identifies a VTIMEZONE
 ::
@@ -330,60 +300,56 @@
 ::  $tzprop:  represents a specific timezone
 ::
 +$  tzprop
-  $:
-    ::  Required fields
-    ::
-    ::  Must be "local time" i.e. NOT utc and no TZID,
-    ::  so just an urbit date
-    ::
-    dtstart=@da
-    tzoffsetto=utc-offset
-    tzoffsetfrom=utc-offset
-    ::  Optional fields
-    ::
-    rrule=(unit rrule)
-    rdate=(list rdate)
-    comments=(list tape)
-    tzname=(list tape)
+  $:  ::  Required fields
+      ::
+      ::  Must be "local time" i.e. NOT utc and no TZID,
+      ::  so just an urbit date
+      ::
+      dtstart=@da
+      tzoffsetto=utc-offset
+      tzoffsetfrom=utc-offset
+      ::  Optional fields
+      ::
+      rrule=(unit rrule)
+      rdate=(list rdate)
+      comments=(list tape)
+      tzname=(list tape)
   ==
 ::  $tzcomponent:  a tzprop can either refer to standard time or
 ::  daylight savings time
 ::
 +$  tzcomponent
-  $%
-    [%standard s=tzprop]
-    [%daylight d=tzprop]
+  $%  [%standard s=tzprop]
+      [%daylight d=tzprop]
   ==
 ::  $vtimezone:  represents a parsed ics timezone
 ::
 +$  vtimezone
-  $:
-    ::  Required fields
-    ::
-    id=tzid
-    props=(list tzcomponent)
-    ::  Optional fields
-    ::
-    last-modified=(unit ical-datetime)
-    url=(unit tape)
+  $:  ::  Required fields
+      ::
+      id=tzid
+      props=(list tzcomponent)
+      ::  Optional fields
+      ::
+      last-modified=(unit ical-datetime)
+      url=(unit tape)
   ==
 ::  $vcalendar:  ics vcalendar object
 ::
 +$  vcalendar
-  $:
-    ::  Required fields
-    ::
-    ::  "product id" of whatever generated this calendar
-    ::
-    prodid=tape
-    ::  ical version
-    ::
-    version=tape
-    ::  events in our calendar
-    ::
-    events=(list vevent)
-    ::  Optional fields
-    ::
-    timezones=(map tzid vtimezone)
+  $:  ::  Required fields
+      ::
+      ::  "product id" of whatever generated this calendar
+      ::
+      prodid=tape
+      ::  ical version
+      ::
+      version=tape
+      ::  events in our calendar
+      ::
+      events=(list vevent)
+      ::  Optional fields
+      ::
+      timezones=(map tzid vtimezone)
   ==
 --

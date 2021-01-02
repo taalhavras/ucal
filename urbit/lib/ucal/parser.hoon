@@ -626,15 +626,13 @@
   ::  $required-tags:  tags we expect a vtimezone to specify exactly once
   ::
   +$  required-tags
-    $:
-      tzid=galf
+    $:  tzid=galf
     ==
   ::  $unique-tags:  tags we expect a vtimezone to specify no more than once
   ::
   +$  unique-tags
-    $:
-      last-mod=galf
-      tzurl=galf
+    $:  last-mod=galf
+        tzurl=galf
     ==
   ::  $vtimezone-tag:  tags specified in a vtimezone
   ::
@@ -1016,33 +1014,31 @@
   ::  $required-tags:  tags we expect to see exactly once in a vevent
   ::
   +$  required-tags
-    $:
-      dtstamp=galf
-      uid=galf
-      dtstart=galf
-      ::  either dtend or duration is required
-      ::
-      dtend-duration=galf
+    $:  dtstamp=galf
+        uid=galf
+        dtstart=galf
+        ::  either dtend or duration is required
+        ::
+        dtend-duration=galf
     ==
   ::  $unique-tags: tags we expect to see no more than once in a vevent
   ::
   +$  unique-tags
-    $:
-      class=galf
-      created=galf
-      description=galf
-      geo=galf
-      last-modified=galf
-      location=galf
-      organizer=galf
-      priority=galf
-      sequence=galf
-      status=galf
-      summary=galf
-      transp=galf
-      url=galf
-      recurrence-id=galf
-      rrule=galf
+    $:  class=galf
+        created=galf
+        description=galf
+        geo=galf
+        last-modified=galf
+        location=galf
+        organizer=galf
+        priority=galf
+        sequence=galf
+        status=galf
+        summary=galf
+        transp=galf
+        url=galf
+        recurrence-id=galf
+        rrule=galf
     ==
   ::  $vevent-tag:  possible properties to parse for a vevent
   ::
@@ -1466,9 +1462,8 @@
   ::  $required-tags:  tags we expect to see exactly once in a vcalendar
   ::
   +$  required-tags
-    $:
-      prodid=galf
-      version=galf
+    $:  prodid=galf
+        version=galf
     ==
   ::  $vcal-tag:  tags present in vcalendar that we parse
   ::

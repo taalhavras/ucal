@@ -16,16 +16,38 @@ Then run `yarn build` from the project root to copy the files into the target pi
 ### Pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
+Support for poking with JSON is still being worked on - some example payloads are below. The general format of a cell type is
+a dictionary of field name to value. Tagged unions (types created with `$%`) will have a single key (the tag) mapped to another
+object containing the fields in that specific variant.
+Sample `ucal-store` poke (a tagged union).
+```
+{ "delete-calendar" : {"calendar-code" : "abcd-efgh"}}
+```
+
+The `calendar-permissions` type is an exception to the above formatting: In json it looks like
+```
+{
+  "readers" : ["~zod" "~nel"],
+  "writers" : [],
+  "acolytes": ["~bus"],
+  "public" : false
+}
+```
+where `readers`, `writers` and `acolytes` are arrays of ships and `public` is a boolean.
+The source code for json serialization/deserialization is in `lib/ucal/util.hoon`, consult that file
+for the specifics of how any type is serialized/deserialized.
+
 ### Scrys
+Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
 `cal-code` and `event-code` are unique per calendar/event and are just `@tas`s (they're just uuids). For the scry for events in range, start and end are `@da`s. `ship` is an `@p` whose almanac (a collection of calendars and events) we're examining.
 | Path                                     | Return type                                  | Notes                                                                                                                                                                                                                                                                                                                   |
 |------------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `%y ship %calendars`                            | (list calendar)                              | all calendars                                                                                                                                                                                                                                                                                                           |
-| `%y ship %events`                               | (list event)                                 | all events                                                                                                                                                                                                                                                                                                              |
-| `%y ship %calendars cal-code`                   | (unit calendar)                              | a specific calendar                                                                                                                                                                                                                                                                                                     |
-| `%y ship %events %specific cal-code event-code` | (unit event)                                 | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
-| `%y ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
-| `%y ship %events %inrange cal-code start end`   | (unit [(list event) (list projected-event)]) | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
+| `%x ship %calendars`                            | (list calendar)                              | all calendars                                                                                                                                                                                                                                                                                                           |
+| `%x ship %events`                               | (list event)                                 | all events                                                                                                                                                                                                                                                                                                              |
+| `%x ship %calendars cal-code`                   | (unit calendar)                              | a specific calendar                                                                                                                                                                                                                                                                                                     |
+| `%x ship %events %specific cal-code event-code` | (unit event)                                 | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
+| `%x ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
+| `%x ship %events %inrange cal-code start end`   | (unit [(list event) (list projected-event)]) | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
 
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
