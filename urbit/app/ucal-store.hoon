@@ -395,7 +395,7 @@
       :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
       :: /x/a/b as our path, while with %gy we get /x/a/b/c
       [%almanac ~]
-    ``noun+!>(almanac)
+    ``ucal-almanac+!>(almanac)
   ::
       [%calendars ~]
     ``ucal-calendars+!>((~(get-calendars al almanac)))
