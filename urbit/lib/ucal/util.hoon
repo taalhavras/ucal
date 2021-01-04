@@ -1,4 +1,4 @@
-/-  *ucal, *hora, components=ucal-components, ucal-timezone, ucal-store
+/-  *ucal, *hora, components=ucal-components, ucal-timezone, ucal-store, *ucal-almanac
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
 ::  TODO for can-{read, write}-cal do we want to allow moons the
@@ -714,5 +714,35 @@
         [%make-public |=(jon=json ~)]
         [%make-private |=(jon=json ~)]
     ==
+  --
+::
+++  almanac-to-json
+  =<
+  |=  alma=almanac
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['calendars' (calendars-to-json alma)]
+      ['events' (events-to-json alma)]
+  ==
+  |%
+  ++  calendars-to-json
+    |=  alma=almanac
+    ^-  json
+    [%a (turn ~(tap by cals.alma) |=([* cal=calendar] (calendar-to-json cal)))]
+  ::
+  ++  events-to-json
+    |=  alma=almanac
+    ^-  json
+    =,  format
+    =/  elts=(list [calendar-code (list event)])
+        ~(tap by events.alma)
+    %-  pairs:enjs
+    %+  turn
+      elts
+    |=  [cc=calendar-code evs=(list event)]
+    ^-  [@t json]
+    :-  cc
+    [%a (turn evs event-to-json)]
   --
 --
