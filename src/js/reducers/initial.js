@@ -1,0 +1,24 @@
+import _ from 'lodash';
+
+
+export class InitialReducer {
+  /* if we get a diff from the app that looks like this:
+
+  { initial: {}}
+
+  it will set the state to look like the contents of "initial"
+
+  */
+    reduce(json, state) {
+        let data = _.get(json, 'allCalendars', false);
+        if (data) {
+            state.allCalendars = data;
+        }
+    }
+    reduce(json, state) {
+        let data = _.get(json, 'allEvents', false);
+        if (data) {
+            state.allEvents = data;
+        }
+    }
+}

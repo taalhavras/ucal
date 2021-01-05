@@ -10,3 +10,6 @@ urbit/gen/resource-test.hoon
 package-lock.json
 urbit/app/ucal-test.hoon
 urbit/gen/snip.hoon
+
+urbit/app/ucal/js/index.js
+!urbit/app/ucal/index.html
