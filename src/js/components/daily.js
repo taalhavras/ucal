@@ -33,11 +33,11 @@ class CalendarEvent extends Component {
 
   render() {
     const { props } = this;
-    const { title, color, subtitle, startTime, endTime } = props;
+    const { title, color, subtitle, startTime, endTime, referenceTime } = props;
     const s = moment(startTime);
     const e = moment(endTime);
     const duration = moment.duration(e.diff(s)).asHours();
-    const topDistance = moment.duration(startTime.diff(moment().startOf('day'))).asHours();
+    const topDistance = moment.duration(startTime.diff(referenceTime)).asHours();
     return (
       <Box
           height={(duration * 80) + 'px'}
@@ -119,8 +119,6 @@ export class Daily extends Component {
   render() {
     const { props, state } = this;
     const referenceTime = moment(props.day);
-    console.log('daily', props, state);
-    console.log('refTime', referenceTime, props.day);
 
     const startDay = moment(referenceTime);
     const endDay = moment(startDay).add(1, 'day');
@@ -152,7 +150,7 @@ export class Daily extends Component {
     const lat = latlon[0];
     const lon = latlon[1];
 
-    const suncalc = SunCalc.getTimes(moment().local().startOf('day').add(1, 'day').toDate(), lat, lon);
+    const suncalc = SunCalc.getTimes(moment(referenceTime).local().startOf('day').add(1, 'day').toDate(), lat, lon);
 
     const dayParts = {
       sunset: convert(suncalc.sunset, referenceTime),
@@ -209,6 +207,7 @@ export class Daily extends Component {
         startTime={e.startTime}
         endTime={e.endTime}
         key={e.key}
+        referenceTime={referenceTime}
         />));
 
     const nowLine = convert(moment(), referenceTime) + '%';

@@ -13,7 +13,6 @@ api.setAuthTokens({
 });
 
 window.urb = new window.channel();
-console.log(urb);
 
 subscription.start();
 
