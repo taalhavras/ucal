@@ -27,8 +27,24 @@ class UrbitApi {
       });
   }
 
+  create_event(calendar_code, title, start, end)
+  {
+      const obj = {
+          'create-event': {
+              'calendar-code': calendar_code,
+              'title': title,
+              'when': { start, end },
+              'organizer': 'finled',
+              'era': null,
+              'tzid': 'utc'
+          }
+      };
+      console.log('create_event', obj);
+      this.ucal(obj);
+  }
+
   ucal(data) {
-    this.action("ucal", "json", data);
+    return this.action("ucal-store", "json", data);
   }
 
   action(appl, mark, data) {
@@ -39,6 +55,7 @@ class UrbitApi {
           resolve(json);
         },
         (err) => {
+            console.log('wtf1', err);
           reject(err);
         });
     });

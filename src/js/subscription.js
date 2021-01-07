@@ -23,20 +23,17 @@ export class Subscription {
     fetch('/~/scry/ucal-store/~finled/calendars.json')
       .then((r) => r.json())
       .then((r)=>{
-        console.log('calendars', r);
         store.handleEvent({data: {allCalendars: r}});
       });
 
     fetch('/~/scry/ucal-store/~finled/events.json')
       .then((r) => r.json())
       .then((r)=>{
-        console.log('events', r)
         store.handleEvent({data: {allEvents: r}});
       });
   }
 
   handleEvent(diff) {
-    console.log('diff', diff);
     store.handleEvent(diff);
   }
 

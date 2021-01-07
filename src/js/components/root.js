@@ -3,6 +3,7 @@ import moment from "moment"
 import { BrowserRouter, Route , Switch, Link } from "react-router-dom";
 import _ from 'lodash';
 import HeaderBar from "./lib/header-bar.js"
+import { dateToDa } from "../lib/util.js"
 
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 
@@ -39,6 +40,22 @@ export class Root extends Component {
   render() {
     const props = this.props;
     const state = this.state;
+
+    const { api } = props;
+
+    console.log(state);
+
+    if (state.allCalendars != undefined && state.allEvents != undefined)
+    {
+        let start = moment().add(1, 'hour');
+        let end = moment(start).add(20, 'minute');
+        api.create_event(
+            state.allCalendars[0]['calendar-code'],
+            'my poke event',
+            dateToDa(start.toDate(), true),
+            dateToDa(end.toDate(), true)
+        );
+    }
 
     return (
       <BrowserRouter>

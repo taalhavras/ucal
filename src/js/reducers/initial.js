@@ -10,15 +10,13 @@ export class InitialReducer {
 
   */
     reduce(json, state) {
-        let data = _.get(json, 'allCalendars', false);
-        if (data) {
-            state.allCalendars = data;
+        let cals = _.get(json, 'allCalendars', false);
+        if (cals) {
+            state.allCalendars = cals;
         }
-    }
-    reduce(json, state) {
-        let data = _.get(json, 'allEvents', false);
-        if (data) {
-            state.allEvents = data;
+        let events = _.get(json, 'allEvents', false);
+        if (events) {
+            state.allEvents = events;
         }
     }
 }
