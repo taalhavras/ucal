@@ -10,3 +10,4 @@ urbit/gen/resource-test.hoon
 package-lock.json
 urbit/app/ucal-test.hoon
 urbit/gen/snip.hoon
+app
