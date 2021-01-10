@@ -14,17 +14,21 @@ export default class UpdateReducer {
   // There's a custom handler at the end for specific use cases. In this case, whenever events are updated, 
   reduceState(property: string, value: any, state: any) {
     if (property && value) {
-      state[property] = value
 
       switch (property) {
         case 'events':
-          const events = value.map((e) => new Event(e))
+          const events = value.map((e) => new Event(e.data))
           state.calendars = Calendar.generateCalendars(state.calendars, events)
           break;
         case 'calendars':
           const calendars = value.map((c) => new Calendar(c))
           state.calendars = Calendar.generateCalendars(calendars, state.events)
           break;
+        case 'location':
+          state.userLocation = value
+          break;
+        default:
+          state[property] = value
       }
     }
   }

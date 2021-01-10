@@ -90,17 +90,17 @@ class CalendarView extends Component<Props, State> {
   createEvent = () => this.props.history.push('/~calendar/event')
 
   render() {
-    const { props: { calendars }, state: { timeframe, displayDay, selectedDay }, selectDay, changeRange, createEvent } = this
+    const { props: { calendars, userLocation }, state: { timeframe, displayDay, selectedDay }, selectDay, changeRange, createEvent } = this
     let layout = <WeeklyView calendars={calendars} {...this.state} selectDay={selectDay()} />
     switch (timeframe) {
       case Timeframe.day:
-        layout = <DailyView calendars={calendars} {...this.state} selectDay={selectDay()} />
+        layout = <DailyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
         break;
       case Timeframe.month:
-        layout = <MonthlyView calendars={calendars} {...this.state} selectDay={selectDay()} />
+        layout = <MonthlyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
         break;
       case Timeframe.year:
-        layout = <YearlyView calendars={calendars} {...this.state} selectDay={selectDay()} />
+        layout = <YearlyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
         break;
     }
 

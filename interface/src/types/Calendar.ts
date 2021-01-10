@@ -65,5 +65,6 @@ export interface ViewProps {
   displayDay: Date
   selectedDay: Date
   selectDay: (day: Date) => () => void
+  location: string
 }
 

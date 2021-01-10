@@ -3,6 +3,7 @@ import moment from 'moment'
 import SunCalc from 'suncalc'
 
 import { Box, Text, Row } from '@tlon/indigo-react'
+import styled from "styled-components";
 import { getHours } from '../../lib/dates'
 
 const toRelativeTime = (date, referenceTime, unit) => moment(referenceTime)
@@ -19,6 +20,10 @@ const convert = (date, referenceTime) => {
 
   return positivePercentage
 }
+
+const Hour = styled(Text)`
+  color: ${p => p.theme.colors.gray}
+`;
 
 interface Props {
   displayDay: Date
@@ -100,7 +105,12 @@ export default class HoursBar extends Component<Props> {
         </Row>
       </Box>
       <Box display='flex' flexDirection='column' alignItems='flex-end'>
-        {hours.map((hour) => <Text color='rgba(0,0,0, 0.6)' margin={hour === 0 ? '16px 4px 0px 0px' : '32px 4px 0px 0px'} key={`hour-${hour}`}>{hour}:00</Text>)}
+        {hours.map((hour) =>
+          <Hour
+            margin={hour === 0 ? '16px 4px 0px 0px' : '32px 4px 0px 0px'}
+            key={`hour-${hour}`}>
+            {hour.toString().padStart(2, 0)}:00
+          </Hour>)}
       </Box>
     </Row> 
   }
