@@ -20,7 +20,7 @@ export interface Permissions {
 
 export default class Calendar {
   owner: string
-  id: string
+  calendar_code: string
   title: string
   permissions: Permissions
   created: Date
@@ -28,8 +28,9 @@ export default class Calendar {
   events: Event[] = []
 
   constructor(data: any) {
+    console.log(data)
     this.owner = data.owner
-    this.id = data.id
+    this.calendar_code = data['calendar-code']
     this.title = data.title
     this.permissions = data.permissions
     this.created = data.created
@@ -39,12 +40,14 @@ export default class Calendar {
   static generateCalendars = (calendars: Calendar[], events: Event[]) : Calendar[] => {
     const all = new Map<string, Calendar | undefined>()
 
-    calendars.forEach((calendar) => all.set(calendar.id, calendar))
+    calendars.forEach((calendar) => all.set(calendar.calendar_code, calendar))
     events.forEach((event) => {
-      const updatedCalendar = all.get(event.calendarId)
+      const updatedCalendar = all.get(event.calendar_code)
       updatedCalendar?.events.push(event)
-      all.set(event.calendarId, updatedCalendar)
+      all.set(event.calendar_code, updatedCalendar)
     })
+
+    console.log(all)
 
     const formattedCalendars : Calendar[] = []
     for (let item of all.values()) {
