@@ -20,7 +20,6 @@ class DailyEvent extends Component {
     const e = moment(endTime);
     const duration = moment.duration(e.diff(s)).asHours();
     const topDistance = moment.duration(startTime.diff(referenceTime)).asHours();
-    console.log('topDist', topDistance);
     return (
       <Box
           height={(duration * 48) + 'px'}
