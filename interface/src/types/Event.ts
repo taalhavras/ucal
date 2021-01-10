@@ -65,10 +65,7 @@ export class EventForm {
   }
 
   toExportFormat = () => ({
-      'calendar-id': this.calendar_code,
-      'title': this.detail.title,
-      'desc': this.detail.desc,
-      'location': '', // TODO: export location here
+
   })
 }
 
