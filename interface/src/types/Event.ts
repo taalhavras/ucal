@@ -73,21 +73,23 @@ export class EventForm {
 }
 
 export default class Event {
-  id: string
+  event_code: string
   calendar_code: string
   about: EventAbout
   detail: EventDetail
-  when: Date
+  start: Date
+  end: Date
   invites: EventInvite[]
   rsvp: Rsvp
   // tzid=tape    -- what is this?
 
   constructor(data: any) {
-    this.id = data.id
-    this.calendar_code = data.calendar_code
+    this.event_code = data['event-code']
+    this.calendar_code = data['calendar-code']
     this.about = data.about
-    this.detail = data.detail
-    this.when = data.when
+    this.detail = new EventDetail(data)
+    this.start = new Date(data.start)
+    this.end = new Date(data.end)
     this.invites = (data.invites || []).map((invite) => new EventInvite(invite))
     this.rsvp = data.rsvp || Rsvp.yes
   }

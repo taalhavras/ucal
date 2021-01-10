@@ -25,6 +25,10 @@ export default class Subscription {
       this.handleEvent.bind(this),
       this.handleError.bind(this))
 
+    this.api.bind('/all', 'PUT', this.api.authTokens.ship, 'weather',
+      this.handleEvent.bind(this),
+      this.handleError.bind(this))
+
     try {
       const calendars = await this.actions.getCalendars()
 

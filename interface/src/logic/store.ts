@@ -22,7 +22,8 @@ export default class Store {
     constructor() {
         this.state = {
           calendars: [],
-          events: []
+          events: [],
+          userLocation: ''
         }
 
         this.initialReducer = new InitialReducer()
