@@ -1,17 +1,18 @@
 # Urbit Calendar
 
 ## Usage
-Clone the repository and then create a .urbitrc in the root. It should look like
+Clone the repository and then create a .urbitrc in the root that looks like the .urbitrc-sample file. It should look like
 ```
 module.exports = {
   URBIT_PIERS: [
     "/path/to/first/pier/zod/home",
     "/path/to/other/pier/nel/home"
-  ]
+  ],
+  URL: 'http://localhost:*port of running ship*'
 };
 
 ```
-Then run `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running.
+Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
 
 ### Pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
@@ -116,5 +117,16 @@ branch: none
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
 
 
-##  Doesn't this need a frontend?
-Yes, it does! I'm not sure I have the time/expertise/motivation to make one so if you're interested _please_ submit a PR. I'm happy to answer any questions about the stores/hooks and can make any changes that're necessary.
+## Interface (front-end)
+
+Created from tlon's [create-landscape-app](https://github.com/urbit/create-landscape-app).
+
+### Development
+
+0. Ensure your have followed installation instructions above (`yarn run build`)
+
+1. On your Urbit ship, if you haven't already, mount your pier to Unix with `|mount %`.
+
+2. Once you're up and running, your application lives in the `src` folder; `src` uses [React](https://reactjs.org) to render itself -- you'll want a basic foothold with it first.
+
+3. Run `npm run serve-interface` to serve a dev server environment with hot reloading at `localhost:9000`.

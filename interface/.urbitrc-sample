@@ -1,6 +1,0 @@
-module.exports = {
-  URBIT_PIERS: [
-    "../../zod/home",
-  ],
-  URL: 'http://localhost:8080'
-};

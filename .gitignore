@@ -1,7 +1,6 @@
 txt/hg.txt
 txt/rn.txt
 ics/*
-*.html
 *.temp
 .urbitrc
 node_modules/
@@ -10,4 +9,4 @@ urbit/gen/resource-test.hoon
 package-lock.json
 urbit/app/ucal-test.hoon
 urbit/gen/snip.hoon
-app
+./app/
