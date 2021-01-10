@@ -14,12 +14,15 @@ class DailyEvent extends Component {
   }
 
   render() {
-    const { props } = this;
-    const { title, color, subtitle, startTime, endTime, referenceTime } = props;
-    const s = moment(startTime);
-    const e = moment(endTime);
+    const { props: { color, referenceTime, event } } = this
+    const s = moment(event.start);
+    const e = moment(event.end);
     const duration = moment.duration(e.diff(s)).asHours();
-    const topDistance = moment.duration(startTime.diff(referenceTime)).asHours();
+    const topDistance = moment.duration(s.diff(referenceTime)).asHours();
+
+    let seeEvent = () =>
+    this.props.history.push(`/~calendar/event/${event.calendar_code}/${event.event_code}`)
+
     return (
       <Box
           height={(duration * 48) + 'px'}
@@ -27,12 +30,18 @@ class DailyEvent extends Component {
           backgroundColor={color}
           position='absolute'
           left='50px'
-          top={(topDistance * 48) + 'px'}>
+          top={(topDistance * 48) + 'px'}
+          onClick={seeEvent}>
         <Row>
-          <Text paddingLeft='0.3rem' paddingTop='0.3rem' bold fontSize={1}>{title}</Text>
+          <Text
+              paddingLeft='0.3rem'
+              paddingTop='0.3rem'
+              bold fontSize={1}>
+            {event.detail.title}
+          </Text>
         </Row>
         <Row>
-          <Text paddingLeft='0.3rem' paddingTop='0.3rem'>{subtitle}</Text>
+          <Text paddingLeft='0.3rem' paddingTop='0.3rem'>{event.detail.desc}</Text>
         </Row>
       </Box>
     );
@@ -60,13 +69,11 @@ export default class DailyView extends Component<ViewProps, State> {
         return startTime.isAfter(startDay) && startTime.isBefore(endDay);
       })
       .map((e) => (<DailyEvent
+        history={this.props.history}
         color='green'
-        title={e.detail.title}
-        subtitle={e.detail.desc}
-        startTime={moment(e.start)}
-        endTime={moment(e.end)}
-        key={e.event_code}
         referenceTime={selectedMoment}
+        event={e}
+        key={e.event_code}
         />)) : [];
 
     console.log(events);

@@ -94,7 +94,7 @@ class CalendarView extends Component<Props, State> {
     let layout = <WeeklyView calendars={calendars} {...this.state} selectDay={selectDay()} />
     switch (timeframe) {
       case Timeframe.day:
-        layout = <DailyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
+        layout = <DailyView history={this.props.history} calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
         break;
       case Timeframe.month:
         layout = <MonthlyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />

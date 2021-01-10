@@ -36,7 +36,7 @@ class EventView extends Component<Props, State> {
 
     const { calendar, event } = props.match.params;
 
-    const eventToEdit = (props.calendars.find(({ id }) => id == calendar) || { events: [] }).events.find(({ id }) => id == event)
+    const eventToEdit = (props.calendars.find(({ calendar_code }) => calendar_code == calendar) || { events: [] }).events.find(({ event_code }) => event_code == event)
 
     this.state = {
       event: eventToEdit,
@@ -52,7 +52,7 @@ class EventView extends Component<Props, State> {
 
   render() {
     const { state: { title }, updateValue } = this
-    
+
     return <Box height='100%' p='4' display='flex' flexDirection='column' borderWidth={['none', '1px']} borderStyle="solid" borderColor="washedGray">
       <Box width='100%' display='flex' flexDirection='row'>
         <Button fontSize='16px' marginRight='20px'>X</Button>
