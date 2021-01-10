@@ -27,13 +27,13 @@ export default class Actions {
   }
 
   createEvent = async (event: EventForm) : Promise<void> => {
-    await this.api.action('ucal-store', 'ucal-action', JSON.stringify({
+    await this.api.action('ucal-store', 'ucal-action', {
       'create-event': event.toExportFormat()
-    }))
+    })
   }
 
   createCalendar = async (title: string) : Promise<void> => {
-    await this.api.action('ucal-store', 'ucal-action', JSON.stringify({
+    await this.api.action('ucal-store', 'ucal-action', {
       'create-calendar': {
         title,
         permissions: {
@@ -43,6 +43,6 @@ export default class Actions {
           public: true
         }
       }
-    }))
+    })
   }
 }

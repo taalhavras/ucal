@@ -52,26 +52,29 @@ export enum Rsvp {
 }
 
 export class EventForm {
-  calendarId: string
+  calendar_code: string
   detail: EventDetail
   when: Date
   invites: EventInvite[] = []
   rsvp: Rsvp = Rsvp.yes
 
-  constructor(calendarId: string, when: Date) {
-    this.calendarId = calendarId
+  constructor(calendar_code: string, when: Date) {
+    this.calendar_code = calendar_code
     this.detail = new EventDetail({ title: '', desc: '', loc: undefined })
     this.when = when
   }
 
   toExportFormat = () => ({
-
+      'calendar-id': this.calendar_code,
+      'title': this.detail.title,
+      'desc': this.detail.desc,
+      'location': '', // TODO: export location here
   })
 }
 
 export default class Event {
   id: string
-  calendarId: string
+  calendar_code: string
   about: EventAbout
   detail: EventDetail
   when: Date
@@ -81,7 +84,7 @@ export default class Event {
 
   constructor(data: any) {
     this.id = data.id
-    this.calendarId = data.calendarId
+    this.calendar_code = data.calendar_code
     this.about = data.about
     this.detail = data.detail
     this.when = data.when

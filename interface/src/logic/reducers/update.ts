@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import Calendar from '../../types/Calendar'
+import Event from '../../types/Event'
 
 export default class UpdateReducer {
   // Specify the state property that needs to be updated
@@ -17,10 +18,12 @@ export default class UpdateReducer {
 
       switch (property) {
         case 'events':
-          state.calendars = Calendar.generateCalendars(state.calendars, value)
+          const events = value.map((e) => new Event(e))
+          state.calendars = Calendar.generateCalendars(state.calendars, events)
           break;
         case 'calendars':
-          state.calendars = Calendar.generateCalendars(value, state.events)
+          const calendars = value.map((c) => new Calendar(c))
+          state.calendars = Calendar.generateCalendars(calendars, state.events)
           break;
       }
     }
