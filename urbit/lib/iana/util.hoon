@@ -102,7 +102,7 @@
       d(d.t (add d.t.d (weekdays-until:lhora day bound-day)))
   (add (year d) (fall offset ~s0))
 ::  +find-rule-entry: takes an input local standard time that's stdoff
-::  away from utc and determines if a given rule-entry applies to it.
+::  away from utc and find the rule-entry that applies to it.
 ::
 ++  find-rule-entry
   =<
@@ -178,18 +178,37 @@
   |=  [zon=zone when=seasoned-time]
   ^-  zone-entry
   !!
+::
+::
+++  utc-conversion-helper
+  |=  [zon=zone st=seasoned-time func=$-([@da delta] @da)]
+  ^-  @da
+  ::  get relevant zone entry
+  =/  ze=zone-entry  (get-zone-entry zon st)
+  =/  pre-rules=@da  (func when.st stdoff.ze)
+  ?:  ?=([%nothing *] rules.ze)
+    pre-rules
+  ?:  ?=([%delta *] rules.ze)
+    (func pre-rules +:rules.ze)
+  ?:  ?=([%rule *])
+    ::  apply offset based on rules - how to get the timezones by name?
+    ::  .^ with a store? pass a map?
+    =/  tzr=tz-rule  !!
+    =/  entry=tz-rule-entry  (find-rule-entry when.st stdoff.ze tzr)
+    (func pre-rules save.entry)
+  !!
 ::  +from-utc: convert an @da in utc to the corresponding wallclock time
 ::  in the given timezone.
 ::
 ++  from-utc
   |=  [zon=zone utc=@da]
   ^-  @da
-  !!
+  (utc-conversion-helper zon [utc %utc] add-delta)
 ::  +to-utc: convert an @da in wallclock time in the specified timezone
 ::  to the corresponding utc time.
 ::
 ++  to-utc
   |=  [zon=zone wallclock=@da]
   ^-  @da
-  !!
+  (utc-conversion-helper zon [wallclock %wallclock] sub-delta)
 --
