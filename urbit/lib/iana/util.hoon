@@ -47,11 +47,35 @@
 ++  spice
   |_  stdoff=delta
   ++  lth
+    =<
     |=  [a=seasoned-time b=seasoned-time]
     ^-  flag
     ?:  =(a.flavor b.flavor)
       (lth when.a when.b)
-    !!
+    =/  at=@da  (seasoned-to-standard a stdoff)
+    =/  bt=@da  (seasoned-to-standard b stdoff)
+    (lth at bt)
+    |%
+    ::  +seasoned-to-standard: takes a seasoned-time that's stdoff away from
+    ::  utc and produces an @da representing the corresponding local standard
+    ::  time.
+    ::
+    ++  seasoned-to-standard
+      |=  [st=seasoned-time stdoff=delta]
+      ^-  @da
+      ?-  flavor.st
+          %standard
+        when.st
+      ::
+          %utc
+        (add-delta when.st stdoff)
+      ::
+          %wallclock
+        ::  For now I'm just treating this like local standard time
+        ::  - I don't think it impacts any use cases.
+        when.st
+      ==
+    --
   ::
   ++  gth
     |=  [a=seasoned-time b=seasoned-time]
@@ -117,9 +141,7 @@
   =/  st-saving=seasoned-time
       (build-seasoned-time y.d `in.saving `on.saving `offset.at.saving `flavor.at.saving)
   ::  now order them
-  =/  a=@da  (seasoned-to-standard st-standard stdoff)
-  =/  b=@da  (seasoned-to-standard st-saving stdoff)
-  ?:  (lth a b)
+  ?:  (~(lth spice stdoff) st-standard st-saving)
     (pick-entry a standard b saving when)
   (pick-entry b saving a standard when)
   |%
@@ -143,41 +165,20 @@
     ?:  &((gte x a) (lth x b))
       ar
     br
-  ::  +seasoned-to-standard: takes a seasoned-time that's stdoff away from
-  ::  utc and produces an @da representing the corresponding local standard
-  ::  time.
-  ::
-  ++  seasoned-to-standard
-    |=  [st=seasoned-time stdoff=delta]
-    ^-  @da
-    ?-  flavor.st
-        %standard
-      when.st
-    ::
-        %utc
-      (add-delta when.st stdoff)
-    ::
-        %wallclock
-      ::  a bit trickier - the input is in local standard time,
-      ::  and we've determined that this rule is in play year-wise.
-      ::  TODO what does it mean for this time to be given in wallclock
-      ::  time? does it mean that the save associated with this has been
-      ::  applied? for non daylight saving time rule entries this is the
-      ::  same as local standard time, but if save is NOT zero how do we
-      ::  interpret this?
-      ::
-      ::  For now I'm just treating this like local standard time because
-      ::  it doesn't really make sense for a rule to be considered in
-      ::  effect when we're still determining if it applies to a given
-      ::  local time. It'd be worth asking someone who knows more about
-      ::  this.
-      when.st
-    ==
 ::
 ++  get-zone-entry
   |=  [zon=zone when=seasoned-time]
   ^-  zone-entry
-  !!
+  |-
+  ?~  entries.zon
+    !!
+  ?.  (~(gte spice stdoff.zon) from.i.entries.zon)
+    $(entries.zon t.entries.zon)
+  ?~  to.i.entries.zon
+    i.entries.zon
+  ?:  (~(lt spice stdoff.zon) u.to.i.entries.zon)
+    i.entries.zon
+  $(entries.zon t.entries.zon)
 ::
 ::
 ++  utc-conversion-helper
