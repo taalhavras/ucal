@@ -55,13 +55,13 @@ moment:
 <br />
 
 location:
-<code>
+<pre>
 {
     'address': "some-address",
     // geo is optional
     'geo': {'lat': 23.2, 'lon': 54.4}
 }
-<code>
+</pre>
 <br />
 
 era:
@@ -92,7 +92,7 @@ era:
      'yearly': null
   }
 }
-<pre>
+</pre>
 
 ### Scrys
 Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
@@ -171,7 +171,3 @@ The data types for invites are floating around and through the code, but they ar
 branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
-
-
-##  Doesn't this need a frontend?
-Yes, it does! I'm not sure I have the time/expertise/motivation to make one so if you're interested _please_ submit a PR. I'm happy to answer any questions about the stores/hooks and can make any changes that're necessary.
