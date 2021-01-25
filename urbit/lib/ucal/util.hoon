@@ -668,7 +668,7 @@
           (~(get by p.jon) 'desc')
         |=(jon=json `(unit @t)`?~(jon ~ `(so:dejs jon)))
         %+  bind
-          (~(get by p.jon) 'loc')
+          (~(get by p.jon) 'location')
         |=(jon=json `(unit location)`?~(jon ~ `(location-from-json jon)))
         (bind (~(get by p.jon) 'when') moment-from-json)
         %+  bind
