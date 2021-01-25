@@ -10,6 +10,41 @@
       %sat
       %sun
   ==
+::  $month: months of the year
+::
++$  month
+  $?  %jan
+      %feb
+      %mar
+      %apr
+      %may
+      %jun
+      %jul
+      %aug
+      %sep
+      %oct
+      %nov
+      %dec
+  ==
+::  +month-to-idx: map of month to index (1-12)
+::
+++  month-to-idx
+  ^-  (map month @ud)
+  %-  malt
+  ^-  (list [month @ud])
+  :~  [%jan 1]
+      [%feb 2]
+      [%mar 3]
+      [%apr 4]
+      [%may 5]
+      [%jun 6]
+      [%jul 7]
+      [%aug 8]
+      [%sep 9]
+      [%oct 10]
+      [%nov 11]
+      [%dec 12]
+  ==
 ::
 ::  When the event will occur. Can be all day, relative to a start date, or have
 ::  an explicit start and end.

@@ -20,13 +20,17 @@
     ~(tap by weekdays-by-idx)
   |=([idx=@ud w=weekday] [w idx])
 ::  +get-weekday: gets weekday that a given date falls on.
-::  implementation of sakamoto's method
-::
+::  implementation of sakamoto's method. convenience implementations
+::  for both @da and date
 ++  get-weekday
-  =<
   |=  da=@da
   ^-  weekday
-  =/  =date  (yore da)
+  (get-weekday-from-date (yore da))
+::
+++  get-weekday-from-date
+  =<
+  |=  =date
+  ^-  weekday
   =/  y=@ud  y.date
   =/  m=@ud  m.date
   =/  d=@ud  d.t.date
@@ -78,6 +82,17 @@
   ?:  (yelp y)
     moy:yo
   moh:yo
+::  +weekdays-until-next: calculate number of weekdays until the next
+::  instance of target, starting at cur. if =(cur target) produce 0.
+::
+++  weekdays-until
+  |=  [cur=weekday target=weekday]
+  ^-  @ud
+  =/  cur-idx=@ud  (~(got by idx-by-weekday) cur)
+  =/  target-idx=@ud  (~(got by idx-by-weekday) target)
+  ?:  (gte target-idx cur-idx)
+    (sub target-idx cur-idx)
+  (sub (add 7 target-idx) cur-idx)
 ::  +nth-weekday: gets nth weekday in target month - keeps granularity at hour
 ::  and below (only changes day)
 ::
@@ -88,14 +103,7 @@
   =/  start=weekday  (get-weekday da)
   ::  number of days to advance start of month by to get
   ::  to first instance of target
-  =/  day-diff=@dr
-      %+  mul
-        ~d1
-      =/  start-idx=@ud  (~(got by idx-by-weekday) start)
-      =/  target-idx=@ud  (~(got by idx-by-weekday) target)
-      ?:  (gte target-idx start-idx)
-        (sub target-idx start-idx)
-      (sub (add 7 target-idx) start-idx)
+  =/  day-diff=@dr  (mul ~d1 (weekdays-until start target))
   =/  base=@da  (add da day-diff)
   ?-  instance
       %first
