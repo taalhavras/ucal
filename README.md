@@ -15,7 +15,9 @@ module.exports = {
 Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
 
 ### Pokes
+The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
+Here's a table of how JSON should be formatted for each poke
 | Poke                | Json                                                                                                                                                                                                                                                                                                                                                                              |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`                                                                                                                                                                                                                                                                                                            |
@@ -214,6 +216,7 @@ branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 
@@ -231,3 +234,5 @@ Created from tlon's [create-landscape-app](https://github.com/urbit/create-lands
 
 3. Run `npm run serve-interface` to serve a dev server environment with hot reloading at `localhost:9000`.
 >>>>>>> 4d4e99e (Cleaned up repo and added instructions to README)
+=======
+>>>>>>> b4bff8c (Readme update w/json payloads (#22))
