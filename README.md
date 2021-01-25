@@ -14,6 +14,24 @@ module.exports = {
 Then run `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running.
 
 ### Pokes
+
+| Poke                | Json                                                                                                                                                                                                                                                                                                                                                                              |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`                                                                                                                                                                                                                                                                                                            |
+| %update-calendar    | `{'update-calendar': {     'calendar-code': 'abcd-efgh',     'title': 'new-title' // optional, though pointless not to include   } }`                                                                                                                                                                                                                                               |
+| %delete-calendar    | `{'delete-calendar': {'calendar-code': 'some-code'}}`                                                                                                                                                                                                                                                                                                                               |
+| %create-event       | `{'create-event': {     'calendar-code': 'some-code',     'event-code': 'event-code', // optional     'organizer': '~zod',     'title': 'my-event',     'desc': 'some-description', // optional     'tzid': 'utc',     'location': some-location,     'when': some-moment,     'era': some-era   } }`                                                                               |
+| %update-event       | `{'update-event': { 'calendar-code': 'some-code',     
+ 'event-code': 'event-code',     
+ 'title': 'new-title', // optional     
+ 'desc': 'some-description', // optional, can specify null     
+ 'location': some-location, // optional, can specify null     
+ 'when': some-moment, // optional     'era': some-era, // optional, can specify null     'tzid': 'utc' // optional   } }` |
+| %delete-event       | `{'delete-event': {     'calendar-code': 'some-code',     'event-code': 'event-code'   } }`                                                                                                                                                                                                                                                                                         |
+| %change-rsvp        | `{'change-rsvp': {     'calendar-code': 'some-code',     'event-code': 'event-code',     'who': '~zod',     'status': 'new-status', // optional, if not specified it's an uninvite   }` }                                                                                                                                                                                           |
+| %import-from-ics    | `{'import-from-ics': {     'path': 'some-path'   } }`                                                                                                                                                                                                                                                                                                                               |
+| %change-permissions | `{'change-permissions': {     'calendar-code': 'some-code',     // now we have ONE of the following     // 1.      'who': 'some-ship',     'role': 'some-role' // either reader, writer, or acolyte     // 2.     'make-public': null     // 3.     'make-private': null   } }`                                                                                                     |
+
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
 Support for poking with JSON is still being worked on - some example payloads are below. The general format of a cell type is
