@@ -2,14 +2,48 @@
 ::  $weekday: days of the week
 ::
 +$  weekday
-  $?
-    %mon
-    %tue
-    %wed
-    %thu
-    %fri
-    %sat
-    %sun
+  $?  %mon
+      %tue
+      %wed
+      %thu
+      %fri
+      %sat
+      %sun
+  ==
+::  $month: months of the year
+::
++$  month
+  $?  %jan
+      %feb
+      %mar
+      %apr
+      %may
+      %jun
+      %jul
+      %aug
+      %sep
+      %oct
+      %nov
+      %dec
+  ==
+::  +month-to-idx: map of month to index (1-12)
+::
+++  month-to-idx
+  ^-  (map month @ud)
+  %-  malt
+  ^-  (list [month @ud])
+  :~  [%jan 1]
+      [%feb 2]
+      [%mar 3]
+      [%apr 4]
+      [%may 5]
+      [%jun 6]
+      [%jul 7]
+      [%aug 8]
+      [%sep 9]
+      [%oct 10]
+      [%nov 11]
+      [%dec 12]
   ==
 ::
 ::  When the event will occur. Can be all day, relative to a start date, or have
@@ -28,9 +62,8 @@
 ::  either on a specific date (i.e. 27th) or on the nth weekday of a month
 ::
 +$  monthly
-  $%
-    [%on ~]
-    [%weekday instance=weekday-instance]
+  $%  [%on ~]
+      [%weekday instance=weekday-instance]
   ==
 ::
 +$  rrule
@@ -66,9 +99,8 @@
 ::  the type determines the era's bounds.
 ::
 +$  era
-  $:
-    type=era-type
-    interval=$~(1 @ud)
-    =rrule
+  $:  type=era-type
+      interval=$~(1 @ud)
+      =rrule
   ==
 --

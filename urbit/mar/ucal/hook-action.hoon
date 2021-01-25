@@ -2,11 +2,13 @@
 |_  act=action:ucal-hook
 ++  grow
   |%
-  ++  tank  >act<
+  ++  noun  act
   --
 ::
 ++  grab
   |%
   ++  noun  action:ucal-hook
   --
+::
+++  grad  %noun
 --

@@ -9,11 +9,10 @@
   :*
     calendar-code
     event-code
-    title
     :: detail
+    title
     ~ :: desc
     ~ :: loc
-    ~ :: description
     :: other fields
     ~ :: when
     ~ :: era

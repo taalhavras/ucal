@@ -1,4 +1,4 @@
-/-  *ucal, *hora, components=ucal-components, ucal-timezone
+/-  *ucal, *hora, components=ucal-components, ucal-timezone, ucal-store, *ucal-almanac
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
 ::  TODO for can-{read, write}-cal do we want to allow moons the
@@ -351,4 +351,398 @@
   ?~  r
     ~
   ``[u.et interval.u.rr u.r]
+::
+++  permissions-to-json
+  =<
+  |=  permissions=calendar-permissions
+  %-  pairs:enjs:format
+  :~  ['acolytes' (ships-to-json acolytes.permissions)]
+      ['writers' (ships-to-json writers.permissions)]
+      ['readers' (ships-to-json (fall readers.permissions ~))]
+      ['public' [%b =(readers.permissions ~)]]
+  ==
+  |%
+  ++  ships-to-json
+    |=  ships=(set @p)
+    ^-  json
+    :-  %a
+    %+  turn
+      ~(tap in ships)
+    ship:enjs:format
+  --
+::
+++  permissions-from-json
+  =<
+  |=  jon=json
+  ^-  calendar-permissions
+  ?>  ?=([%o *] jon)
+  =/  acolytes=(set @p)  (json-to-ships (~(got by p.jon) 'acolytes'))
+  =/  writers=(set @p)  (json-to-ships (~(got by p.jon) 'writers'))
+  :+  ?:  (bo:dejs:format (~(got by p.jon) 'public'))
+        ~
+      `(json-to-ships (~(got by p.jon) 'readers'))
+    writers
+  acolytes
+  |%
+  ++  json-to-ships
+    |=  jon=json
+    ^-  (set @p)
+    ?>  ?=([%a *] jon)
+    %-  silt
+    ^-  (list @p)
+    %+  turn
+      p.jon
+    (se:dejs:format %p)
+  --
+::
+++  calendar-to-json
+  |=  cal=calendar
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['owner' (ship:enjs owner.cal)]
+      ['calendar-code' (tape:enjs (trip calendar-code.cal))]
+      ['title' (tape:enjs (trip title.cal))]
+      ['permissions' (permissions-to-json permissions.cal)]
+      ['date-created' (time:enjs date-created.cal)]
+      ['last-modified' (time:enjs last-modified.cal)]
+  ==
+::
+++  location-to-json
+  =<
+  |=  loc=location
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['address' [%s address.loc]]
+      :-  'geo'
+      ?~  geo.loc
+        ~
+      %-  pairs:enjs
+      :~  ['lat' [%s (rd-to-cord lat.u.geo.loc)]]
+          ['lon' [%s (rd-to-cord lon.u.geo.loc)]]
+      ==
+  ==
+  |%
+  ::  produce a signed cord in scientific notation
+  ++  rd-to-cord
+    |=  val=@rd
+    ^-  cord
+    =,  rd
+    (crip (r-co:co (rlyd val)))
+  --
+::
+++  location-from-json
+  =<
+  |=  jon=json
+  ^-  location
+  ?>  ?=([%o *] jon)
+  =,  format
+  :-  (so:dejs (~(got by p.jon) 'address'))
+  (bind (~(get by p.jon) 'geo') coord-from-json)
+  |%
+  ++  coord-from-json
+    |=  jon=json
+    ^-  coordinate
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (ne:dejs (~(got by p.jon) 'lat'))
+    (ne:dejs (~(got by p.jon) 'lon'))
+  --
+::
+++  event-data-to-json
+  |=  data=event-data
+  ^-  json
+  =,  format
+  =/  [start=@da end=@da]  (moment-to-range when.data)
+  ::  TODO handle invites once code supports them
+  %-  pairs:enjs
+  :~  ['event-code' (tape:enjs (trip event-code.data))]
+      ['calendar-code' (tape:enjs (trip calendar-code.data))]
+      ::  about
+      ['organizer' (ship:enjs organizer.about.data)]
+      ['date-created' (time:enjs date-created.about.data)]
+      ['last-modified' (time:enjs last-modified.about.data)]
+      ::  detail
+      ['title' (tape:enjs (trip title.detail.data))]
+      ['desc' (tape:enjs (trip (fall desc.detail.data '')))]
+      ['location' ?~(loc.detail.data ~ (location-to-json u.loc.detail.data))]
+      ['start' (time:enjs start)]
+      ['end' (time:enjs end)]
+      ['tzid' (tape:enjs tzid.data)]
+  ==
+::
+++  event-to-json
+  |=  ev=event
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['data' (event-data-to-json data.ev)]
+      ['era' ?~(era.ev ~ (era-to-json u.era.ev))]
+  ==
+::
+++  projected-event-to-json
+  |=  proj=projected-event
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['data' (event-data-to-json data.proj)]
+      ['era' (era-to-json source.proj)]
+  ==
+::
+::
+++  era-to-json
+  =,  format
+  =<
+  |=  =era
+  ^-  json
+  %-  pairs:enjs
+  :~  ['interval' (numb:enjs interval.era)]
+      ['type' (era-type-to-json type.era)]
+      ['rrule' (rrule-to-json rrule.era)]
+  ==
+  |%
+  ++  era-type-to-json
+    |=  et=era-type
+    ^-  json
+    %-  frond:enjs
+    ?:  ?=([%until *] et)
+      ['until' (time:enjs end.et)]
+    ?:  ?=([%instances *] et)
+      ['instances' (numb:enjs num.et)]
+    ?:  ?=([%infinite *] et)
+      ['infinite' ~]
+    !!
+  ::
+  ++  rrule-to-json
+    |=  rr=rrule
+    ^-  json
+    %-  frond:enjs
+    ?:  ?=([%daily *] rr)
+      ['daily' ~]
+    ?:  ?=([%weekly *] rr)
+      :-  'weekly'
+      ^-  json
+      :-  %a
+      %+  turn
+        ~(tap in days.rr)
+      |=  w=weekday
+      ^-  json
+      (tape:enjs (trip w))
+    ?:  ?=([%monthly *] rr)
+      :-  'monthly'
+      %-  frond:enjs
+      ?:  ?=([%on *] form.rr)
+        ['on' ~]
+      ?:  ?=([%weekday *] form.rr)
+        ['weekday' (tape:enjs (trip instance.form.rr))]
+      !!
+    ?:  ?=([%yearly *] rr)
+      ['yearly' ~]
+    !!
+  --
+::
+++  era-from-json
+  =<
+  |=  jon=json
+  ^-  era
+  ?>  ?=([%o *] jon)
+  :+  (era-type-from-json (~(got by p.jon) 'type'))
+    (ni:dejs:format (~(got by p.jon) 'interval'))
+  (rrule-from-json (~(got by p.jon) 'rrule'))
+  |%
+  ++  era-type-from-json
+    |=  jon=json
+    ^-  era-type
+    =,  format
+    %.  jon
+    %-  of:dejs
+    :~  [%until di:dejs]
+        [%instances ni:dejs]
+        [%infinite |=(=json ~)]
+    ==
+  ::
+  ++  rrule-from-json
+    |=  jon=json
+    ^-  rrule
+    =,  format
+    %.  jon
+    %-  of:dejs
+    :~  [%daily |=(jon=json ~)]
+        [%weekly |=(jon=json ((as:dejs (cu:dejs weekday so:dejs)) jon))]
+        [%monthly monthly-from-json]
+        [%yearly |=(jon=json ~)]
+    ==
+  ::
+  ++  monthly-from-json
+    |=  jon=json
+    ^-  monthly
+    =,  format
+    %.  jon
+    %-  of:dejs
+    :~  [%on |=(jon=json ~)]
+        [%weekday (cu:dejs weekday-instance so:dejs)]
+    ==
+  --
+::  +moment-from-json: parse a moment from a json. only supports
+::  %period moments (explicit start/end time).
+::
+++  moment-from-json
+  |=  jon=json
+  ^-  moment
+  =,  format
+  ?>  ?=([%o *] jon)
+  :+  %period
+    (di:dejs (~(got by p.jon) 'start'))
+  (di:dejs (~(got by p.jon) 'end'))
+::
+++  ucal-action-from-json
+  =<
+  |=  jon=json
+  ^-  action:ucal-store
+  =,  format
+  ::  Format should be key -> json of fields
+  %.  jon
+  %-  of:dejs
+  :~  [%create-calendar convert-create-calendar]
+      [%update-calendar convert-update-calendar]
+      [%delete-calendar convert-delete-calendar]
+      [%create-event convert-create-event]
+      [%update-event convert-update-event]
+      [%delete-event convert-delete-event]
+      [%change-rsvp convert-change-rsvp]
+      [%import-from-ics convert-import]
+      [%change-permissions convert-change-permissions]
+  ==
+  |%
+  ++  convert-create-calendar
+    |=  jon=json
+    ^-  [@t (unit calendar-code) calendar-permissions]
+    =,  format
+    ?>  ?=([%o *] jon)
+    =/  m=(map @t json)  p.jon
+    =/  cc=(unit calendar-code)  (bind (~(get by m) 'calendar-code') so:dejs)
+    :+  (so:dejs (~(got by m) 'title'))
+      cc
+    (permissions-from-json (~(got by m) 'permissions'))
+  ++  convert-update-calendar
+    |=  jon=json
+    ^-  calendar-patch:ucal-store
+    ?>  ?=([%o *] jon)
+    =,  format
+    =/  cc=calendar-code  (so:dejs (~(got by p.jon) 'calendar-code'))
+    =/  title=(unit @t)  (bind (~(get by p.jon) 'title') so:dejs)
+    [cc title]
+  ++  convert-delete-calendar
+    |=  jon=json
+    ^-  calendar-code
+    ?>  ?=([%o *] jon)
+    (so:dejs:format (~(got by p.jon) 'calendar-code'))
+  ++  convert-create-event
+    |=  jon=json
+    ^-  [calendar-code (unit event-code) @p detail moment (unit era) invites tape]
+    =,  format
+    ?>  ?=([%o *] jon)
+    :*  (so:dejs (~(got by p.jon) 'calendar-code'))
+        (bind (~(get by p.jon) 'event-code') so:dejs)
+        ((se:dejs:format %p) (~(got by p.jon) 'organizer'))
+        ::  detail
+        :+  (so:dejs (~(got by p.jon) 'title'))
+          (bind (~(get by p.jon) 'desc') so:dejs)
+        (bind (~(get by p.jon) 'location') location-from-json)
+        (moment-from-json (~(got by p.jon) 'when'))
+        (bind (~(get by p.jon) 'era') era-from-json)
+        ::  TODO handle invites
+        ~
+        (sa:dejs (~(got by p.jon) 'tzid'))
+    ==
+  ++  convert-update-event
+    |=  jon=json
+    ^-  event-patch:ucal-store
+    =,  format
+    ?>  ?=([%o *] jon)
+    :*  (so:dejs (~(got by p.jon) 'calendar-code'))
+        (so:dejs (~(got by p.jon) 'event-code'))
+        (bind (~(get by p.jon) 'title') so:dejs)
+        %+  bind
+          (~(get by p.jon) 'desc')
+        |=(jon=json `(unit @t)`?~(jon ~ `(so:dejs jon)))
+        %+  bind
+          (~(get by p.jon) 'location')
+        |=(jon=json `(unit location)`?~(jon ~ `(location-from-json jon)))
+        (bind (~(get by p.jon) 'when') moment-from-json)
+        %+  bind
+          (~(get by p.jon) 'era')
+        |=(jon=json `(unit era)`?~(jon ~ `(era-from-json jon)))
+        (bind (~(get by p.jon) 'tzid') sa:dejs)
+    ==
+  ++  convert-delete-event
+    |=  jon=json
+    ^-  [calendar-code event-code]
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (so:dejs (~(got by p.jon) 'calendar-code'))
+    (so:dejs (~(got by p.jon) 'event-code'))
+  ++  convert-change-rsvp
+    |=  jon=json
+    ^-  rsvp-change:ucal-store
+    =,  format
+    ?>  ?=([%o *] jon)
+    :^    (so:dejs (~(got by p.jon) 'calendar-code'))
+        (so:dejs (~(got by p.jon) 'event-code'))
+      ((se:dejs %p) (~(got by p.jon) 'who'))
+    (bind (~(get by p.jon) 'status') (corl rsvp so:dejs))
+  ++  convert-import
+    |=  jon=json
+    ^-  path
+    ?>  ?=([%o *] jon)
+    (pa:dejs:format (~(got by p.jon) 'path'))
+  ++  convert-change-permissions
+    |=  jon=json
+    ^-  permission-change:ucal-store
+    =,  format
+    ?>  ?=([%o *] jon)
+    :-  (so:dejs (~(got by p.jon) 'calendar-code'))
+    %.  jon
+    %-  of:dejs
+    :~  :-  %change
+        |=  jon=json
+        ^-  [@p (unit calendar-role)]
+        ?>  ?=([%o *] jon)
+        :-  ((se:dejs %p) (~(got by p.jon) 'who'))
+        (bind (~(get by p.jon) 'role') (corl calendar-role so:dejs))
+        [%make-public |=(jon=json ~)]
+        [%make-private |=(jon=json ~)]
+    ==
+  --
+::
+++  almanac-to-json
+  =<
+  |=  alma=almanac
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['calendars' (calendars-to-json alma)]
+      ['events' (events-to-json alma)]
+  ==
+  |%
+  ++  calendars-to-json
+    |=  alma=almanac
+    ^-  json
+    [%a (turn ~(tap by cals.alma) |=([* cal=calendar] (calendar-to-json cal)))]
+  ::
+  ++  events-to-json
+    |=  alma=almanac
+    ^-  json
+    =,  format
+    =/  elts=(list [calendar-code (list event)])
+        ~(tap by events.alma)
+    %-  pairs:enjs
+    %+  turn
+      elts
+    |=  [cc=calendar-code evs=(list event)]
+    ^-  [@t json]
+    :-  cc
+    [%a (turn evs event-to-json)]
+  --
 --

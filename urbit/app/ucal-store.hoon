@@ -16,16 +16,14 @@
 ++  al  al:alma-door
 ::
 +$  state-zero
-  $:
-    ::  maintains calendar and event states
-    alma=almanac
-    ::  map of entity to almanac, to track almanacs pulled from remote ships
-    external=(map entity almanac)
+  $:  ::  maintains calendar and event states
+      alma=almanac
+      ::  map of entity to almanac, to track almanacs pulled from remote ships
+      external=(map entity almanac)
   ==
 ::
 +$  versioned-state
-  $%
-    [%0 state-zero]
+  $%  [%0 state-zero]
   ==
 --
 ::
@@ -108,7 +106,7 @@
     ?+  path
       (on-peek:def path)
     ::
-        [%y @p *]
+        [%x @p *]
       =/  who=@p  `@p`(slav %p `@tas`+<:path)
       ?:  =(who our.bowl)
         (handle-on-peek t.t.path alma.state)
@@ -397,37 +395,37 @@
       :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
       :: /x/a/b as our path, while with %gy we get /x/a/b/c
       [%almanac ~]
-    ``noun+!>(almanac)
+    ``ucal-almanac+!>(almanac)
   ::
       [%calendars ~]
-    ``noun+!>((~(get-calendars al almanac)))
+    ``ucal-calendars+!>((~(get-calendars al almanac)))
   ::
       [%events ~]
-    ``noun+!>((~(get-events al almanac)))
+    ``ucal-events+!>((~(get-events al almanac)))
   ::
       [%calendars *]
     =/  res  (get-calendar t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-calendar+!>(u.res)
   ::
       [%events %specific *]
     =/  res  (get-specific-event t.t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-event+!>(u.res)
   ::
       [%events %bycal *]
     =/  res  (get-events-bycal t.t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-events+!>(u.res)
   ::
       [%events %inrange *]
     =/  res  (get-events-inrange t.t.path almanac)
     ?~  res
       ~
-    ``noun+!>(u.res)
+    ``ucal-events-in-range+!>(u.res)
   ==
 ::  +apply-permissions-update: updates calendar permissions
 ::
@@ -460,14 +458,4 @@
   ?:  (lth b a)
     [b a]
   [a b]
-::
-++  give
-  |*  [=mark =noun]
-  ^-  (list card)
-  [%give %fact ~ mark !>(noun)]~
-::
-++  give-single
-  |*  [=mark =noun]
-  ^-  card
-  [%give %fact ~ mark !>(noun)]
 --

@@ -16,16 +16,95 @@ Then run `yarn build` from the project root to copy the files into the target pi
 ### Pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
+Here's a table of how JSON should be formatted for each poke
+| Poke                | Json                                                                                                                                                                                                                                                                                                                                                                              |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`|
+| %update-calendar    | <pre>{'update-calendar': {'calendar-code': 'abcd-efgh',<br />'title': 'new-title' // optional, though pointless not to include   } }<pre>|
+| %delete-calendar    | <pre>{'delete-calendar': {'calendar-code': 'some-code'}}<pre>|
+| %create-event       | <pre>{'create-event': {'calendar-code': 'some-code', <br />  'event-code': 'event-code', // optional <br /> 'organizer': '~zod', <br />     'title': 'my-event',<br/> 'desc': 'some-description', // optional <br /> 'tzid': 'utc', <br /> 'location': some-location, <br /> 'when': some-moment, <br /> 'era': some-era   } }<pre>|
+| %update-event       | <pre>{'update-event': {'calendar-code': 'some-code', <br />'event-code': 'event-code',     <br />'title': 'new-title', // optional     <br />'desc': 'some-description', // optional, can specify null     <br />'location': some-location, // optional, can specify null     <br />'when': some-moment, // optional     <br />'era': some-era, // optional, can specify null     <br />'tzid': 'utc' // optional   } }<pre> |
+| %delete-event       | <pre>{'delete-event': {'calendar-code': 'some-code',     'event-code': 'event-code'   } }<pre>|
+| %change-rsvp        | <pre>{'change-rsvp': {'calendar-code': 'some-code', <br />'event-code': 'event-code',  <br />'who': '~zod',  <br />'status': 'new-status', // optional, if not specified it's an uninvite   } }<pre>                                                                                                                                                                                           |
+| %import-from-ics    | <pre>{'import-from-ics': {'path': 'some-path'   } }<pre>                                                                                                                                                                                                                                                                                                                               |
+| %change-permissions | <pre>{'change-permissions': {'calendar-code': 'some-code',<br />// now we have ONE of the following     <br />// 1.<br />'who': 'some-ship', <br />'role': 'some-role' // either reader, writer, or acolyte<br />// 2.<br />'make-public': null     <br />// 3.<br />'make-private': null   } }<pre>                                                                                                     |
+
+
+The general format of a cell type in JSON is a dictionary of field name to value.
+Tagged unions (types created with `$%`) will have a single key (the tag) mapped to another
+object containing the fields in that specific variant.
+
+The `calendar-permissions` type is an exception to the above formatting: In json it looks like
+```
+{
+  "readers" : ["~zod" "~nel"],
+  "writers" : [],
+  "acolytes": ["~bus"],
+  "public" : false
+}
+```
+where `readers`, `writers` and `acolytes` are arrays of ships and `public` is a boolean.
+The source code for json serialization/deserialization is in `lib/ucal/util.hoon`, consult that file
+for the specifics of how any type is serialized/deserialized.
+
+Some other types mentioned above that must be parsed from json are below. <br />
+moment:
+```
+{ 'period' : {'start': start-time, 'end': end-time} }
+```
+<br />
+
+location:
+<pre>
+{
+    'address': "some-address",
+    // geo is optional
+    'geo': {'lat': 23.2, 'lon': 54.4}
+}
+</pre>
+<br />
+
+era:
+<pre>
+{
+  'type': {
+    // 1.
+    'until': some-date
+    // 2.
+    'instances': 10
+    // 3.
+    'infinite': null
+  },
+  'interval': 23,
+  'rrule': {
+     // 1.
+     'daily': null
+     // 2.
+     'weekly': ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+     // 3.
+     'monthly': {
+       // 1.
+       'on': null
+       // 2.
+       'weekday': 'wed'
+     }
+     // 4.
+     'yearly': null
+  }
+}
+</pre>
+
 ### Scrys
+Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
 `cal-code` and `event-code` are unique per calendar/event and are just `@tas`s (they're just uuids). For the scry for events in range, start and end are `@da`s. `ship` is an `@p` whose almanac (a collection of calendars and events) we're examining.
 | Path                                     | Return type                                  | Notes                                                                                                                                                                                                                                                                                                                   |
 |------------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `%y ship %calendars`                            | (list calendar)                              | all calendars                                                                                                                                                                                                                                                                                                           |
-| `%y ship %events`                               | (list event)                                 | all events                                                                                                                                                                                                                                                                                                              |
-| `%y ship %calendars cal-code`                   | (unit calendar)                              | a specific calendar                                                                                                                                                                                                                                                                                                     |
-| `%y ship %events %specific cal-code event-code` | (unit event)                                 | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
-| `%y ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
-| `%y ship %events %inrange cal-code start end`   | (unit [(list event) (list projected-event)]) | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
+| `%x ship %calendars`                            | (list calendar)                              | all calendars                                                                                                                                                                                                                                                                                                           |
+| `%x ship %events`                               | (list event)                                 | all events                                                                                                                                                                                                                                                                                                              |
+| `%x ship %calendars cal-code`                   | (unit calendar)                              | a specific calendar                                                                                                                                                                                                                                                                                                     |
+| `%x ship %events %specific cal-code event-code` | (unit event)                                 | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
+| `%x ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
+| `%x ship %events %inrange cal-code start end`   | (unit [(list event) (list projected-event)]) | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
 
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
@@ -92,7 +171,3 @@ The data types for invites are floating around and through the code, but they ar
 branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
-
-
-##  Doesn't this need a frontend?
-Yes, it does! I'm not sure I have the time/expertise/motivation to make one so if you're interested _please_ submit a PR. I'm happy to answer any questions about the stores/hooks and can make any changes that're necessary.
