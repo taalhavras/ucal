@@ -50,11 +50,11 @@
     =<
     |=  [a=seasoned-time b=seasoned-time]
     ^-  flag
-    ?:  =(a.flavor b.flavor)
-      (lth when.a when.b)
+    ?:  =(flavor.a flavor.b)
+      (^lth when.a when.b)
     =/  at=@da  (seasoned-to-standard a stdoff)
     =/  bt=@da  (seasoned-to-standard b stdoff)
-    (lth at bt)
+    (^lth at bt)
     |%
     ::  +seasoned-to-standard: takes a seasoned-time that's stdoff away from
     ::  utc and produces an @da representing the corresponding local standard
@@ -125,14 +125,14 @@
       =/  bound-day=weekday:hora  (get-weekday-from-date:lhora d)
       d(d.t (add d.t.d (weekdays-until:lhora day bound-day)))
   (add (year d) (fall offset ~s0))
-::  +find-rule-entry: takes an input local standard time that's stdoff
+::  +find-rule-entry: takes a seasoned time that's stdoff
 ::  away from utc and find the rule-entry that applies to it.
 ::
 ++  find-rule-entry
   =<
-  |=  [when=@da stdoff=delta tzr=tz-rule]
+  |=  [st=seasoned-time stdoff=delta tzr=tz-rule]
   ^-  rule-entry
-  =/  d=date  (yore when)
+  =/  d=date  (yore when.st)
   =/  standard=rule-entry  (find-in-range standard.tzr y.d)
   =/  saving=rule-entry  (find-in-range saving.tzr y.d)
   ::  build both seasoned-times,
@@ -142,8 +142,8 @@
       (build-seasoned-time y.d `in.saving `on.saving `offset.at.saving `flavor.at.saving)
   ::  now order them
   ?:  (~(lth spice stdoff) st-standard st-saving)
-    (pick-entry a standard b saving when)
-  (pick-entry b saving a standard when)
+    (pick-entry stdoff st-standard standard st-saving saving st)
+  (pick-entry stdoff st-saving saving st-standard standard st)
   |%
   ++  find-in-range
     |=  [l=(list rule-entry) y=@ud]
@@ -156,13 +156,13 @@
   --
   ::
   ++  pick-entry
-    |=  [a=@da ar=rule-entry b=@da br=rule-entry x=@da]
+    |=  [stdoff=delta a=seasoned-time ar=rule-entry b=seasoned-time br=rule-entry x=seasoned-time]
     ^-  rule-entry
     ::  caller should pass a < b
     ::  a < b <= x -> b
     ::  a <= x < b -> a
     ::  x <= a < b -> b
-    ?:  &((gte x a) (lth x b))
+    ?:  &((~(gte spice stdoff) x a) (~(lth spice stdoff) x b))
       ar
     br
 ::
@@ -172,11 +172,12 @@
   |-
   ?~  entries.zon
     !!
-  ?.  (~(gte spice stdoff.zon) from.i.entries.zon)
+  =/  stdoff=delta  stdoff.i.entries.zon
+  ?.  (~(gte spice stdoff) from.i.entries.zon when)
     $(entries.zon t.entries.zon)
   ?~  to.i.entries.zon
     i.entries.zon
-  ?:  (~(lt spice stdoff.zon) u.to.i.entries.zon)
+  ?:  (~(lth spice stdoff) u.to.i.entries.zon when)
     i.entries.zon
   $(entries.zon t.entries.zon)
 ::
@@ -191,11 +192,11 @@
     pre-rules
   ?:  ?=([%delta *] rules.ze)
     (func pre-rules +:rules.ze)
-  ?:  ?=([%rule *])
+  ?:  ?=([%rule *] rules.ze)
     ::  apply offset based on rules - how to get the timezones by name?
     ::  .^ with a store? pass a map?
     =/  tzr=tz-rule  !!
-    =/  entry=tz-rule-entry  (find-rule-entry when.st stdoff.ze tzr)
+    =/  entry=rule-entry  (find-rule-entry st stdoff.ze tzr)
     (func pre-rules save.entry)
   !!
 ::  +from-utc: convert an @da in utc to the corresponding wallclock time
