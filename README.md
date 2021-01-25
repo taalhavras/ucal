@@ -14,33 +14,25 @@ module.exports = {
 Then run `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running.
 
 ### Pokes
-
-| Poke                | Json                                                                                                                                                                                                                                                                                                                                                                              |
-|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`                                                                                                                                                                                                                                                                                                            |
-| %update-calendar    | `{'update-calendar': {     'calendar-code': 'abcd-efgh',     'title': 'new-title' // optional, though pointless not to include   } }`                                                                                                                                                                                                                                               |
-| %delete-calendar    | `{'delete-calendar': {'calendar-code': 'some-code'}}`                                                                                                                                                                                                                                                                                                                               |
-| %create-event       | `{'create-event': {     'calendar-code': 'some-code',     'event-code': 'event-code', // optional     'organizer': '~zod',     'title': 'my-event',     'desc': 'some-description', // optional     'tzid': 'utc',     'location': some-location,     'when': some-moment,     'era': some-era   } }`                                                                               |
-| %update-event       | `{'update-event': { 'calendar-code': 'some-code',     
- 'event-code': 'event-code',     
- 'title': 'new-title', // optional     
- 'desc': 'some-description', // optional, can specify null     
- 'location': some-location, // optional, can specify null     
- 'when': some-moment, // optional     'era': some-era, // optional, can specify null     'tzid': 'utc' // optional   } }` |
-| %delete-event       | `{'delete-event': {     'calendar-code': 'some-code',     'event-code': 'event-code'   } }`                                                                                                                                                                                                                                                                                         |
-| %change-rsvp        | `{'change-rsvp': {     'calendar-code': 'some-code',     'event-code': 'event-code',     'who': '~zod',     'status': 'new-status', // optional, if not specified it's an uninvite   }` }                                                                                                                                                                                           |
-| %import-from-ics    | `{'import-from-ics': {     'path': 'some-path'   } }`                                                                                                                                                                                                                                                                                                                               |
-| %change-permissions | `{'change-permissions': {     'calendar-code': 'some-code',     // now we have ONE of the following     // 1.      'who': 'some-ship',     'role': 'some-role' // either reader, writer, or acolyte     // 2.     'make-public': null     // 3.     'make-private': null   } }`                                                                                                     |
-
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
-Support for poking with JSON is still being worked on - some example payloads are below. The general format of a cell type is
-a dictionary of field name to value. Tagged unions (types created with `$%`) will have a single key (the tag) mapped to another
+Here's a table of how JSON should be formatted for each poke
+| Poke                | Json                                                                                                                                                                                                                                                                                                                                                                              |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`|
+| %update-calendar    | <pre>{'update-calendar': {'calendar-code': 'abcd-efgh',<br />'title': 'new-title' // optional, though pointless not to include   } }<pre>|
+| %delete-calendar    | <pre>{'delete-calendar': {'calendar-code': 'some-code'}}<pre>|
+| %create-event       | <pre>{'create-event': {'calendar-code': 'some-code', <br />  'event-code': 'event-code', // optional <br /> 'organizer': '~zod', <br />     'title': 'my-event',<br/> 'desc': 'some-description', // optional <br /> 'tzid': 'utc', <br /> 'location': some-location, <br /> 'when': some-moment, <br /> 'era': some-era   } }<pre>|
+| %update-event       | <pre>{'update-event': {'calendar-code': 'some-code', <br />'event-code': 'event-code',     <br />'title': 'new-title', // optional     <br />'desc': 'some-description', // optional, can specify null     <br />'location': some-location, // optional, can specify null     <br />'when': some-moment, // optional     <br />'era': some-era, // optional, can specify null     <br />'tzid': 'utc' // optional   } }<pre> |
+| %delete-event       | <pre>{'delete-event': {'calendar-code': 'some-code',     'event-code': 'event-code'   } }<pre>|
+| %change-rsvp        | <pre>{'change-rsvp': {'calendar-code': 'some-code', <br />'event-code': 'event-code',  <br />'who': '~zod',  <br />'status': 'new-status', // optional, if not specified it's an uninvite   } }<pre>                                                                                                                                                                                           |
+| %import-from-ics    | <pre>{'import-from-ics': {'path': 'some-path'   } }<pre>                                                                                                                                                                                                                                                                                                                               |
+| %change-permissions | <pre>{'change-permissions': {'calendar-code': 'some-code',<br />// now we have ONE of the following     <br />// 1.<br />'who': 'some-ship', <br />'role': 'some-role' // either reader, writer, or acolyte<br />// 2.<br />'make-public': null     <br />// 3.<br />'make-private': null   } }<pre>                                                                                                     |
+
+
+The general format of a cell type in JSON is a dictionary of field name to value.
+Tagged unions (types created with `$%`) will have a single key (the tag) mapped to another
 object containing the fields in that specific variant.
-Sample `ucal-store` poke (a tagged union).
-```
-{ "delete-calendar" : {"calendar-code" : "abcd-efgh"}}
-```
 
 The `calendar-permissions` type is an exception to the above formatting: In json it looks like
 ```
@@ -54,6 +46,53 @@ The `calendar-permissions` type is an exception to the above formatting: In json
 where `readers`, `writers` and `acolytes` are arrays of ships and `public` is a boolean.
 The source code for json serialization/deserialization is in `lib/ucal/util.hoon`, consult that file
 for the specifics of how any type is serialized/deserialized.
+
+Some other types mentioned above that must be parsed from json are below. <br />
+moment:
+```
+{ 'period' : {'start': start-time, 'end': end-time} }
+```
+<br />
+
+location:
+<pre>
+{
+    'address': "some-address",
+    // geo is optional
+    'geo': {'lat': 23.2, 'lon': 54.4}
+}
+</pre>
+<br />
+
+era:
+<pre>
+{
+  'type': {
+    // 1.
+    'until': some-date
+    // 2.
+    'instances': 10
+    // 3.
+    'infinite': null
+  },
+  'interval': 23,
+  'rrule': {
+     // 1.
+     'daily': null
+     // 2.
+     'weekly': ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+     // 3.
+     'monthly': {
+       // 1.
+       'on': null
+       // 2.
+       'weekday': 'wed'
+     }
+     // 4.
+     'yearly': null
+  }
+}
+</pre>
 
 ### Scrys
 Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
@@ -132,7 +171,3 @@ The data types for invites are floating around and through the code, but they ar
 branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
-
-
-##  Doesn't this need a frontend?
-Yes, it does! I'm not sure I have the time/expertise/motivation to make one so if you're interested _please_ submit a PR. I'm happy to answer any questions about the stores/hooks and can make any changes that're necessary.
