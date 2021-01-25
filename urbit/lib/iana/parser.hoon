@@ -66,6 +66,38 @@
       (jest 'w')
     ==
   ==
+::  +parse-on: rule for parsing the 'ON' component of a tz-rule-entry.
+::  Is also used to parse part of the 'UNTIL' component
+::
+++  parse-on
+  ;~  pose
+    ::  a specified day of the month
+    %+  cook
+      from-digits
+    (stun [1 2] dit)
+    ::  a specific weekday
+    %+  cook
+      |=  [a=tape monthday=@ud]
+      =/  day=weekday:hora  ;;(weekday:hora (crip (cass a)))
+      ::  TODO is it worth parsing 1, 8, 15, 22 as first, second,
+      ::  third, fourth here? if we have to handle other things anyway
+      ::  does it really matter?
+      [day [%on monthday]]
+    ::  of the form "Sun>=1, Tue>=8, etc.
+    ;~  plug
+      (plus alf)
+      ;~(pfix (jest '>=') (cook from-digits (stun [1 2] dit)))
+    ==
+    :: last weekday in a month, i.e. lastSun
+    %+  cook
+      |=  a=tape
+      =/  day=weekday:hora  ;;(weekday:hora (crip (cass a)))
+      [day [%instance %last]]
+    ;~  pfix
+      (jest 'last')
+      (plus alf)
+    ==
+  ==
 ::  +can-skip: skip lines that are all whitespace and comments (start
 ::  with '#') as well as blank lines.
 ::
@@ -114,7 +146,7 @@
   ::  if entry is ~, then the line was not parseable as a continuation
   ::  to the current zone - bail out.
   ?~  entry
-    [[name entries] t.lines]
+    [[name entries] lines]
   ?~  to.u.entry
     ::  if this is none we can bail out (assuming these are always
     ::  in chronological order).
@@ -132,7 +164,7 @@
           (jest 'Zone')
           whitespace
           ::  NAME
-          (plus ;~(pose alf cab fas hep))
+          (plus ;~(pose aln cab fas hep))
           ::  now we have whitespace and the continuation
           (plus next)
         ==
@@ -159,24 +191,22 @@
     ?:  =(n 2)
       ::  year and month
       [(year d) %wallclock]
-    =/  day=@ud  (slav %ud (crip (snag 2 segments)))
-    =/  d=date  d(d.t day)
+    ::  now we have a  a value analogous to a rule's "ON" component (i.e. lastSun, Mon>=3, etc.)
+    =/  on=rule-on  (scan (snag 2 segments) parse-on)
     ?:  =(n 3)
-      ::  year, month, and day
-      [(year d) %wallclock]
-    ::  use delta rule, but this must be positive
+      ::  year, month, and day w/no specified time
+      (build-seasoned-time y `month-idx `on ~ `%wallclock)
     =/  [offset=@dr flavor=time-flavor]
         (scan (snag 3 segments) parse-offset-and-flavor)
     ?:  =(n 4)
       ::  year, month, day, time
-      [(add offset (year d)) flavor]
+      (build-seasoned-time y `month-idx `on `offset `flavor)
     !!
   ::  +parse-zone-entry: parses a continuation line
   ::
   ++  parse-zone-entry
     |=  [from=seasoned-time line=tape]
     ^-  (unit zone-entry)
-    ~&  [%zone-entry line]
     =/  res=(unit [d=delta ~ rules=zone-rules-type ~ format=@t (list ~) until=(unit seasoned-time)])
         %+  rust
           line
@@ -193,11 +223,12 @@
               %+  cook
                 |=  name=tape
                 `zone-rules-type`[%rule `@ta`(crip name)]
-              (plus alf)
+              (plus ;~(pose alf cab))
             ==
             whitespace
-            ::  FORMAT, arbitrary cord. sometimes contains '%s'
-            (cook crip (plus ;~(pose alf cen)))
+            ::  FORMAT, arbitrary cord. sometimes contains '%s',
+            ::  sometimes is '-00', sometimes contains '/'
+            (cook crip (plus ;~(pose aln cen hep fas)))
             (stun [0 1] whitespace)
             ::  UNTIL, optional, end of entry. if omitted, entry
             ::  is valid until the present.
@@ -235,41 +266,11 @@
       (skid `(list rule-entry)`entries is-standard)
   [tzr continuation]
   |%
-  ++  parse-on
-    ;~  pose
-      ::  a specified day of the month
-      %+  cook
-        from-digits
-      (stun [1 2] dit)
-      ::  a specific weekday
-      %+  cook
-        |=  [a=tape monthday=@ud]
-        =/  day=weekday:hora  ;;(weekday:hora (crip (cass a)))
-        ::  TODO is it worth parsing 1, 8, 15, 22 as first, second,
-        ::  third, fourth here? if we have to handle other things anyway
-        ::  does it really matter?
-        [day [%on monthday]]
-      ::  of the form "Sun>=1, Tue>=8, etc.
-      ;~  plug
-        (plus alf)
-        ;~(pfix (jest '>=') (cook from-digits (stun [1 2] dit)))
-      ==
-      :: last weekday in a month, i.e. lastSun
-      %+  cook
-        |=  a=tape
-        =/  day=weekday:hora  ;;(weekday:hora (crip (cass a)))
-        [day [%instance %last]]
-      ;~  pfix
-        (jest 'last')
-        (plus alf)
-      ==
-    ==
   ::  +parse-rule-entry: produce rule entry and name from a line
   ::
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
-    ~&  [%rule-entry line]
     =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=char]
         %+  scan
           line
@@ -277,7 +278,7 @@
           ;~  (glue whitespace)
             (jest 'Rule')
             ::  NAME
-            (plus alf)
+            (plus ;~(pose alf cab))
             ::  FROM, year
             (cook from-digits digits)
             ::  TO, year, 'only', or 'max'
@@ -302,7 +303,10 @@
             ::  SAVE, delta to apply
             parse-delta
             ::  LETTER/S, cord
-            (cook crip (plus alf))
+            ::  while you'd like to imagine this field containing solely
+            ::  LETTERS, it can sometimes contain signed numbers!
+            ::  see: Belize (northamerica) contains -0530 here.
+            (cook crip (plus ;~(pose aln hep)))
           ==
           ::  now there might be trailing whitespace and stuff so
           ::  just parse it and ignore.
@@ -324,10 +328,25 @@
         letter
     ==
   --
+::  +is-link-line: check if line is a Link line
+::
+++  is-link-line
+  |=  line=tape
+  ^-  flag
+  (startswith line (jest 'Link'))
+::  +parse-link: parse a link line (creates timezone alias). head of
+::  cell is the name of the alias and the tail is the existing zone.
+::
+++  parse-link
+  |=  line=tape
+  ^-  [@t @t]
+  =/  tokens=wall  (split line whitespace)
+  [(crip (snag 2 tokens)) (crip (snag 1 tokens))]
 ::  +parse-timezones: top level parser to go from file contents to
 ::  tzrules and zones (keyed by name)
 ::
 ++  parse-timezones
+  =<
   |=  input=wall
   ^-  [(map @t zone) (map @t tz-rule)]
   =/  lines=wall
@@ -338,9 +357,10 @@
       (strip-trailing-whitespace (remove-inline-comments line))
   =|  zones=(map @t zone)
   =|  rules=(map @t tz-rule)
+  =|  links=(map @t @t)
   |-
   ?~  lines
-    [zones rules]
+    (resolve-links zones rules links)
   ?:  (can-skip i.lines)
     $(lines t.lines)
   ?:  (is-rule-line i.lines)
@@ -349,6 +369,21 @@
   ?:  (is-zone-line i.lines)
     =/  [zon=zone continuation=wall]  (parse-zone lines)
     $(zones (~(put by zones) name.zon zon), lines continuation)
+  ?:  (is-link-line i.lines)
+    =/  [alias=@t real=@t]  (parse-link i.lines)
+    $(links (~(put by links) alias real), lines t.lines)
   ~&  [%unparseable-timezone-line i.lines]
   !!
+  |%
+  ++  resolve-links
+    |=  [zones=(map @t zone) rules=(map @t tz-rule) links=(map @t @t)]
+    ^-  [(map @t zone) (map @t tz-rule)]
+    :_  rules
+    =/  pairs=(list [@t @t])  ~(tap by links)
+    |-
+    ?~  pairs
+      zones
+    =/  [alias=@t real=@t]  i.pairs
+    $(pairs t.pairs, zones (~(put by zones) alias (~(got by zones) real)))
+  --
 --
