@@ -47,6 +47,51 @@ where `readers`, `writers` and `acolytes` are arrays of ships and `public` is a 
 The source code for json serialization/deserialization is in `lib/ucal/util.hoon`, consult that file
 for the specifics of how any type is serialized/deserialized.
 
+Some other types mentioned above that must be parsed from json are below. <br />
+`moment`:
+```
+{ 'period' : {'start': start-time, 'end': end-time} }
+```
+<br />
+`location`:
+```
+{
+    'address': "some-address",
+    // geo is optional
+    'geo': {'lat': 23.2, 'lon': 54.4}
+}
+```
+<br />
+`era`:
+<pre>
+{
+  'type': {
+    // 1.
+    'until': some-date
+    // 2.
+    'instances': 10
+    // 3.
+    'infinite': null
+  },
+  'interval': 23,
+  'rrule': {
+     // 1.
+     'daily': null
+     // 2.
+     'weekly': ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+     // 3.
+     'monthly': {
+       // 1.
+       'on': null
+       // 2.
+       'weekday': 'wed'
+     }
+     // 4.
+     'yearly': null
+  }
+}
+<pre>
+
 ### Scrys
 Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
 `cal-code` and `event-code` are unique per calendar/event and are just `@tas`s (they're just uuids). For the scry for events in range, start and end are `@da`s. `ship` is an `@p` whose almanac (a collection of calendars and events) we're examining.
