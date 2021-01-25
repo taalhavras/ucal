@@ -48,21 +48,23 @@ The source code for json serialization/deserialization is in `lib/ucal/util.hoon
 for the specifics of how any type is serialized/deserialized.
 
 Some other types mentioned above that must be parsed from json are below. <br />
-`moment`:
+moment:
 ```
 { 'period' : {'start': start-time, 'end': end-time} }
 ```
 <br />
-`location`:
-```
+
+location:
+<code>
 {
     'address': "some-address",
     // geo is optional
     'geo': {'lat': 23.2, 'lon': 54.4}
 }
-```
+<code>
 <br />
-`era`:
+
+era:
 <pre>
 {
   'type': {
