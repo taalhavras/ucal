@@ -346,9 +346,8 @@
 ::  tzrules and zones (keyed by name)
 ::
 ++  parse-timezones
-  =<
   |=  input=wall
-  ^-  [(map @t zone) (map @t tz-rule)]
+  ^-  [(map @t zone) (map @t tz-rule) (map @t @t)]
   =/  lines=wall
       %+  turn
         input
@@ -360,7 +359,7 @@
   =|  links=(map @t @t)
   |-
   ?~  lines
-    (resolve-links zones rules links)
+    [zones rules links]
   ?:  (can-skip i.lines)
     $(lines t.lines)
   ?:  (is-rule-line i.lines)
@@ -374,16 +373,4 @@
     $(links (~(put by links) alias real), lines t.lines)
   ~&  [%unparseable-timezone-line i.lines]
   !!
-  |%
-  ++  resolve-links
-    |=  [zones=(map @t zone) rules=(map @t tz-rule) links=(map @t @t)]
-    ^-  [(map @t zone) (map @t tz-rule)]
-    :_  rules
-    =/  pairs=(list [@t @t])  ~(tap by links)
-    |-
-    ?~  pairs
-      zones
-    =/  [alias=@t real=@t]  i.pairs
-    $(pairs t.pairs, zones (~(put by zones) alias (~(got by zones) real)))
-  --
 --
