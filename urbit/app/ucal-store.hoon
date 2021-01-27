@@ -390,10 +390,6 @@
   ^-  (unit (unit cage))
   ?+  path  [~ ~] :: unhandled
   ::
-      :: y the y???
-      :: Alright, so the y seems to correspond to whether the last piece
-      :: of the path is seen here. if we make a %gx scry with /a/b/c, we get
-      :: /x/a/b as our path, while with %gy we get /x/a/b/c
       [%almanac ~]
     ``ucal-almanac+!>(almanac)
   ::
