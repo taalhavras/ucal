@@ -709,8 +709,7 @@
         |=  jon=json
         ^-  [@p (unit calendar-role)]
         ?>  ?=([%o *] jon)
-        :-  ((se:dejs %p) (~(got by p.jon) 'who'))
-        (bind (~(get by p.jon) 'role') (corl calendar-role so:dejs))
+        :-  ((se:dejs %p) (~(got by p.jon) 'who'))  (bind (~(get by p.jon) 'role') (corl calendar-role so:dejs))
         [%make-public |=(jon=json ~)]
         [%make-private |=(jon=json ~)]
     ==
