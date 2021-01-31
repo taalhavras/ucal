@@ -1,5 +1,5 @@
 /-  ucal, ucal-almanac, ucal-store, *resource
-/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser
+/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser, tzconv=iana-conversion
 ::
 ::: local type
 ::
@@ -422,6 +422,57 @@
     ?~  res
       ~
     ``ucal-events-in-range+!>(u.res)
+  ::
+      [%timezone @t %events @t *]
+    =/  tzid=@t  i.t.path
+    =/  variant=@t  i.t.t.t.path
+    =/  convert-event-data=$-(event-data event-data)
+        |=  ed=event-data
+        ^-  event-data
+        =/  src-zone=@ta  (crip tzid.ed)
+        =/  [start=@da @da]  (moment-to-range when.ed)
+        =/  new-start=@da
+            (~(convert-between tzconv [our.bowl now.bowl]) start src-zone tzid)
+        ed(when (move-moment-start when.ed new-start))
+    ::  now we support the same scrys we do earlier
+    ?:  =(variant %specific)
+      =/  res=(unit event)  (get-specific-event t.t.t.t.path almanac)
+      ?~  res
+        ~
+      ``ucal-event+!>(u.res(data (convert-event-data data.u.res)))
+    ?:  =(variant %bycal)
+      =/  res=(unit (list event))  (get-events-bycal t.t.path almanac)
+      ?~  res
+        ~
+      %-  some
+      %-  some
+      :-  %ucal-events
+      !>
+      %+  turn
+        u.res
+      |=  ev=event
+      ^-  event
+      ev(data (convert-event-data data.ev))
+    ?:  =(variant %inrange)
+      =/  res=(unit [(list event) (list projected-event)])  (get-events-inrange t.t.path almanac)
+      ?~  res
+        ~
+      %-  some
+      %-  some
+      :-  %ucal-events-in-range
+      !>
+      :-
+        %+  turn
+          -.u.res
+        |=  ev=event
+        ^-  event
+        ev(data (convert-event-data data.ev))
+      %+  turn
+        +.u.res
+      |=  pr=projected-event
+      ^-  projected-event
+      pr(data (convert-event-data data.pr))
+    !!
   ==
 ::  +apply-permissions-update: updates calendar permissions
 ::

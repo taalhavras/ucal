@@ -52,4 +52,13 @@
   ?:  =(zone-name 'utc')
     wallclock
   (utc-conversion-helper [us now] zone-name [wallclock %wallclock] sub-delta)
+::  +convert-between: given an @da in a timezone, convert to the
+::  equivalent @da in another timezone
+::
+++  convert-between
+  |=  [t=@da in-zone=@ta to-zone=@ta]
+  ^-  @da
+  ?:  =(in-zone to-zone)
+    t
+  (from-utc to-zone (to-utc in-zone t))
 --
