@@ -592,9 +592,11 @@
   ^-  moment
   =,  format
   ?>  ?=([%o *] jon)
+  =/  period-jon=json  (~(got by p.jon) 'period')
+  ?>  ?=([%o *] period-jon)
   :+  %period
-    (di:dejs (~(got by p.jon) 'start'))
-  (di:dejs (~(got by p.jon) 'end'))
+    (di:dejs (~(got by p.period-jon) 'start'))
+  (di:dejs (~(got by p.period-jon) 'end'))
 ::
 ++  ucal-action-from-json
   =<
