@@ -34,7 +34,6 @@
           (scot %p us)
           %timezone-store
           (scot %da now)
-          (scot %p us)
           %rules
           name.rules.ze
           %noun
