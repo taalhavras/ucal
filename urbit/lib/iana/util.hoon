@@ -173,7 +173,7 @@
   ?~  entries.zon
     !!
   =/  stdoff=delta  stdoff.i.entries.zon
-  ?.  (~(gte spice stdoff) from.i.entries.zon when)
+  ?.  (~(gte spice stdoff) when from.i.entries.zon)
     $(entries.zon t.entries.zon)
   ?~  to.i.entries.zon
     i.entries.zon

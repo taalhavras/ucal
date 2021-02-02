@@ -109,11 +109,11 @@
         [%x @p *]
       =/  who=@p  `@p`(slav %p `@tas`+<:path)
       ?:  =(who our.bowl)
-        (handle-on-peek t.t.path alma.state)
+        (handle-on-peek bowl t.t.path alma.state)
       =/  other-alma=(unit almanac)  (~(get by external.state) `entity`who)
       ?~  other-alma
         ~
-      (handle-on-peek t.t.path u.other-alma)
+      (handle-on-peek bowl t.t.path u.other-alma)
     ==
   ++  on-fail   on-fail:def
 --
@@ -386,7 +386,7 @@
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek
-  |=  [=path =almanac]
+  |=  [=bowl:gall =path =almanac]
   ^-  (unit (unit cage))
   ?+  path  [~ ~] :: unhandled
   ::
@@ -424,6 +424,7 @@
     ``ucal-events-in-range+!>(u.res)
   ::
       [%timezone @t %events @t *]
+    ~&  %specific-timezone-case
     =/  tzid=@t  i.t.path
     =/  variant=@t  i.t.t.t.path
     =/  convert-event-data=$-(event-data event-data)
