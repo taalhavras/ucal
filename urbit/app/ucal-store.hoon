@@ -434,7 +434,7 @@
         =/  [start=@da @da]  (moment-to-range when.ed)
         =/  new-start=@da
             (~(convert-between tzconv [our.bowl now.bowl]) start src-zone tzid)
-        ed(when (move-moment-start when.ed new-start))
+        ed(when (move-moment-start when.ed new-start), tzid (trip tzid))
     ::  now we support the same scrys we do earlier
     ?:  =(variant %specific)
       =/  res=(unit event)  (get-specific-event t.t.t.t.path almanac)
