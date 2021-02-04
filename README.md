@@ -108,12 +108,13 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 
 ### Timezones in ucal
 All scries that produce events can have `/timezone/ZONE_NAME` included after the ship. This means that the events produced wil have
-times adjusted to the specified timezone. Some examples:
+times adjusted to the specified timezone. Some examples with EST as the timezone of choice:
 ```
 /gx/~zod/events/specific/abcd-efgh/hijk-lmno/noun -> /gx/~zod/timezone/EST/abcd-efgh/hijk-lmno/noun
 /gx/~zod/events/bycal/abcd-efgh/noun -> /gx/~zod/timezone/EST/abcd-efgh/noun
 /gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun
 ```
+See the `timezone-store` section below for more details on how this actually works.
 
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
@@ -138,9 +139,21 @@ Now if ~nel creates events on this calendar, they'll be sent to ~zod's store (th
 
 ### timezone-store
 Timezones are handled with the help of a separate store - `timezone-store` to be exact. The store is itself fairly simple - it
-has one poke and two main scrys. It's built to handle the tz database - a canonical source for all timezone data, past and present.
+has one poke and two main scrys. It's built to handle the [tz database](https://github.com/eggert/tz) - a canonical source for all timezone data, past and present.
 Timezones are obviously important to `ucal`, but they will certainly be important to other applications as well which is why this
-is a wholly separate store.
+is a wholly separate store. Applications using this will probably be interested in `lib/iana/*`, specifically `lib/iana/conversion.hoon`.
+To use `timezone-store` you'll need to populate it with some data. You can either clone the repo linked above or copy specific files
+into your urbit. Which files? You'll want the ones roughly named for continents (i.e. `northamerica`, `asia`, etc.)
+Note that since the files in question don't have extensions, you'll need to rename them (just adding `.txt` is sufficient).
+Once you've imported the files you want into your urbit you can import them into `timezone-store` with
+```
+:timezone-store &timezone-store-action [%import-files ~[/path/to/first/file /path/to/second/file]]
+```
+If an import contains data previously in the store, the old data is overwritten. You can also reset the store with
+```
+:timezone-store %reset-state
+```
+if you want a truly blank slate.
 
 ### Inviting ships to your events
 Not yet implemented.
