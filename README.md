@@ -106,6 +106,15 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 | `%x ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
 | `%x ship %events %inrange cal-code start end`   | (unit [(list event) (list projected-event)]) | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
 
+### Timezones in ucal
+All scries that produce events can have `/timezone/ZONE_NAME` included after the ship. This means that the events produced wil have
+times adjusted to the specified timezone. Some examples:
+```
+/gx/~zod/events/specific/abcd-efgh/hijk-lmno/noun -> /gx/~zod/timezone/EST/abcd-efgh/hijk-lmno/noun
+/gx/~zod/events/bycal/abcd-efgh/noun -> /gx/~zod/timezone/EST/abcd-efgh/noun
+/gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun
+```
+
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
 
@@ -127,6 +136,12 @@ To enable this, you'll need to start `ucal-push-hook` on the ship you're subscri
 Now if ~nel creates events on this calendar, they'll be sent to ~zod's store (this can be verified by scrying, `events-in-range`, or just doing `:ucal-store %print-state`). Event updates and deletions will also be sent over to ~zod. If the calendar is deleted, ~zod will be unsubscribed and the calendar in ~zod's store will be deleted. If ~zod wants to manually unsubscribe we can poke the pull hook as follows.
 `:ucal-pull-hook &pull-hook-action [%remove ~nel %abcd-efgh]`
 
+### timezone-store
+Timezones are handled with the help of a separate store - `timezone-store` to be exact. The store is itself fairly simple - it
+has one poke and two main scrys. It's built to handle the tz database - a canonical source for all timezone data, past and present.
+Timezones are obviously important to `ucal`, but they will certainly be important to other applications as well which is why this
+is a wholly separate store.
+
 ### Inviting ships to your events
 Not yet implemented.
 
@@ -147,20 +162,14 @@ calendars the querying ship isn't allowed to read.
 These are the current big tasks to undertake (in no particular order).
 
 1. almanac update to use ordered map (and potentially implementing an interval tree)
-2. timezones
-3. invites
-4. more ph tests (sadly broken atm)
+2. invites
+3. more ph tests (sadly broken atm)
 
 
 ### almanac update
 branch: none
 
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
-
-### timezones
-branch: none
-
-As of this moment there's just some stub code and ideas for how to handle timezones. The current model of "just make everything UTC" is not particularly compelling - improvements can certainly be made. There are a few approaches, the most involved being to parse the IANA timezone database (a potentially herculean effort). There may be a middle ground where certain timezones can be hardcoded in some way, but ultimately parsing the db is probably the best way to go.
 
 ### invites
 branch: none
