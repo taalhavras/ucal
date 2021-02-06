@@ -223,12 +223,13 @@
               %+  cook
                 |=  name=tape
                 `zone-rules-type`[%rule `@ta`(crip name)]
-              (plus ;~(pose alf cab))
+              (plus ;~(pose alf cab hep))
             ==
             whitespace
             ::  FORMAT, arbitrary cord. sometimes contains '%s',
-            ::  sometimes is '-00', sometimes contains '/'
-            (cook crip (plus ;~(pose aln cen hep fas)))
+            ::  sometimes is '-00', sometimes contains '/', sometimes
+            ::  contains '+'
+            (cook crip (plus ;~(pose aln cen hep fas lus)))
             (stun [0 1] whitespace)
             ::  UNTIL, optional, end of entry. if omitted, entry
             ::  is valid until the present.
@@ -271,6 +272,7 @@
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
+    ~&  [%rule-entry-is line]
     =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=char]
         %+  scan
           line
@@ -278,7 +280,7 @@
           ;~  (glue whitespace)
             (jest 'Rule')
             ::  NAME
-            (plus ;~(pose alf cab))
+            (plus ;~(pose alf cab hep))
             ::  FROM, year
             (cook from-digits digits)
             ::  TO, year, 'only', or 'max'
