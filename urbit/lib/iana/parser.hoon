@@ -273,7 +273,7 @@
     |=  line=tape
     ^-  [rule-entry @ta]
     ~&  [%rule-entry-is line]
-    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=char]
+    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=cord]
         %+  scan
           line
         ;~  sfix
@@ -307,8 +307,9 @@
             ::  LETTER/S, cord
             ::  while you'd like to imagine this field containing solely
             ::  LETTERS, it can sometimes contain signed numbers!
-            ::  see: Belize (northamerica) contains -0530 here.
-            (cook crip (plus ;~(pose aln hep)))
+            ::  see: Belize (northamerica) is -0530
+            ::  Ghana (africa) is +0020
+            (cook crip (plus ;~(pose aln hep lus)))
           ==
           ::  now there might be trailing whitespace and stuff so
           ::  just parse it and ignore.
