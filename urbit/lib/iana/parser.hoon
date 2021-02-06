@@ -3,7 +3,7 @@
 |%
 ::  +parse-time: rule for parsing time in HH:MM or HH:MM:SS format. does
 ::  not assume leading zeros (will parse 1:00 and 01:00 identically).
-::  parses 0 as ~s0.
+::  parses 0 as ~s0, 1 as ~h1, etc.
 ::
 ++  parse-time
   ::  rule for parsing one or two digit numbers
@@ -16,9 +16,7 @@
     ^-  @dr
     =/  hours=@dr  (mul hr ~h1)
     ?~  l
-      ::  only support "0" in this manner
-      ?>  =(hr 0)
-      ~s0
+      (mul hr ~h1)
     =/  minutes=@dr  (mul i.l ~m1)
     ;:  add
       hours
