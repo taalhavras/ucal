@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import _, { capitalize } from 'lodash';
 
-import { Text, Box, Button } from '@tlon/indigo-react';
+import { Text, Box, Button, Checkbox } from '@tlon/indigo-react';
 import moment from 'moment';
 import Calendar, { NavDirection, Timeframe } from '../types/Calendar';
 import WeeklyView from './WeeklyView';
@@ -12,6 +12,7 @@ import Title from '../components/lib/Title';
 import MonthTile from '../components/lib/MonthTile';
 import { match, RouteComponentProps, withRouter } from 'react-router-dom';
 import { Location, History } from 'history'
+import Actions from '../logic/actions';
 
 interface RouterProps {
   timeframe: string
@@ -23,6 +24,8 @@ interface Props extends RouteComponentProps<RouterProps> {
   location: Location
   match: match<RouterProps>
   calendars: Calendar[]
+  actions: Actions
+  userLocation: string
 }
 
 interface State {
@@ -74,14 +77,12 @@ class CalendarView extends Component<Props, State> {
     this.setState({ selectedDay, timeframe, displayDay: selectedDay })
   }
 
-  changeRange = (isSidebar?: boolean) => (direction: NavDirection) => () => {
+  changeRange = (direction: NavDirection) => () => {
     const { state: { displayDay, timeframe, selectedDay } } = this
-    const newDisplay = moment(displayDay)[direction](1, isSidebar ? 'month' : timeframe).toDate()
-    const newSelected = isSidebar ? selectedDay : newDisplay
+    const newDisplay = moment(displayDay)[direction](1, timeframe).toDate()
+    const newSelected = newDisplay
     
-    if (!isSidebar) {
-      this.pushViewRoute(timeframe, newSelected)
-    }
+    this.pushViewRoute(timeframe, newSelected)
     this.setState({ displayDay: newDisplay, selectedDay: newSelected })
   }
 
@@ -112,8 +113,8 @@ class CalendarView extends Component<Props, State> {
           <Button onClick={this.goToToday}>Today</Button>
 
           <Box height='100%' display='flex' flexDirection='row' margin='0px 24px'>
-            <Button onClick={changeRange()(NavDirection.left)} fontSize='3' border='none'>&lsaquo;</Button>
-            <Button onClick={changeRange()(NavDirection.right)} fontSize='3' border='none'>&rsaquo;</Button>
+            <Button onClick={changeRange(NavDirection.left)} fontSize='3' border='none'>&lsaquo;</Button>
+            <Button onClick={changeRange(NavDirection.right)} fontSize='3' border='none'>&rsaquo;</Button>
           </Box>
 
           <Title {...this.state} />
@@ -130,7 +131,12 @@ class CalendarView extends Component<Props, State> {
       <Box width='100%' display='flex' flexDirection='row'>
         <Box display='flex' flexDirection='column' margin='32px 2% 0px 0px'>
           <Button onClick={createEvent} marginBottom='20px' width='100px'><Text fontSize='20px'>+</Text> <Text margin='2px 0px 0px 6px' fontSize='14px'>Create</Text></Button>
-          <MonthTile {...this.state} selectDay={selectDay(true)} showYear calendars={calendars} selectedDay={selectedDay} changeRange={changeRange(true)} />
+          <MonthTile {...this.state} selectDay={selectDay(true)} showYear showNavArrows selectedDay={selectedDay} />
+          <Text fontSize='1' margin='20px 0px 12px 0px'>Calendars</Text>
+          {calendars.map((cal, ind) => <Box display='flex' flexDirection='row' key={`cal-${ind}`}>
+            <Checkbox selected={cal.active} />
+            <Text marginLeft="8px">{cal.owner}_{cal.title}</Text>
+          </Box>)}
         </Box>
         
         {layout}

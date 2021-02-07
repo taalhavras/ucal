@@ -58,8 +58,6 @@ export default class DailyView extends Component<ViewProps, State> {
     const hours = getHours()
     const selectedMoment = moment(selectedDay)
 
-    console.log(calendars);
-
     const startDay = moment(selectedMoment);
     const endDay = moment(selectedMoment).add(1, 'day');
 

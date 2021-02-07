@@ -52,15 +52,17 @@ export class App extends Component<Props, State> {
   }
 
   render() {
+    const { state } = this
+
     return (
       <BrowserRouter>
-        <ThemeProvider theme={this.state.dark ? dark : light}>
+        <ThemeProvider theme={state.dark ? dark : light}>
         <Box display='flex' flexDirection='column' position='absolute' backgroundColor='white' height='100%' width='100%' px={[0,4]} pb={[0,4]}>
         <HeaderBar/>
-        <Route exact path="/~calendar" render={ () => <CalendarView {...this.state} />}/>
-        <Route exact path="/~calendar/:timeframe/:displayDay" render={ () => <CalendarView {...this.state} />}/>
-        <Route exact path="/~calendar/event" render={ () => <EventView {...this.state} />}/>
-        <Route exact path="/~calendar/event/:calendar/:event" render={ () => <EventView {...this.state} {...this.actions} />}/>
+        <Route exact path="/~calendar" render={ () => <CalendarView {...state} actions={this.actions} />}/>
+        <Route exact path="/~calendar/:timeframe/:displayDay" render={ () => <CalendarView {...state} actions={this.actions} />}/>
+        <Route exact path="/~calendar/event" render={ () => <EventView {...state} calendars={state.calendars} actions={this.actions} ship={this.api.authTokens.ship} />}/>
+        <Route exact path="/~calendar/event/:calendar/:event" render={ () => <EventView {...state} actions={this.actions} ship={this.api.authTokens.ship} />}/>
         </Box>
         </ThemeProvider>
       </BrowserRouter>

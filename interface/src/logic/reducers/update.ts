@@ -17,11 +17,12 @@ export default class UpdateReducer {
 
       switch (property) {
         case 'events':
-          const events = value.map((e) => new Event(e.data))
+          const events = value.filter((re) => !!re).map((e) => new Event(e))
+          state.events = events
           state.calendars = Calendar.generateCalendars(state.calendars, events)
           break;
         case 'calendars':
-          const calendars = value.map((c) => new Calendar(c))
+          const calendars = value.filter((rc) => !!rc).map((c) => new Calendar(c))
           state.calendars = Calendar.generateCalendars(calendars, state.events)
           break;
         case 'location':

@@ -20,34 +20,32 @@ export interface Permissions {
 
 export default class Calendar {
   owner: string
-  calendar_code: string
+  calendarCode: string
   title: string
   permissions: Permissions
   created: Date
   modified: Date
   events: Event[] = []
+  active = true
 
   constructor(data: any) {
-    console.log(data)
     this.owner = data.owner
-    this.calendar_code = data['calendar-code']
+    this.calendarCode = data['calendar-code']
     this.title = data.title
     this.permissions = data.permissions
-    this.created = data.created
-    this.modified = data.modified
+    this.created = data['date-created'] && new Date(data['date-created'])
+    this.modified = data['last-modified'] && new Date(data['last-modified'])
   }
 
   static generateCalendars = (calendars: Calendar[], events: Event[]) : Calendar[] => {
     const all = new Map<string, Calendar | undefined>()
 
-    calendars.forEach((calendar) => all.set(calendar.calendar_code, calendar))
+    calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar))
     events.forEach((event) => {
-      const updatedCalendar = all.get(event.calendar_code)
+      const updatedCalendar = all.get(event.calendarCode)
       updatedCalendar?.events.push(event)
-      all.set(event.calendar_code, updatedCalendar)
+      all.set(event.calendarCode, updatedCalendar)
     })
-
-    console.log(all)
 
     const formattedCalendars : Calendar[] = []
     for (let item of all.values()) {
@@ -65,6 +63,6 @@ export interface ViewProps {
   displayDay: Date
   selectedDay: Date
   selectDay: (day: Date) => () => void
-  location: string
+  userLocation: string
 }
 

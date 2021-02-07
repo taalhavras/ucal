@@ -4,7 +4,7 @@ import SunCalc from 'suncalc'
 
 import { Box, Text, Row } from '@tlon/indigo-react'
 import styled from "styled-components";
-import { getHours } from '../../lib/dates'
+import { getHours, padTime } from '../../lib/dates'
 
 const toRelativeTime = (date, referenceTime, unit) => moment(referenceTime)
   .diff(date, unit)
@@ -109,7 +109,7 @@ export default class HoursBar extends Component<Props> {
           <Hour
             margin={hour === 0 ? '16px 4px 0px 0px' : '32px 4px 0px 0px'}
             key={`hour-${hour}`}>
-            {hour.toString().padStart(2, 0)}:00
+            {padTime(hour)}:00
           </Hour>)}
       </Box>
     </Row> 

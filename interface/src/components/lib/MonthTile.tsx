@@ -5,38 +5,59 @@ import moment from 'moment'
 import Calendar, { NavDirection } from '../../types/Calendar'
 import DateCircle from './DateCircle'
 import { getMonthDays } from '../../lib/dates'
+import { display } from 'styled-system'
 
 interface Props {
   selectedDay: Date
   displayDay: Date
   year?: number
   month?: number
-  calendars: Calendar[]
   showYear?: boolean
   showNavArrows?: boolean
   selectDay: (day: Date) => () => void
   changeRange?: (direction: NavDirection) => () => void
 }
 
-interface State {}
+interface State {
+  displayDay: Date
+}
 
 class MonthTile extends Component<Props, State> {
   constructor(props) {
     super(props)
+
+    this.state = { displayDay: props.displayDay }
+  }
+
+  static getDerivedStateFromProps = (nextProps: Props, prevState: State) => {
+    return nextProps.changeRange ? { displayDay: nextProps.displayDay } : prevState
+  }
+
+  changeRange = (dir: NavDirection) => () : void => {
+    if (this.props.changeRange) {
+      this.props.changeRange(dir)()
+    } else {
+      const { state: { displayDay } } = this
+      const newDisplay = moment(displayDay)[dir](1, 'month').toDate()
+      console.log(displayDay, newDisplay)
+      this.setState({ displayDay: newDisplay })
+    }
   }
 
   render() {
-    const { props: { showYear, selectedDay, displayDay, changeRange } } = this
+    const { props: { showYear, selectedDay, showNavArrows }, state: { displayDay }, changeRange } = this
 
     const month = this.props.month === undefined ? displayDay.getMonth() : this.props.month
     const year = this.props.year || displayDay.getFullYear()
     const days = getMonthDays(year, month)
 
+    console.log('MONTH', month)
+
     return (
       <Box display='flex' flexDirection='column'>
         <Box display='flex' flexDirection='row' justifyContent='space-between'>
           <Text fontSize='14px' margin='4px 0px 8px 8px' opacity={showYear || moment().get('month') === month ? '0.9' : '0.6'}>{moment({ year, month }).format(showYear ? 'MMMM YYYY' : 'MMMM')}</Text>
-          {!!changeRange && <Box display='flex' flexDirection='row' justifyContent='space-between'>
+          {!!showNavArrows && <Box display='flex' flexDirection='row' justifyContent='space-between'>
             <Button height='24px' onClick={changeRange(NavDirection.left)} fontSize='2' border='none'>&lsaquo;</Button>
             <Button height='24px' onClick={changeRange(NavDirection.right)} fontSize='2' border='none'>&rsaquo;</Button>
           </Box>}

@@ -35,6 +35,7 @@ export default class Subscription {
       if (calendars.length < 1) {
         try {
           await this.actions.createCalendar('default')
+          await this.actions.getCalendars()
         } catch (error) {}
       }
       
@@ -45,6 +46,7 @@ export default class Subscription {
       if (error.toString().includes('Not found')) {
         try {
           await this.actions.createCalendar('default')
+          await this.actions.getCalendars()
         } catch (createError) {
           warnError('CREATE CALENDAR')(createError)
         }

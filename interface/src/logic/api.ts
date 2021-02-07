@@ -38,7 +38,7 @@ export default class UrbitApi {
   }
 
   action = (appl, mark, data) : Promise<void> => {
-    console.log('ACTION', this.authTokens.ship, appl, mark, data)
+    console.log('ACTION', this.authTokens.ship, appl, mark, JSON.stringify(data))
     return new Promise((resolve, reject) => {
       (window as any).urb.poke(this.authTokens.ship, appl, mark, data,
         (json) => {

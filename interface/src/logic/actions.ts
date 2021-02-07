@@ -27,12 +27,17 @@ export default class Actions {
   }
 
   createEvent = async (event: EventForm) : Promise<void> => {
-    await this.api.action('ucal-store', 'ucal-action', {
-      'create-event': event.toExportFormat()
-    })
+    for(let key in event) {
+      if (event[key] === undefined) {
+        delete event[key]
+      }
+    }
+    console.log('CREATING:', event.toExportFormat())
+    await this.api.action('ucal-store', 'ucal-action', event.toExportFormat())
+    await this.getEvents()
   }
 
-  createCalendar = async (title: string) : Promise<void> => {
+  createCalendar = async (title: string, isPublic = false) : Promise<void> => {
     await this.api.action('ucal-store', 'ucal-action', {
       'create-calendar': {
         title,
@@ -40,7 +45,7 @@ export default class Actions {
           readers: [],
           writers: [],
           acolytes: [],
-          public: true
+          public: isPublic
         }
       }
     })

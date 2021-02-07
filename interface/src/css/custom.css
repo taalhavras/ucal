@@ -159,13 +159,28 @@ textarea, select, input, button {
 
 /* Calendar-specific */
 
-select.timeframe {
+select {
   appearance: auto;
   -webkit-appearance: auto;
   -moz-appearance: auto;
   font-size: 14px;
   color:rgba(0, 0, 0, 0.8);
+}
+
+select.timeframe {
   width: 72px;
+}
+
+.repeat-interval {
+  background-color: #f1f3f4;
+  border-radius: 4px;
+  padding-right: 8px;
+}
+
+.repeat-interval select {
+  padding: 8px;
+  background-color: #f1f3f4;
+  border-radius: 4px;
 }
 
 .clickable {
@@ -211,4 +226,8 @@ button.dark {
 
 button.dark:hover {
   background-color: rgba(0, 0, 0, 0.6);
+}
+
+.time-entry:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }

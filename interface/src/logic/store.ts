@@ -5,6 +5,7 @@ import UpdateReducer from './reducers/update'
 export interface StoreState {
   calendars: Calendar[]
   events: Event[]
+  userLocation: string
 }
 
 export default class Store {
@@ -36,7 +37,6 @@ export default class Store {
 
     updateStore(data) {
       const json = data.data
-      console.log('HANDLING DATA:', JSON.stringify(json))
 
       Object.keys(json).forEach((key: string) => {
         this.updateReducer.reduce(key, json, this.state)
