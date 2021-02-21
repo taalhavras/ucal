@@ -106,7 +106,7 @@
       (startswith line (jest '#'))
       =(line "")
   ==
-::  +is-rule-line: checks if a line is part of a rule section
+::  +is-rule-line: checks if a line is part of a rule section.
 ::
 ++  is-rule-line
   |=  line=tape
@@ -253,7 +253,10 @@
       |-
       ?~  lines
         [entries rule-name ~]
-      ?:  (can-skip i.lines)
+      ::  FIXME currently special cases out lines containing '<=' as well.
+      ::  This is only used once as of 02/21/2021 - for Rule 'Zion'
+      ::  and isn't currently supported.
+      ?:  |((can-skip i.lines) !=((find "<=" i.lines) ~))
         $(lines t.lines)
       ?.  (is-rule-line i.lines)
         [entries rule-name lines]
