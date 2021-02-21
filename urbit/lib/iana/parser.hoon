@@ -216,8 +216,10 @@
             whitespace
             ::  RULE, nothing, delta, or name of tz-rule
             ;~  pose
-              (cook |=(* `zone-rules-type`[%nothing ~]) hep)
+              :: order here is important - since negative deltas also
+              :: start with hep we should consider them first.
               (cook |=(d=delta `zone-rules-type`[%delta d]) parse-delta)
+              (cook |=(* `zone-rules-type`[%nothing ~]) hep)
               %+  cook
                 |=  name=tape
                 `zone-rules-type`[%rule `@ta`(crip name)]
