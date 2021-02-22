@@ -114,7 +114,7 @@ times adjusted to the specified timezone. Some examples with EST as the timezone
 /gx/~zod/events/bycal/abcd-efgh/noun -> /gx/~zod/timezone/EST/events/bycal/abcd-efgh/noun
 /gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun
 ```
-See the `timezone-store` section below for more details on how this actually works.
+You'll need to run `timezone-store`on your ship with some imported data for this to work. See the `timezone-store` section below for more details on how to set this up.
 
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
