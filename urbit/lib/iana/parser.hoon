@@ -275,7 +275,6 @@
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
-    ~&  [%rule-entry-is line]
     =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=cord]
         %+  scan
           line
@@ -378,5 +377,5 @@
     =/  [alias=@t real=@t]  (parse-link i.lines)
     $(links (~(put by links) alias real), lines t.lines)
   ~&  [%unparseable-timezone-line i.lines]
-  !!
+  $(lines t.lines)
 --

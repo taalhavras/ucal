@@ -173,10 +173,13 @@
   ?~  entries.zon
     !!
   =/  stdoff=delta  stdoff.i.entries.zon
-  ?.  (~(gte spice stdoff) when from.i.entries.zon)
+  ::  if when < from, then skip
+  ?:  (~(lth spice stdoff) when from.i.entries.zon)
     $(entries.zon t.entries.zon)
   ?~  to.i.entries.zon
     i.entries.zon
+  ::  since when >= from, if it's less than to it's
+  ::  relevant for our time
   ?:  (~(lth spice stdoff) u.to.i.entries.zon when)
     i.entries.zon
   $(entries.zon t.entries.zon)
