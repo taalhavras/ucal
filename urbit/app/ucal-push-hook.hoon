@@ -146,7 +146,7 @@
   =/  us=@tas  (scot %p our.bowl)
   =/  alma=almanac
       .^  almanac
-        %gy
+        %gx
         us
         %ucal-store
         (scot %da now.bowl)

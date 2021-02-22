@@ -173,44 +173,11 @@
   ?~  entries.zon
     !!
   =/  stdoff=delta  stdoff.i.entries.zon
-  ?.  (~(gte spice stdoff) from.i.entries.zon when)
+  ?.  (~(gte spice stdoff) when from.i.entries.zon)
     $(entries.zon t.entries.zon)
   ?~  to.i.entries.zon
     i.entries.zon
   ?:  (~(lth spice stdoff) u.to.i.entries.zon when)
     i.entries.zon
   $(entries.zon t.entries.zon)
-::
-::
-++  utc-conversion-helper
-  |=  [zon=zone st=seasoned-time func=$-([@da delta] @da)]
-  ^-  @da
-  ::  get relevant zone entry
-  =/  ze=zone-entry  (get-zone-entry zon st)
-  =/  pre-rules=@da  (func when.st stdoff.ze)
-  ?:  ?=([%nothing *] rules.ze)
-    pre-rules
-  ?:  ?=([%delta *] rules.ze)
-    (func pre-rules +:rules.ze)
-  ?:  ?=([%rule *] rules.ze)
-    ::  apply offset based on rules - how to get the timezones by name?
-    ::  .^ with a store? pass a map?
-    =/  tzr=tz-rule  !!
-    =/  entry=rule-entry  (find-rule-entry st stdoff.ze tzr)
-    (func pre-rules save.entry)
-  !!
-::  +from-utc: convert an @da in utc to the corresponding wallclock time
-::  in the given timezone.
-::
-++  from-utc
-  |=  [zon=zone utc=@da]
-  ^-  @da
-  (utc-conversion-helper zon [utc %utc] add-delta)
-::  +to-utc: convert an @da in wallclock time in the specified timezone
-::  to the corresponding utc time.
-::
-++  to-utc
-  |=  [zon=zone wallclock=@da]
-  ^-  @da
-  (utc-conversion-helper zon [wallclock %wallclock] sub-delta)
 --
