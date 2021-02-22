@@ -110,8 +110,8 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 All scries that produce events can have `/timezone/ZONE_NAME` included after the ship. This means that the events produced wil have
 times adjusted to the specified timezone. Some examples with EST as the timezone of choice:
 ```
-/gx/~zod/events/specific/abcd-efgh/hijk-lmno/noun -> /gx/~zod/timezone/EST/abcd-efgh/hijk-lmno/noun
-/gx/~zod/events/bycal/abcd-efgh/noun -> /gx/~zod/timezone/EST/abcd-efgh/noun
+/gx/~zod/events/specific/abcd-efgh/hijk-lmno/noun -> /gx/~zod/timezone/EST/events/specific/abcd-efgh/hijk-lmno/noun
+/gx/~zod/events/bycal/abcd-efgh/noun -> /gx/~zod/timezone/EST/events/bycal/abcd-efgh/noun
 /gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun
 ```
 See the `timezone-store` section below for more details on how this actually works.
@@ -144,7 +144,8 @@ Timezones are obviously important to `ucal`, but they will certainly be importan
 is a wholly separate store. Applications using this will probably be interested in `lib/iana/*`, specifically `lib/iana/conversion.hoon`.
 To use `timezone-store` you'll need to populate it with some data. You can either clone the repo linked above or copy specific files
 into your urbit. Which files? You'll want the ones roughly named for continents (i.e. `northamerica`, `asia`, etc.)
-Note that since the files in question don't have extensions, you'll need to rename them (just adding `.txt` is sufficient).
+Note that since the files in question don't have extensions, you'll need to rename them (just adding `.txt` is sufficient). There
+is a script in this repo that does this - run `import-timezones.sh DIR` to import all the files into the supplied directory.
 Once you've imported the files you want into your urbit you can import them into `timezone-store` with
 ```
 :timezone-store &timezone-store-action [%import-files ~[/path/to/first/file /path/to/second/file]]
