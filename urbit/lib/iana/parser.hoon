@@ -3,7 +3,7 @@
 |%
 ::  +parse-time: rule for parsing time in HH:MM or HH:MM:SS format. does
 ::  not assume leading zeros (will parse 1:00 and 01:00 identically).
-::  parses 0 as ~s0.
+::  parses 0 as ~s0, 1 as ~h1, etc.
 ::
 ++  parse-time
   ::  rule for parsing one or two digit numbers
@@ -16,9 +16,7 @@
     ^-  @dr
     =/  hours=@dr  (mul hr ~h1)
     ?~  l
-      ::  only support "0" in this manner
-      ?>  =(hr 0)
-      ~s0
+      (mul hr ~h1)
     =/  minutes=@dr  (mul i.l ~m1)
     ;:  add
       hours
@@ -108,7 +106,7 @@
       (startswith line (jest '#'))
       =(line "")
   ==
-::  +is-rule-line: checks if a line is part of a rule section
+::  +is-rule-line: checks if a line is part of a rule section.
 ::
 ++  is-rule-line
   |=  line=tape
@@ -218,17 +216,20 @@
             whitespace
             ::  RULE, nothing, delta, or name of tz-rule
             ;~  pose
-              (cook |=(* `zone-rules-type`[%nothing ~]) hep)
+              :: order here is important - since negative deltas also
+              :: start with hep we should consider them first.
               (cook |=(d=delta `zone-rules-type`[%delta d]) parse-delta)
+              (cook |=(* `zone-rules-type`[%nothing ~]) hep)
               %+  cook
                 |=  name=tape
                 `zone-rules-type`[%rule `@ta`(crip name)]
-              (plus ;~(pose alf cab))
+              (plus ;~(pose alf cab hep))
             ==
             whitespace
             ::  FORMAT, arbitrary cord. sometimes contains '%s',
-            ::  sometimes is '-00', sometimes contains '/'
-            (cook crip (plus ;~(pose aln cen hep fas)))
+            ::  sometimes is '-00', sometimes contains '/', sometimes
+            ::  contains '+'
+            (cook crip (plus ;~(pose aln cen hep fas lus)))
             (stun [0 1] whitespace)
             ::  UNTIL, optional, end of entry. if omitted, entry
             ::  is valid until the present.
@@ -252,7 +253,10 @@
       |-
       ?~  lines
         [entries rule-name ~]
-      ?:  (can-skip i.lines)
+      ::  FIXME currently special cases out lines containing '<=' as well.
+      ::  This is only used once as of 02/21/2021 - for Rule 'Zion'
+      ::  and isn't currently supported.
+      ?:  |((can-skip i.lines) !=((find "<=" i.lines) ~))
         $(lines t.lines)
       ?.  (is-rule-line i.lines)
         [entries rule-name lines]
@@ -271,14 +275,15 @@
   ++  parse-rule-entry
     |=  line=tape
     ^-  [rule-entry @ta]
-    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=char]
+    ~&  [%rule-entry-is line]
+    =/  [@t name=tape from=@ud to=$@(@ud [@tas ~]) @t month-code=@ud on=rule-on at=[@dr time-flavor] save=delta letter=cord]
         %+  scan
           line
         ;~  sfix
           ;~  (glue whitespace)
             (jest 'Rule')
             ::  NAME
-            (plus ;~(pose alf cab))
+            (plus ;~(pose alf cab hep))
             ::  FROM, year
             (cook from-digits digits)
             ::  TO, year, 'only', or 'max'
@@ -305,8 +310,9 @@
             ::  LETTER/S, cord
             ::  while you'd like to imagine this field containing solely
             ::  LETTERS, it can sometimes contain signed numbers!
-            ::  see: Belize (northamerica) contains -0530 here.
-            (cook crip (plus ;~(pose aln hep)))
+            ::  see: Belize (northamerica) is -0530
+            ::  Ghana (africa) is +0020
+            (cook crip (plus ;~(pose aln hep lus)))
           ==
           ::  now there might be trailing whitespace and stuff so
           ::  just parse it and ignore.
@@ -346,9 +352,8 @@
 ::  tzrules and zones (keyed by name)
 ::
 ++  parse-timezones
-  =<
   |=  input=wall
-  ^-  [(map @t zone) (map @t tz-rule)]
+  ^-  [(map @t zone) (map @t tz-rule) (map @t @t)]
   =/  lines=wall
       %+  turn
         input
@@ -360,7 +365,7 @@
   =|  links=(map @t @t)
   |-
   ?~  lines
-    (resolve-links zones rules links)
+    [zones rules links]
   ?:  (can-skip i.lines)
     $(lines t.lines)
   ?:  (is-rule-line i.lines)
@@ -374,16 +379,4 @@
     $(links (~(put by links) alias real), lines t.lines)
   ~&  [%unparseable-timezone-line i.lines]
   !!
-  |%
-  ++  resolve-links
-    |=  [zones=(map @t zone) rules=(map @t tz-rule) links=(map @t @t)]
-    ^-  [(map @t zone) (map @t tz-rule)]
-    :_  rules
-    =/  pairs=(list [@t @t])  ~(tap by links)
-    |-
-    ?~  pairs
-      zones
-    =/  [alias=@t real=@t]  i.pairs
-    $(pairs t.pairs, zones (~(put by zones) alias (~(got by zones) real)))
-  --
 --
