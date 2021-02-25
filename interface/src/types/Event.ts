@@ -1,4 +1,6 @@
+import { Rule } from '@tlon/indigo-react'
 import moment from 'moment'
+import { isSameDay, sameMonthDay, getHoursMinutes } from '../lib/dates'
 import { EventViewState } from '../views/EventView'
 
 export interface Coords {
@@ -14,6 +16,27 @@ export class EventLoc {
     this.address = data.address
     this.geo = data.geo
   }
+
+  toExportFormat = () => {
+    if (!this.geo) {
+      return { address: this.address }
+    }
+
+    return {
+      address: this.address,
+      geo: this.geo
+    }
+  }
+
+  compareTo = (other: EventLoc) : number => {
+    if (this.address === other.address) {
+      return 0
+    } else if (this.address > other.address) {
+      return 1
+    } else {
+      return -1
+    }
+  }
 }
 
 export enum RepeatInterval {
@@ -25,16 +48,16 @@ export enum RepeatInterval {
 }
 
 export enum Weekday {
+  sun = 'sun',
   mon = 'mon',
   tue = 'tue',
   wed = 'wed',
   thu = 'thu',
   fri = 'fri',
   sat = 'sat',
-  sun = 'sun',
 }
 
-export const WEEKDAYS = [ Weekday.mon, Weekday.tue, Weekday.wed, Weekday.thu, Weekday.fri, Weekday.sat, Weekday.sun ]
+export const WEEKDAYS = [ Weekday.sun, Weekday.mon, Weekday.tue, Weekday.wed, Weekday.thu, Weekday.fri, Weekday.sat ]
 
 export class Era {
   type: {
@@ -59,7 +82,38 @@ export class Era {
     this.rrule = data?.rrule
   }
 
-  fromRepeatInterval = (repeatInterval: RepeatInterval): Era => {
+  isOnDay = (day: Date, start: Date, end: Date) : boolean => {
+    const { type, interval, rrule } = this
+    const moDay = moment(day)
+
+    const untilMatch = !!type.until && moDay.isSameOrBefore(type.until)
+    const instancesMatch = !!type.instances && false // How to calculate the number of instances?
+    const typeMatch = (type.infinite !== undefined) || untilMatch || instancesMatch
+
+    const weeklyMatch = !!rrule.weekly?.includes(moDay.format('ddd').toString().toLowerCase() as Weekday)
+    const monthlyMatch = !!rrule.monthly && (day.getDate() === start.getDate() || day.getDate() === end.getDate()) // TODO: handle day-of-week case
+    const yearlyMatch = !!rrule.yearly && (sameMonthDay(day, start) || sameMonthDay(day, end))
+
+    const repeatMatch = rrule.daily !== undefined || weeklyMatch || monthlyMatch || yearlyMatch
+
+    return typeMatch && repeatMatch
+  }
+
+  getRepeatInterval = () : RepeatInterval => {
+    if (this.rrule.daily !== undefined) {
+      return RepeatInterval.daily
+    } else if (this.rrule.weekly) {
+      return RepeatInterval.weekly
+    } else if (this.rrule.monthly) {
+      return RepeatInterval.monthly
+    } else {
+      return RepeatInterval.yearly
+    }
+  }
+
+  getWeekdays = () : Weekday[] => this.rrule?.weekly || []
+
+  fromRepeatInterval = (repeatInterval: RepeatInterval, weekdays: Weekday[]): Era => {
     // if doesNotRepeat, then shouldn't do anything
     this.type = {
       infinite: true
@@ -71,7 +125,7 @@ export class Era {
         this.rrule = { daily: true }
         break
       case RepeatInterval.weekly:
-        this.rrule = { weekly: WEEKDAYS }
+        this.rrule = { weekly: weekdays }
         break
       case RepeatInterval.monthly:
         this.rrule = { monthly: { on: new Date().getDate() } }
@@ -84,38 +138,20 @@ export class Era {
     return this
   }
 
-  // {
-  //   'create-event': {
-  //     'calendar-code': 'njru-musv',
-  //     'organizer': '~zod',
-  //     'title': 'my-event',
-  //     'desc': 'some-description',
-  //     'tzid': 'utc',
-  //     'location': {
-  //       'address': "14 Manning Ave, Medford, MA 02155"
-  //     },
-  //     'when': {
-  //       'period': {
-  //         'start': new Date().getTime(),
-  //         'end': new Date().getTime() + 50000
-  //       }
-  //     },
-  //     'era': {
-  //       'type': {
-  //         'until': new Date().getTime() + 31536000000,
-  //       },
-  //       'interval': 1,
-  //     'rrule': {
-  //         'daily': ,
-  //         'monthly': {
-  //           'on': *number*,
-  //           'weekday': []
-  //         },
-  //         'yearly': null
-  //        'weekly': ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
-  //     }
-  //   }
-  // }
+  matchesInterval = (repeatInterval: RepeatInterval) : boolean => {
+    switch (repeatInterval) {
+      case RepeatInterval.daily:
+        return !this.rrule?.daily
+      case RepeatInterval.weekly:
+        return !this.rrule?.weekly
+      case RepeatInterval.monthly:
+        return !this.rrule?.monthly
+      case RepeatInterval.yearly:
+        return !this.rrule?.yearly
+    }
+
+    return false
+  }
 }
 
 export class Period {
@@ -130,6 +166,10 @@ export class Period {
       end: data?.end ? new Date(data.end) : new Date(),
     }
   }
+
+  getStart = () : Date => this.period.start
+
+  getEnd = () : Date => this.period.end
 
   setStart = (start: Date) : Period => {
     this.period = { start, end: this.period.end }
@@ -205,7 +245,7 @@ export class EventForm {
     this.start = data.start
     this.end = data.end
     if (data.repeatInterval !== RepeatInterval.doesNotRepeat) {
-      this.era = new Era().fromRepeatInterval(data.repeatInterval)
+      this.era = new Era().fromRepeatInterval(data.repeatInterval, data.weekdays)
     }
     this.allDay = data.allDay
     this.startTime = data.startTime
@@ -231,19 +271,37 @@ export class EventForm {
     }
   }
 
-  toExportFormat = () => ({
-    'create-event': {
+  isUnchanged = (state: EventViewState) : boolean => {
+    return this.title === state.title &&
+    this.desc === state.desc &&
+    this.location.compareTo(state.location) === 0 &&
+    this.start === state.start &&
+    this.end === state.end &&
+    ( (!this.era && state.repeatInterval === RepeatInterval.doesNotRepeat) || !this.era?.matchesInterval(state.repeatInterval) ) &&
+    this.startTime === state.startTime &&
+    this.endTime === state.endTime &&
+    this.allDay === state.allDay
+  }
+
+  toExportFormat = (update: boolean) => {
+    const data = {
       'calendar-code': this.calendarCode,
       'event-code': this.eventCode,
       organizer: this.organizer,
       title: this.title,
       desc: this.desc,
       tzid: this.tzid,
-      location: this.location,
+      location: this.location.toExportFormat(),
       when: { period: this.getPeriod() },
       era: this.era
     }
-  })
+
+    if (update) {
+      delete data.organizer
+    }
+
+    return update ? { 'update-event': data } : { 'create-event': data }
+  }
 }
 
 export default class Event {
@@ -252,8 +310,9 @@ export default class Event {
   organizer: string
   title: string
   desc: string
+  location: EventLoc
   when: Period
-  era: Era
+  era?: Era
   tzid: string
   invites: EventInvite[]
   rsvp: Rsvp
@@ -266,6 +325,7 @@ export default class Event {
     this.organizer = data.organizer
     this.title = data.title
     this.desc = data.desc
+    this.location = new EventLoc(data.location)
     this.when = new Period({ ...data })
     if (era) {
       this.era = new Era(era)
@@ -275,5 +335,38 @@ export default class Event {
     this.rsvp = data.rsvp || Rsvp.yes
     this.created = new Date(data['date-created'])
     this.modified = new Date(data['last-modified'])
+  }
+
+  getStart = () : Date => this.when.getStart()
+
+  getEnd = () : Date => this.when.getEnd()
+
+  isOnDay = (day: Date) : boolean => {
+    const { era, when, getStart, getEnd } = this
+
+    if (isSameDay(getStart(), day) || isSameDay(getEnd(), day)) {
+      return true
+    }
+
+    return !!era && era.isOnDay(day, getStart(), getEnd())
+  }
+
+  toFormFormat = () : EventViewState => {
+    return {
+      ...this,
+      location: new EventLoc({ address: '' }),
+      start: this.getStart(),
+      repeatInterval: this.era?.getRepeatInterval() || RepeatInterval.doesNotRepeat,
+      weekdays: this.era?.getWeekdays(),
+      end: this.getEnd(),
+      allDay: Math.round(moment(this.getStart()).diff(this.getEnd(), 'hours')) === 24,
+      startTime: getHoursMinutes(this.getStart()),
+      endTime: getHoursMinutes(this.getEnd()),
+      event: this
+    }
+  }
+
+  isUnchanged = (state: EventViewState) : boolean => {
+    return new EventForm(state).isUnchanged(this.toFormFormat())
   }
 }

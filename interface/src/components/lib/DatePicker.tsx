@@ -32,9 +32,11 @@ export default class DatePicker extends Component<Props, State> {
 
   render() {
     const { props: { selectedDay, startDate }, state: { showCalendar }, toggleDate, selectDate } = this
+
+    const endAfterStart = startDate && moment(startDate).startOf('day').isAfter(selectedDay)
       
     return <Box>
-      <Box margin='20px 0px 0px' padding="8px" borderRadius="4px" backgroundColor={startDate && moment(startDate).isAfter(selectedDay) ? "#fce8e6" : "#f1f3f4"}
+      <Box margin='20px 0px 0px' padding="8px" borderRadius="4px" backgroundColor={endAfterStart ? "#fce8e6" : "#f1f3f4"}
         onClick={toggleDate} cursor='pointer'>
         <Text fontSize='14px'>{moment(selectedDay).format('MMM D, YYYY')}</Text>
       </Box>

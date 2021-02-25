@@ -37,10 +37,15 @@ export default class Calendar {
     this.modified = data['last-modified'] && new Date(data['last-modified'])
   }
 
+  clearEvents = () => {
+    this.events = []
+    return this
+  }
+
   static generateCalendars = (calendars: Calendar[], events: Event[]) : Calendar[] => {
     const all = new Map<string, Calendar | undefined>()
 
-    calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar))
+    calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar.clearEvents()))
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
       updatedCalendar?.events.push(event)
@@ -56,13 +61,19 @@ export default class Calendar {
 
     return formattedCalendars
   }
+
+  static getActiveEvents = (calendars: Calendar[]) : Event[] => {
+    return calendars.filter((c) => c.active)
+      .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
+  }
 }
 
 export interface ViewProps {
   calendars: Calendar[]
   displayDay: Date
   selectedDay: Date
-  selectDay: (day: Date) => () => void
+  selectDay: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
   userLocation: string
+  goToEvent: (calendarCode: string, eventCode: string) => (event: React.MouseEvent<HTMLElement>) => void
 }
 

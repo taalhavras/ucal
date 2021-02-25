@@ -1,0 +1,30 @@
+{
+  "update-event": {
+    "calendar-code": "njru-musv",
+    "event-code": "yzdz-ixhl",
+    "title": "Monthly 2 test",
+    "desc": "",
+    "tzid": "utc",
+    "location": {
+      "address": "",
+      "geo": null
+    },
+    "when": {
+      "period": {
+        "start": 1613097026958,
+        "end": 1613098826958
+      }
+    },
+    "era": {
+      "type": {
+        "infinite": true
+      },
+      "interval": 1,
+      "rrule": {
+        "monthly": {
+          "on": 14
+        }
+      }
+    }
+  }
+}

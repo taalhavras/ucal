@@ -231,3 +231,38 @@ button.dark:hover {
 .time-entry:hover {
   background-color: rgba(0, 0, 0, 0.2);
 }
+
+.event-title-ellipsis {
+  white-space: nowrap;
+  padding-left: 5%;
+  width: 95%;
+  overflow: hidden;
+  display: block;
+  text-overflow: ellipsis;
+}
+
+.event-title-ellipsis:hover {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.weekday {
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 0px 4px;
+  background-color: #f1f3f4;
+}
+
+.weekday.selected {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+}
+
+.weekday.selected > span {
+  color: white;
+}
+
+.weekday:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}

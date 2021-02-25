@@ -14,7 +14,7 @@ interface Props {
   month?: number
   showYear?: boolean
   showNavArrows?: boolean
-  selectDay: (day: Date) => () => void
+  selectDay: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
   changeRange?: (direction: NavDirection) => () => void
 }
 
@@ -50,8 +50,6 @@ class MonthTile extends Component<Props, State> {
     const month = this.props.month === undefined ? displayDay.getMonth() : this.props.month
     const year = this.props.year || displayDay.getFullYear()
     const days = getMonthDays(year, month)
-
-    console.log('MONTH', month)
 
     return (
       <Box display='flex' flexDirection='column'>

@@ -5,6 +5,8 @@ import InitialReducer from './reducers/initial'
 import UpdateReducer from './reducers/update'
 import Store from './store'
 
+// TODO: break out event types
+
 export default class Actions {
   store: Store
   api: UrbitApi
@@ -20,23 +22,6 @@ export default class Actions {
     return calendars
   }
 
-  getEvents = async () : Promise<Event[]> => {
-    const events = await this.api.scry<any>('ucal-store', '/events')
-    this.store.updateStore({ data: { events } })
-    return events
-  }
-
-  createEvent = async (event: EventForm) : Promise<void> => {
-    for(let key in event) {
-      if (event[key] === undefined) {
-        delete event[key]
-      }
-    }
-    console.log('CREATING:', event.toExportFormat())
-    await this.api.action('ucal-store', 'ucal-action', event.toExportFormat())
-    await this.getEvents()
-  }
-
   createCalendar = async (title: string, isPublic = false) : Promise<void> => {
     await this.api.action('ucal-store', 'ucal-action', {
       'create-calendar': {
@@ -49,5 +34,31 @@ export default class Actions {
         }
       }
     })
+  }
+
+  getEvents = async () : Promise<Event[]> => {
+    const events = await this.api.scry<any>('ucal-store', '/events')
+    this.store.updateStore({ data: { events } })
+    return events
+  }
+
+  deleteEvent = async (event: Event) : Promise<void> => {
+    await this.api.action('ucal-store', 'ucal-action', {
+      'delete-event': {
+        'calendar-code': event.calendarCode,
+        'event-code': event.eventCode
+      }
+    })
+  }
+
+  saveEvent = async (event: EventForm, update: boolean) : Promise<void> => {
+    for(let key in event) {
+      if (event[key] === undefined) {
+        delete event[key]
+      }
+    }
+    console.log('SAVING:', JSON.stringify(event.toExportFormat(update)))
+    await this.api.action('ucal-store', 'ucal-action', event.toExportFormat(update))
+    await this.getEvents()
   }
 }

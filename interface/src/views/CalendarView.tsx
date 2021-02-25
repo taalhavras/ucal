@@ -2,17 +2,17 @@ import React, { Component } from 'react';
 import _, { capitalize } from 'lodash';
 
 import { Text, Box, Button, Checkbox } from '@tlon/indigo-react';
-import moment from 'moment';
-import Calendar, { NavDirection, Timeframe } from '../types/Calendar';
-import WeeklyView from './WeeklyView';
-import DailyView from './DailyView';
-import MonthlyView from './MonthlyView';
-import YearlyView from './YearlyView';
-import Title from '../components/lib/Title';
-import MonthTile from '../components/lib/MonthTile';
-import { match, RouteComponentProps, withRouter } from 'react-router-dom';
+import moment from 'moment'
+import Calendar, { NavDirection, Timeframe } from '../types/Calendar'
+import WeeklyView from './WeeklyView'
+import DailyView from './DailyView'
+import MonthlyView from './MonthlyView'
+import YearlyView from './YearlyView'
+import Title from '../components/lib/Title'
+import MonthTile from '../components/lib/MonthTile'
+import { match, RouteComponentProps, withRouter } from 'react-router-dom'
 import { Location, History } from 'history'
-import Actions from '../logic/actions';
+import Actions from '../logic/actions'
 
 interface RouterProps {
   timeframe: string
@@ -90,18 +90,23 @@ class CalendarView extends Component<Props, State> {
 
   createEvent = () => this.props.history.push('/~calendar/event')
 
+  goToEvent = (calendarCode: string, eventCode: string) => () : void => {
+    this.props.history.push(`/~calendar/event/${calendarCode}/${eventCode}`)
+  }
+
   render() {
-    const { props: { calendars, userLocation }, state: { timeframe, displayDay, selectedDay }, selectDay, changeRange, createEvent } = this
-    let layout = <WeeklyView calendars={calendars} {...this.state} selectDay={selectDay()} />
+    const { props: { calendars, userLocation }, state: { timeframe, selectedDay },
+      selectDay, changeRange, createEvent, goToEvent } = this
+    let layout = <WeeklyView {...this.props} {...this.state} selectDay={selectDay()} goToEvent={goToEvent} />
     switch (timeframe) {
       case Timeframe.day:
-        layout = <DailyView history={this.props.history} calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
+        layout = <DailyView {...this.props} {...this.state} selectDay={selectDay()} goToEvent={goToEvent} />
         break;
       case Timeframe.month:
-        layout = <MonthlyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
+        layout = <MonthlyView {...this.props} {...this.state} selectDay={selectDay()} goToEvent={goToEvent} />
         break;
       case Timeframe.year:
-        layout = <YearlyView calendars={calendars} userLocation={userLocation} {...this.state} selectDay={selectDay()} />
+        layout = <YearlyView {...this.props} {...this.state} selectDay={selectDay()} goToEvent={goToEvent} />
         break;
     }
 
@@ -141,8 +146,6 @@ class CalendarView extends Component<Props, State> {
         
         {layout}
       </Box>
-    {/* <Text pt='3'>Welcome to your Calendar.</Text>
-    <Text pt='3'>To get started, edit <code>src/index.js</code> or <code>urbit/app/calendar.hoon</code> and <code>|commit %home</code> on your Urbit ship to see your changes.</Text> */}
   </Box>
   }
 }

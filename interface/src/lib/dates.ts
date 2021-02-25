@@ -60,3 +60,9 @@ export const getDefaultStartEndTimes = () : { startTime: string, endTime: string
     endTime: moment().add(toAdd + 30, 'minutes').format('HH:mm'),
   }
 }
+
+export const isSameDay = (one: Date, two: Date) : boolean => moment(one).isSame(moment(two), 'day')
+
+export const sameMonthDay = (one: Date, two: Date) : boolean => `${one.getMonth()}${one.getDate()}` === `${two.getMonth()}${two.getDate()}`
+
+export const getHoursMinutes = (date: Date) : string => moment(date).format('HH:mm')

@@ -4,7 +4,7 @@ import moment from 'moment'
 import { Text } from '@tlon/indigo-react'
 
 interface Props {
-  selectDay?: (day: Date) => () => void
+  selectDay?: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
   shaded?: boolean
   day?: Date
   selectedDay?: Date
