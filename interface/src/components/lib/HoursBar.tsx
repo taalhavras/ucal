@@ -4,7 +4,7 @@ import SunCalc from 'suncalc'
 
 import { Box, Text, Row } from '@tlon/indigo-react'
 import styled from "styled-components";
-import { getHours, padTime } from '../../lib/dates'
+import { getHours, HOUR_HEIGHT, FIRST_HOUR_MARGIN, padTime } from '../../lib/dates'
 
 const toRelativeTime = (date, referenceTime, unit) => moment(referenceTime)
   .diff(date, unit)
@@ -38,7 +38,6 @@ export default class HoursBar extends Component<Props> {
   render() {
     const loc = this.props.userLocation.includes(',') && this.props.userLocation || '40.4, -74.5'
     const [lat, lon] = loc.split(',')
-    console.log(lat, lon)
 
     const referenceTime = moment(this.props.displayDay).startOf('day')
     const suncalc = SunCalc.getTimes(moment(referenceTime).toDate(), lat, lon)
@@ -107,7 +106,7 @@ export default class HoursBar extends Component<Props> {
       <Box display='flex' flexDirection='column' alignItems='flex-end'>
         {hours.map((hour) =>
           <Hour
-            margin={hour === 0 ? '16px 4px 0px 0px' : '32px 4px 0px 0px'}
+            margin={hour === 0 ? `${FIRST_HOUR_MARGIN}px 4px 0px 0px` : `${HOUR_HEIGHT - FIRST_HOUR_MARGIN}px 4px 0px 0px`}
             key={`hour-${hour}`}>
             {padTime(hour)}:00
           </Hour>)}

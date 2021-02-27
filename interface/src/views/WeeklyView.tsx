@@ -2,9 +2,11 @@ import React, { Component } from 'react'
 
 import { Text, Box, Button } from '@tlon/indigo-react'
 import moment from 'moment'
-import { ViewProps } from '../types/Calendar'
-import { getWeekDays, getHours } from '../lib/dates'
+import Calendar, { ViewProps } from '../types/Calendar'
+import { getWeekDays, getHours, HOUR_HEIGHT } from '../lib/dates'
 import DateCircle from '../components/lib/DateCircle'
+import HoursBar from '../components/lib/HoursBar'
+import EventTile from '../components/lib/EventTile'
 
 interface State {}
 
@@ -30,16 +32,33 @@ export default class WeeklyView extends Component<ViewProps, State> {
         </Box>
         <Box width='100%' height='calc(100vh - 160px)' overflowY='scroll'>
           <Box display='flex' flexDirection='row' width='100%'>
-            <Box display='flex' flexDirection='column' width='12.5%' alignItems='flex-end'>
-              {hours.map((hour) => <Text color='rgba(0,0,0, 0.6)' margin={hour === 0 ? '16px 12px 0px 0px' : '32px 12px 0px 0px'} key={`hour-${hour}`}>{hour}:00</Text>)}
-            </Box>
-            {days.map((day, ind) => <Box display='flex' flexDirection='column' alignItems='center' width='12.5%' key={`weekday-${ind}`}>
-              <Box width='100%' height='24px' borderLeft={ind === 0 ? '1px solid lightgray' : 'none'} borderRight='1px solid lightgray' borderBottom='1px solid lightgray' display='flex' flexDirection='column' alignItems='center'>
-              </Box>
-              {hours.map((hour) => <Box width='100%' height='48px' borderLeft={ind === 0 ? '1px solid lightgray' : 'none'} borderRight='1px solid lightgray' borderBottom='1px solid lightgray' display='flex' flexDirection='column' alignItems='center' key={`hour-${ind}-${hour}`}>
+            <HoursBar {...this.props} />
+            {days.map((day, ind) => {
+              const events = Calendar.getRelevantEvents(calendars, day)
+                .map((e, _ind, events) => (<EventTile
+                  {...this.props}
+                  event={e}
+                  events={events}
+                  weeklyView={true}
+                  key={`${e.calendarCode}${e.eventCode}`}
+                />))
 
-              </Box>)}
-            </Box>)}
+              return <Box className="weekly-day" key={`weekday-${ind}`}>
+                <Box width='100%' height='24px' borderLeft={ind === 0 ? '1px solid lightgray' : 'none'} borderRight='1px solid lightgray' borderBottom='1px solid lightgray' display='flex' flexDirection='column' alignItems='center' />
+                {hours.map((hour) => <Box
+                  width='100%'
+                  height={`${HOUR_HEIGHT}px`}
+                  borderLeft={ind === 0 ? '1px solid lightgray' : 'none'}
+                  borderRight='1px solid lightgray'
+                  borderBottom='1px solid lightgray'
+                  display='flex'
+                  flexDirection='column'
+                  alignItems='center'
+                  key={`hour-${ind}-${hour}`}>
+                </Box>)}
+                {events}
+              </Box>
+            })}
           </Box>
         </Box>
       </Box>

@@ -1,52 +1,13 @@
 import React, { Component } from 'react'
 
-import { Text, Box, Row, Button } from '@tlon/indigo-react'
+import { Text, Box, Row } from '@tlon/indigo-react'
 import moment from 'moment'
-import { ViewProps } from '../types/Calendar'
-import { getHours } from '../lib/dates'
+import Calendar, { ViewProps } from '../types/Calendar'
+import { getHours, HOUR_HEIGHT } from '../lib/dates'
 import HoursBar from '../components/lib/HoursBar'
+import EventTile from '../components/lib/EventTile'
 
 interface State {}
-
-class DailyEvent extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    const { props: { color, referenceTime, event } } = this
-    const s = moment(event.start);
-    const e = moment(event.end);
-    const duration = moment.duration(e.diff(s)).asHours();
-    const topDistance = moment.duration(s.diff(referenceTime)).asHours();
-
-    let seeEvent = () =>
-    this.props.history.push(`/~calendar/event/${event.calendar_code}/${event.event_code}`)
-
-    return (
-      <Box
-          height={(duration * 48) + 'px'}
-          width='80%'
-          backgroundColor={color}
-          position='absolute'
-          left='50px'
-          top={(topDistance * 48) + 'px'}
-          onClick={seeEvent}>
-        <Row>
-          <Text
-              paddingLeft='0.3rem'
-              paddingTop='0.3rem'
-              bold fontSize={1}>
-            {event.detail.title}
-          </Text>
-        </Row>
-        <Row>
-          <Text paddingLeft='0.3rem' paddingTop='0.3rem'>{event.detail.desc}</Text>
-        </Row>
-      </Box>
-    );
-  }
-};
 
 export default class DailyView extends Component<ViewProps, State> {
   constructor(props) {
@@ -58,23 +19,14 @@ export default class DailyView extends Component<ViewProps, State> {
     const hours = getHours()
     const selectedMoment = moment(selectedDay)
 
-    const startDay = moment(selectedMoment);
-    const endDay = moment(selectedMoment).add(1, 'day');
-
-    let events = calendars.length > 0 ? calendars[0].events
-      .filter((e) => {
-        let startTime = moment.utc(e.start);
-        return startTime.isAfter(startDay) && startTime.isBefore(endDay);
-      })
-      .map((e) => (<DailyEvent
-        history={this.props.history}
-        color='green'
-        referenceTime={selectedMoment}
+    const events = Calendar.getRelevantEvents(calendars, selectedDay)
+      .map((e, _ind, events) => (<EventTile
+        {...this.props}
+        weeklyView={false}
         event={e}
-        key={e.event_code}
-        />)) : [];
-
-    console.log(events);
+        events={events}
+        key={`${e.calendarCode}${e.eventCode}`}
+      />))
 
     return (
       <Box display='flex' flexDirection='column' width='100%' margin='16px 0px 0px 0px'>
@@ -93,14 +45,13 @@ export default class DailyView extends Component<ViewProps, State> {
                   {hours.map((hour) =>
                       <Box
                           width='100%'
-                          height='48px'
+                          height={`${HOUR_HEIGHT}px`}
                           borderLeft='1px solid lightgray'
                           borderBottom='1px solid lightgray'
                           display='flex'
                           flexDirection='column'
                           alignItems='center'
                           key={`hour-blocks-${hour}`}>
-                        {/* comment */}
                       </Box>)}
                   {events}
               </Box>

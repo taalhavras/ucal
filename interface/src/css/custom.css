@@ -266,3 +266,56 @@ button.dark:hover {
   background-color: rgba(0, 0, 0, 0.3);
   cursor: pointer;
 }
+
+.weekly-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 12.5%;
+  position: relative;
+}
+
+.event-tile {
+  position: absolute;
+  background-color: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,0,0,0.4);
+  border-radius: 8px;
+  left: 10%;
+  width: 80%;
+}
+
+#yearly-view-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 10;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#yearly-view-modal .content {
+  z-index: 10;
+  background: white;
+  width: 400px;
+  min-height: 200px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+}
+
+#yearly-view-modal .content .yearly-view-event {
+  margin-top: 8px;
+}
+
+#yearly-view-modal .content .yearly-view-event:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+

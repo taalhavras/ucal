@@ -369,4 +369,6 @@ export default class Event {
   isUnchanged = (state: EventViewState) : boolean => {
     return new EventForm(state).isUnchanged(this.toFormFormat())
   }
+
+  compareTo = (b: Event) : number => Number(moment(this.getStart()).format('hhmm')) - Number(moment(b.getStart()).format('hhmm'))
 }

@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import _, { capitalize } from 'lodash';
 
 import { Text, Box, Button, StatelessTextInput, StatelessTextArea, Checkbox } from '@tlon/indigo-react';
-import moment, { weekdays } from 'moment';
+import moment from 'moment';
 import Calendar from '../types/Calendar';
-import { match, RouteComponentProps, withRouter } from 'react-router-dom';
+import { match, RouteComponentProps, useLocation, withRouter } from 'react-router-dom';
 import { History, Location } from 'history'
 import Event, { EventForm, EventLoc, RepeatInterval, Weekday, WEEKDAYS } from '../types/Event';
 import DatePicker from '../components/lib/DatePicker';
@@ -72,16 +72,20 @@ class EventView extends Component<Props, EventViewState> {
       return event.toFormFormat()
     }
 
+    const dateQueryParam = new URLSearchParams(props.location.search).get('date')
+    const start = dateQueryParam ? new Date(Number(dateQueryParam)) : new Date()
+    const end = moment(start).add(30, 'minutes').toDate()
+
     return {
       calendarCode: props.calendars[0]?.calendarCode,
       organizer: props.ship,
       title: '',
       desc: '',
       location: new EventLoc({ address: '' }),
-      start: new Date(),
+      start,
+      end,
       repeatInterval: RepeatInterval.doesNotRepeat,
-      weekdays: [moment().format('ddd').toLowerCase() as Weekday],
-      end: moment().add(30, 'minutes').toDate(),
+      weekdays: [moment(start).format('ddd').toLowerCase() as Weekday],
       allDay: false,
       startTime,
       endTime,
@@ -177,8 +181,6 @@ class EventView extends Component<Props, EventViewState> {
       setRepeatInterval, disableSave, toggleWeekday } = this
 
     const saveDisabled = disableSave()
-
-    console.log(weekdays)
 
     return <Box height='100%' p='4' display='flex' flexDirection='column' borderWidth={['none', '1px']} borderStyle="solid" borderColor="washedGray">
       <Box width='100%' display='flex' flexDirection='row'>

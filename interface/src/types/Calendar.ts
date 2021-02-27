@@ -66,6 +66,11 @@ export default class Calendar {
     return calendars.filter((c) => c.active)
       .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
   }
+
+  static getRelevantEvents = (calendars: Calendar[], date: Date) => calendars.filter((c) => c.active)
+    .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
+    .filter((e) => e.isOnDay(date))
+    .sort((a, b) => a.compareTo(b))
 }
 
 export interface ViewProps {
@@ -75,5 +80,6 @@ export interface ViewProps {
   selectDay: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
   userLocation: string
   goToEvent: (calendarCode: string, eventCode: string) => (event: React.MouseEvent<HTMLElement>) => void
+  createEvent: (day?: Date) => () => void
 }
 

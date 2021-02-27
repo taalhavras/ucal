@@ -39,7 +39,6 @@ class MonthTile extends Component<Props, State> {
     } else {
       const { state: { displayDay } } = this
       const newDisplay = moment(displayDay)[dir](1, 'month').toDate()
-      console.log(displayDay, newDisplay)
       this.setState({ displayDay: newDisplay })
     }
   }

@@ -2,6 +2,9 @@ import moment from 'moment'
 import { Timeframe } from '../types/Calendar'
 import Event from '../types/Event'
 
+export const HOUR_HEIGHT = 100;
+export const FIRST_HOUR_MARGIN = 16;
+
 const daysInYear = (year: number) => (year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0)) ? 366 : 365
 
 export const addDays = (day: Date, days: number) : Date => moment(day).add(days, 'days').toDate()
