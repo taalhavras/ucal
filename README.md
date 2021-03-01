@@ -1,19 +1,40 @@
 # Urbit Calendar
 
 ## Usage
-Clone the repository and then create a .urbitrc in the root. It should look like
+Clone the repository and then create a .urbitrc in the root that looks like the .urbitrc-sample file. It should look like
 ```
 module.exports = {
   URBIT_PIERS: [
     "/path/to/first/pier/zod/home",
     "/path/to/other/pier/nel/home"
-  ]
+  ],
+  URL: 'http://localhost:*port of running ship*'
 };
 
 ```
-Then run `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running.
+Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `mount |%home` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
 
 ### Pokes
+The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
+
+Here's a table of how JSON should be formatted for each poke
+| Poke                | Json                                                                                                                                                                                                                                                                                                                                                                              |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`                                                                                                                                                                                                                                                                                                            |
+| %update-calendar    | `{'update-calendar': {     'calendar-code': 'abcd-efgh',     'title': 'new-title' // optional, though pointless not to include   } }`                                                                                                                                                                                                                                               |
+| %delete-calendar    | `{'delete-calendar': {'calendar-code': 'some-code'}}`                                                                                                                                                                                                                                                                                                                               |
+| %create-event       | `{'create-event': {     'calendar-code': 'some-code',     'event-code': 'event-code', // optional     'organizer': '~zod',     'title': 'my-event',     'desc': 'some-description', // optional     'tzid': 'utc',     'location': some-location,     'when': some-moment,     'era': some-era   } }`                                                                               |
+| %update-event       | `{'update-event': { 'calendar-code': 'some-code',     
+ 'event-code': 'event-code',     
+ 'title': 'new-title', // optional     
+ 'desc': 'some-description', // optional, can specify null     
+ 'location': some-location, // optional, can specify null     
+ 'when': some-moment, // optional     'era': some-era, // optional, can specify null     'tzid': 'utc' // optional   } }` |
+| %delete-event       | `{'delete-event': {     'calendar-code': 'some-code',     'event-code': 'event-code'   } }`                                                                                                                                                                                                                                                                                         |
+| %change-rsvp        | `{'change-rsvp': {     'calendar-code': 'some-code',     'event-code': 'event-code',     'who': '~zod',     'status': 'new-status', // optional, if not specified it's an uninvite   }` }                                                                                                                                                                                           |
+| %import-from-ics    | `{'import-from-ics': {     'path': 'some-path'   } }`                                                                                                                                                                                                                                                                                                                               |
+| %change-permissions | `{'change-permissions': {     'calendar-code': 'some-code',     // now we have ONE of the following     // 1.      'who': 'some-ship',     'role': 'some-role' // either reader, writer, or acolyte     // 2.     'make-public': null     // 3.     'make-private': null   } }`                                                                                                     |
+
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
 Here's a table of how JSON should be formatted for each poke
@@ -194,3 +215,24 @@ The data types for invites are floating around and through the code, but they ar
 branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+
+## Interface (front-end)
+
+Created from tlon's [create-landscape-app](https://github.com/urbit/create-landscape-app).
+
+### Development
+
+0. Ensure your have followed installation instructions above (`yarn run build`)
+
+1. On your Urbit ship, if you haven't already, mount your pier to Unix with `|mount %`.
+
+2. Once you're up and running, your application lives in the `src` folder; `src` uses [React](https://reactjs.org) to render itself -- you'll want a basic foothold with it first.
+
+3. Run `npm run serve-interface` to serve a dev server environment with hot reloading at `localhost:9000`.
+>>>>>>> 4d4e99e (Cleaned up repo and added instructions to README)
+=======
+>>>>>>> b4bff8c (Readme update w/json payloads (#22))
