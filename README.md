@@ -215,10 +215,6 @@ The data types for invites are floating around and through the code, but they ar
 branch: none
 
 We have tests to verify calendar/event creation, destruction, and updates. There's also a test that demonstrates the hooks in use - subscriptions to calendars, updates propagating, and eventually stopping when the calendar is deleted. As more functionality (i.e. invites) is added, more tests will be needed (you can't have too many tests right?).
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
 
 ## Interface (front-end)
 
@@ -233,6 +229,3 @@ Created from tlon's [create-landscape-app](https://github.com/urbit/create-lands
 2. Once you're up and running, your application lives in the `src` folder; `src` uses [React](https://reactjs.org) to render itself -- you'll want a basic foothold with it first.
 
 3. Run `npm run serve-interface` to serve a dev server environment with hot reloading at `localhost:9000`.
->>>>>>> 4d4e99e (Cleaned up repo and added instructions to README)
-=======
->>>>>>> b4bff8c (Readme update w/json payloads (#22))
