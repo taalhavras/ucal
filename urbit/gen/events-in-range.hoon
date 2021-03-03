@@ -9,7 +9,7 @@
     (scot %p u.who)
 =/  res=[(list event) (list projected-event)]
     .^  [(list event) (list projected-event)]
-      %gy
+      %gx
       us
       %ucal-store
       (scot %da now)
@@ -19,6 +19,7 @@
       (scot %tas calendar-code)
       (scot %da start)
       (scot %da end)
+      %noun
       ~
     ==
 res

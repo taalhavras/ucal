@@ -25,12 +25,13 @@
 ::  get metadata from local store
 =/  res=(list calendar)
     .^  (list calendar)
-      %gy
+      %gx
       us
       %ucal-store
       (scot %da now)
       them
       %calendars
+      %noun
       ~
     ==
 %+  turn
