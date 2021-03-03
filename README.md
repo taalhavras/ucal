@@ -23,13 +23,25 @@ Here's a table of how JSON should be formatted for each poke
 | %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`                                                                                                                                                                                                                                                                                                            |
 | %update-calendar    | `{'update-calendar': {     'calendar-code': 'abcd-efgh',     'title': 'new-title' // optional, though pointless not to include   } }`                                                                                                                                                                                                                                               |
 | %delete-calendar    | `{'delete-calendar': {'calendar-code': 'some-code'}}`                                                                                                                                                                                                                                                                                                                               |
-| %create-event       | `{'create-event': {     'calendar-code': 'some-code',     'event-code': 'event-code', // optional     'organizer': '~zod',     'title': 'my-event',     'desc': 'some-description', // optional     'tzid': 'utc',     'location': some-location,     'when': some-moment,     'era': some-era   } }`                                                                               |
-| %update-event       | `{'update-event': { 'calendar-code': 'some-code',     
- 'event-code': 'event-code',     
- 'title': 'new-title', // optional     
- 'desc': 'some-description', // optional, can specify null     
- 'location': some-location, // optional, can specify null     
- 'when': some-moment, // optional     'era': some-era, // optional, can specify null     'tzid': 'utc' // optional   } }` |
+| %create-event       | <pre>{'create-event': {     
+                            'calendar-code': 'some-code',     
+                            'event-code': 'event-code', // optional     
+                            'organizer': '~zod',     
+                            'title': 'my-event',     
+                            'desc': 'some-description', // optional     
+                            'tzid': 'utc',     '
+                            location': some-location,     
+                            'when': some-moment,     
+                            'era': some-era   } }</pre>
+| %update-event       | <pre>{'update-event': { 
+                                'calendar-code': 'some-code',     
+                                'event-code': 'event-code',     
+                                'title': 'new-title', // optional     
+                                'desc': 'some-description', // optional, can specify null     
+                                'location': some-location, // optional, can specify null     
+                                'when': some-moment, // optional     
+                                'era': some-era, // optional, can specify null     
+                                'tzid': 'utc' // optional   } }</pre> |
 | %delete-event       | `{'delete-event': {     'calendar-code': 'some-code',     'event-code': 'event-code'   } }`                                                                                                                                                                                                                                                                                         |
 | %change-rsvp        | `{'change-rsvp': {     'calendar-code': 'some-code',     'event-code': 'event-code',     'who': '~zod',     'status': 'new-status', // optional, if not specified it's an uninvite   }` }                                                                                                                                                                                           |
 | %import-from-ics    | `{'import-from-ics': {     'path': 'some-path'   } }`                                                                                                                                                                                                                                                                                                                               |
