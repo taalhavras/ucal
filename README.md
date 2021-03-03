@@ -1,5 +1,7 @@
 # Urbit Calendar
 
+[![awesome urbit badge](https://img.shields.io/badge/~-awesome%20urbit-lightgrey)](https://github.com/urbit/awesome-urbit)
+
 ![screenshot](https://archiv.nyc3.digitaloceanspaces.com/littel-wolfur/2021.3.03..16.28.48-screen.jpg)
 
 ## Usage
