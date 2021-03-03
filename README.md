@@ -23,16 +23,7 @@ Here's a table of how JSON should be formatted for each poke
 | %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`                                                                                                                                                                                                                                                                                                            |
 | %update-calendar    | `{'update-calendar': {     'calendar-code': 'abcd-efgh',     'title': 'new-title' // optional, though pointless not to include   } }`                                                                                                                                                                                                                                               |
 | %delete-calendar    | `{'delete-calendar': {'calendar-code': 'some-code'}}`                                                                                                                                                                                                                                                                                                                               |
-| %create-event       | <pre>{'create-event': {     
-                            'calendar-code': 'some-code',     
-                            'event-code': 'event-code', // optional     
-                            'organizer': '~zod',     
-                            'title': 'my-event',     
-                            'desc': 'some-description', // optional     
-                            'tzid': 'utc',     '
-                            location': some-location,     
-                            'when': some-moment,     
-                            'era': some-era   } }</pre>
+| %create-event       | <pre>{'create-event': { <br/> 'calendar-code': 'some-code', <br/> 'event-code': 'event-code', // optional <br/> 'organizer': '~zod', <br/> 'title': 'my-event', <br/> 'desc': 'some-description', // optional <br/> 'tzid': 'utc', <br/> 'location': some-location, <br/> 'when': some-moment, <br/> 'era': some-era   } }</pre>
 | %update-event       | <pre>{'update-event': { 
                                 'calendar-code': 'some-code',     
                                 'event-code': 'event-code',     
