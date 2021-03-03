@@ -408,30 +408,6 @@
       ['last-modified' (time:enjs last-modified.cal)]
   ==
 ::
-++  location-to-json
-  =<
-  |=  loc=location
-  ^-  json
-  =,  format
-  %-  pairs:enjs
-  :~  ['address' [%s address.loc]]
-      :-  'geo'
-      ?~  geo.loc
-        ~
-      %-  pairs:enjs
-      :~  ['lat' [%s (rd-to-cord lat.u.geo.loc)]]
-          ['lon' [%s (rd-to-cord lon.u.geo.loc)]]
-      ==
-  ==
-  |%
-  ::  produce a signed cord in scientific notation
-  ++  rd-to-cord
-    |=  val=@rd
-    ^-  cord
-    =,  rd
-    (crip (r-co:co (rlyd val)))
-  --
-::
 ++  location-from-json
   =<
   |=  jon=json
@@ -472,24 +448,6 @@
     ^-  cord
     =,  rd
     (crip (r-co:co (rlyd val)))
-  --
-::
-++  location-from-json
-  =<
-  |=  jon=json
-  ^-  location
-  ?>  ?=([%o *] jon)
-  =,  format
-  :-  (so:dejs (~(got by p.jon) 'address'))
-  (bind (~(get by p.jon) 'geo') coord-from-json)
-  |%
-  ++  coord-from-json
-    |=  jon=json
-    ^-  coordinate
-    =,  format
-    ?>  ?=([%o *] jon)
-    :-  (ne:dejs (~(got by p.jon) 'lat'))
-    (ne:dejs (~(got by p.jon) 'lon'))
   --
 ::
 ++  event-data-to-json
