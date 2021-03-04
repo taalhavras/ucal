@@ -78,12 +78,13 @@
   ^-  flag
   ::  TODO for now just always accept
   &
+::  NOTE: must be kept in sync with +resource-for-update in ucal-pull-hook
 ::
 ++  resource-for-update
   |=  =vase
-  ^-  (unit resource)
+  ^-  (list resource)
   =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
-  `resource.ts
+  ~[resource.ts]
 ::
 ++  take-update
   |=  =vase

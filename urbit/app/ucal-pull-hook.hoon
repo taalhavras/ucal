@@ -14,6 +14,7 @@
       to-subscriber:ucal-store
       %ucal-to-subscriber
       %ucal-push-hook
+      |
   ==
 ::
 ::
@@ -99,4 +100,11 @@
   |=  =resource
   ^-  (unit path)
   `/
+::  NOTE: must be kept in sync with +resource-for-update in ucal-push-hook
+::
+++  resource-for-update
+  |=  =vase
+  ^-  (list resource)
+  =/  ts=to-subscriber:ucal-store  !<(to-subscriber:ucal-store vase)
+  ~[resource.ts]
 --
