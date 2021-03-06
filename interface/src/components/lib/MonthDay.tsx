@@ -23,7 +23,7 @@ export default class MonthDay extends Component<Props> {
   render() {
     const { props: { weekIndex, dayIndex, day, month, events, goToEvent, selectDay } } = this
 
-    const eventsOnDay = events.filter((ae) => ae.isOnDay(day))
+    const eventsOnDay = events.filter((ae) => ae.isOnDay(day)).sort((a, b) => a.compareTo(b))
     const moreThanThree = eventsOnDay.length > 3
     let shownEvents = []
 

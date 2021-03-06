@@ -21,13 +21,9 @@ export default class Subscription {
   }
 
   initialize = async () : Promise<void> => {
-    this.api.bind('/almanac', 'PUT', this.api.authTokens.ship, 'ucal-store',
-      this.handleEvent.bind(this),
-      this.handleError.bind(this))
-
-    this.api.bind('/all', 'PUT', this.api.authTokens.ship, 'weather',
-      this.handleEvent.bind(this),
-      this.handleError.bind(this))
+    // this.api.bind('/almanac', 'PUT', this.api.authTokens.ship, 'ucal-store',
+    //   this.handleEvent.bind(this),
+    //   this.handleError.bind(this))
 
     try {
       const calendars = await this.actions.getCalendars()

@@ -18,8 +18,9 @@ export default class DateCircle extends Component<Props> {
 
   render() {
     const { props: { selectDay, day, selectedDay, month } } = this
-    const isToday = !!day && moment(day).isSame(moment(), 'day')
-    const isSelected = !!day && !!selectedDay && moment(day).isSame(moment(selectedDay), 'day') && selectedDay.getMonth() === month
+    const isSameMonth = day?.getMonth() === month
+    const isToday = !!day && isSameMonth && moment(day).isSame(moment(), 'day')
+    const isSelected = !!day && isSameMonth && !!selectedDay && moment(day).isSame(moment(selectedDay), 'day') && selectedDay.getMonth() === month
     let className = 'date-circle'
     let onClick
     if (selectDay) {
@@ -34,7 +35,8 @@ export default class DateCircle extends Component<Props> {
     }
 
     return (
-      <Text className={className} onClick={onClick} padding='5px 1px' width='24px' margin='1px 4px' borderRadius='13px' textAlign='center' verticalAlign='middle' opacity={!!this.props.shaded ? '0.5' : '0.9'}>
+      <Text className={className} onClick={onClick} padding='5px 1px' width='24px' margin='1px 4px' borderRadius='13px' textAlign='center'
+        verticalAlign='middle' opacity={!!this.props.shaded ? '0.5' : '0.9'}>
         {this.props.children}
       </Text>
     )   
