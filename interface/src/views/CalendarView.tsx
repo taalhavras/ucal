@@ -146,7 +146,7 @@ class CalendarView extends Component<Props, State> {
         
         {layout}
       </Box>
-  </Box>
+    </Box>
   }
 }
 

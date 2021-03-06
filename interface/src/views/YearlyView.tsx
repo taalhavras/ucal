@@ -2,8 +2,9 @@ import React, { Component } from 'react'
 
 import { Text, Box, Button } from '@tlon/indigo-react'
 import moment from 'moment'
-import Calendar, { ViewProps } from '../types/Calendar'
+import Calendar, { Timeframe, ViewProps } from '../types/Calendar'
 import MonthTile from '../components/lib/MonthTile'
+import { scrollToSelectedDay } from '../lib/position'
 
 interface State {
   showDaySummary?: Date
@@ -37,7 +38,8 @@ export default class YearlyView extends Component<ViewProps, State> {
   }
 
   render() {
-    const { props: { calendars, selectedDay, goToEvent, createEvent }, state: { showDaySummary }, selectDay, hideDaySummary } = this
+    const { props: { calendars, selectedDay, goToEvent, createEvent }, state: { showDaySummary },
+      selectDay, hideDaySummary } = this
 
     const events = Calendar.getRelevantEvents(calendars, selectedDay)
       .map((e) => <Text className="yearly-view-event" onClick={goToEvent(e.calendarCode, e.eventCode)} key={`${e.calendarCode}-${e.eventCode}`}>
@@ -45,7 +47,7 @@ export default class YearlyView extends Component<ViewProps, State> {
       </Text>)
 
     return (
-      <Box display='flex' flexDirection='column' width='100%' height='calc(100vh - 117px)' overflow='scroll'>
+      <Box display='flex' flexDirection='column' width='100%' height='calc(100vh - 117px)' overflow='scroll' ref={scrollToSelectedDay(Timeframe.year, selectedDay)}>
         <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='space-around' onClick={hideDaySummary}>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((month) => <Box margin='20px 20px' key={`year-view-${month}`}>
             <MonthTile year={selectedDay.getFullYear()} month={month} {...this.props} selectDay={selectDay} />

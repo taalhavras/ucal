@@ -2,11 +2,12 @@ import React, { Component } from 'react'
 
 import { Text, Box, Button } from '@tlon/indigo-react'
 import moment from 'moment'
-import Calendar, { ViewProps } from '../types/Calendar'
+import Calendar, { Timeframe, ViewProps } from '../types/Calendar'
 import { getWeekDays, getHours, HOUR_HEIGHT } from '../lib/dates'
 import DateCircle from '../components/lib/DateCircle'
 import HoursBar from '../components/lib/HoursBar'
 import EventTile from '../components/lib/EventTile'
+import { scrollToSelectedDay } from '../lib/position'
 
 interface State {}
 
@@ -30,7 +31,7 @@ export default class WeeklyView extends Component<ViewProps, State> {
             <DateCircle {...this.props} day={day} month={month}>{day.getDate()}</DateCircle>
           </Box>)}
         </Box>
-        <Box width='100%' height='calc(100vh - 160px)' overflowY='scroll'>
+        <Box width='100%' height='calc(100vh - 160px)' overflowY='scroll' ref={scrollToSelectedDay(Timeframe.week, selectedDay)}>
           <Box display='flex' flexDirection='row' width='100%'>
             <HoursBar {...this.props} />
             {days.map((day, ind) => {

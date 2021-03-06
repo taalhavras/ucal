@@ -2,10 +2,11 @@ import React, { Component } from 'react'
 
 import { Text, Box, Row } from '@tlon/indigo-react'
 import moment from 'moment'
-import Calendar, { ViewProps } from '../types/Calendar'
+import Calendar, { Timeframe, ViewProps } from '../types/Calendar'
 import { getHours, HOUR_HEIGHT } from '../lib/dates'
 import HoursBar from '../components/lib/HoursBar'
 import EventTile from '../components/lib/EventTile'
+import { scrollToSelectedDay } from '../lib/position'
 
 interface State {}
 
@@ -34,7 +35,7 @@ export default class DailyView extends Component<ViewProps, State> {
           <Text>{selectedMoment.format('ddd').toLocaleUpperCase()}</Text>
           <Text fontSize='2'>{selectedMoment.format('D').toLocaleUpperCase()}</Text>
         </Box>
-        <Box width='100%' height='calc(100vh - 212px)' overflowY='scroll'>
+        <Box width='100%' height='calc(100vh - 212px)' overflowY='scroll' ref={scrollToSelectedDay(Timeframe.day, selectedDay)}>
           <Box display='flex' flexDirection='row' width='100%'>
             <HoursBar {...this.props} />
             <Box display='flex' flexDirection='column' width='87.5%' alignItems='flex-end'>
