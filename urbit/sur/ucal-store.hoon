@@ -110,4 +110,31 @@
       [%rsvp-changed =rsvp-change]
       [%permissions-changed =calendar-code =calendar-permissions]
   ==
+::  $invitation: sent to ships invited to a particular event. if the
+::  event is changed, new invitations will be sent. rsvp-required should
+::  be true if a new rsvp is needed (i.e. if the time has changed) - it
+::  should always be true on the initial invitation.
+::
++$  invitation
+  $:  =event
+      rsvp-required=flag
+  ==
+::  $invite-reply: sent by ships who are invited to an event.
+::
++$  invite-reply
+  $:  status=rsvp
+      =calendar-code
+      =event-code
+      ::  mug of the moment and era of the event this is a response to.
+      ::  this is used by the host to determine if the reply is for the
+      ::  latest version of the event. consider the following scenario.
+      ::  1. ~sovmep invites ~marnus to an event.
+      ::  2. ~marnus sends a reply indicating they can attend
+      ::  3. while ~marnus's reply is in flight, ~sovmep updates
+      ::     the time of the event, sending a new invitation to ~marnus
+      ::  4. ~sovmep receives ~marnus's initial reply. ~sovmep needs
+      ::     a way to know whether this reply is based on the most
+      ::     recent version of the event - hence the mug.
+      hash=@
+  ==
 --
