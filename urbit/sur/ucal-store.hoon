@@ -119,9 +119,10 @@
   $:  =event
       rsvp-required=flag
   ==
-::  $invite-reply: sent by ships who are invited to an event.
+::  $invitation-reply: sent by ships who are invited to an event,
+::  indicating whether they can attend or not.
 ::
-+$  invite-reply
++$  invitation-reply
   $:  status=rsvp
       =calendar-code
       =event-code
