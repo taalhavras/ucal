@@ -118,13 +118,6 @@
 +$  invitation
   $:  =event
       rsvp-required=flag
-      ::  The invitation needs to specify the ship hosting the calendar.
-      ::  This is because the event organizer isn't necessarily the host
-      ::  and there's no guarantee that the invitee has access to the
-      ::  calendar this event is on - that's because being invited to an
-      ::  event on a calendar shouldn't give you any sort of access to
-      ::  the rest of the calendar that you didn't already have.
-      cal-host=@p
   ==
 ::  $invitation-reply: sent by ships who are invited to an event,
 ::  indicating whether they can attend or not.
