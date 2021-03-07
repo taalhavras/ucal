@@ -222,7 +222,14 @@
         =/  rid=resource  (resource-for-calendar code)
         =/  removed=to-subscriber:ucal-store  [rid %update %calendar-removed code]
         [%give %fact ~[/almanac] %ucal-to-subscriber !>(removed)]
-    :-  ~[cal-update]
+    =/  uninvites=(list card)
+        =|  acc=(list card)
+        =/  all-events=(list event)  (need (~(get-events-bycal al alma.state) code))
+        |-
+        ?~  all-events
+          acc
+        (weld (make-uninvite-cards i.all-events) acc)
+    :-  [cal-update uninvites]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
     ==
