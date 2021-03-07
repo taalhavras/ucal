@@ -23,7 +23,10 @@
       ::  store events we're invited to in an almanac
       invited-to=almanac
       ::  store our current rsvp status for each event we're invited to
-      outgoing-rsvps=(map [calendar-code event-code] (unit rsvp))
+      ::  along with the ship to respond to (not necessarily the
+      ::  organizer of the event - we want to send our responses to the
+      ::  ship that's hosting the calendar.
+      outgoing-rsvps=(map [calendar-code event-code] [(unit rsvp) @p])
   ==
 ::
 +$  versioned-state
@@ -425,14 +428,22 @@
         ::  if it's an event we haven't seen before we should also mark
         ::  that we haven't responded yet. this _shouldn't_ happen in an
         ::  ideal world but we can handle it anyway.
-        (~(gut by outgoing-rsvps.state) key ~)
+        =/  old-entry=(unit [(unit rsvp) @p])  (~(get by outgoing-rsvps.state) key)
+        ?~  old-entry
+          ~
+        ?>  =(+.u.old-entry src.bowl)
+        -.u.old-entry
     ::  we always want to overwrite our old notion of the event
+    ::  src.bowl is the ship that sent us this poke, which means it's
+    ::  the one we want to send our response to.
     %=  state
       invited-to  (~(add-event al invited-to.state) event.inv)
-      outgoing-rsvps  (~(put by outgoing-rsvps.state) key our-status)
+      outgoing-rsvps  (~(put by outgoing-rsvps.state) key [our-status src.bowl])
     ==
   ?:  ?=([%removed *] inv)
     =/  key=[calendar-code event-code]  +.inv
+    =/  old-entry=[(unit rsvp) @p]  (~(got by outgoing-rsvps.state) key)
+    ?>  =(+.old-entry src.bowl)
     %=  state
       invited-to  (~(delete-event al invited-to.state) +.key -.key)
       outgoing-rsvps  (~(del by outgoing-rsvps.state) key)
