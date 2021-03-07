@@ -22,6 +22,7 @@
       external=(map entity almanac)
       ::  store events we're invited to in an almanac
       invited-to=almanac
+      ::  store our current rsvp status for each event we're invited to
       outgoing-rsvps=(map [calendar-code event-code] (unit rsvp))
   ==
 ::
@@ -253,7 +254,9 @@
     =/  paths=(list path)  ~[/almanac]
     =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
-    :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
+    =/  invite-cards=(list card)
+        (make-invite-cards new ~(key by invites.data.new) &)
+    :-  [[%give %fact paths %ucal-to-subscriber !>(ts)] invite-cards]
     %=  state
       alma  (~(add-event al alma.state) new)
     ==
@@ -535,4 +538,24 @@
   ?:  (lth b a)
     [b a]
   [a b]
+::
+++  make-invite-cards
+  |=  [=event ships=(set @p) rsvp-required=flag]
+  ^-  (list card)
+  =/  inv=invitation:ucal-store  [event rsvp-required]
+  %~  tap
+    in
+  ^-  (set card)
+  ::  don't send invitations to the organizer
+  %-  ~(run in (~(del in ships) organizer.about.data.event))
+  |=  who=@p
+  ^-  card
+  :*  %pass
+      /inviting/(scot %p who)
+      %agent
+      [our.bowl %ucal-store]
+      %poke
+      %ucal-invitation
+      !>(inv)
+  ==
 --
