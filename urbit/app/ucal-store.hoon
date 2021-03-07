@@ -270,14 +270,23 @@
       !!
     ::  must have write access to calendar to update an event
     ?>  (can-write-cal [owner permissions]:u.target src.bowl)
+    =/  old-event=event
+        %-  need
+        (~(get-event al alma.state) [calendar-code event-code]:patch.input)
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
       `state  :: nonexistent update
     =/  rid=resource  (resource-for-calendar calendar-code.patch.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-changed input now.bowl]
-    :-
-    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+    ::  we need new rsvps if the era or moment are being changed.
+    =/  new-rsvp=flag
+        ?|  =(era.old-event era.u.new-event)
+            =(when.data.old-event when.data.u.new-event)
+        ==
+    =/  invite-cards=(list card)
+        (make-invite-cards u.new-event ~(key by invites.data.u.new-event) new-rsvp)
+    :-  [[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] invite-cards]
     state(alma new-alma)
     ::
       %delete-event
