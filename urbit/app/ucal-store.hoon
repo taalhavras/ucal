@@ -20,6 +20,9 @@
       alma=almanac
       ::  map of entity to almanac, to track almanacs pulled from remote ships
       external=(map entity almanac)
+      ::  store events we're invited to in an almanac
+      invited-to=almanac
+      outgoing-rsvps=(map [calendar-code event-code] (unit rsvp))
   ==
 ::
 +$  versioned-state
@@ -79,6 +82,11 @@
         %ucal-to-subscriber
       ::  this is where updates from ucal-pull-hook come through.
       =^  cards  state  (poke-ucal-to-subscriber:uc !<(to-subscriber:ucal-store vase))
+      [cards this]
+    ::
+        %ucal-invitation
+      ::  if we're invited to an event we find out through these pokes
+      =^  cards  state  (poke-ucal-invitation:uc !<(invitation:ucal-store vase))
       [cards this]
     ==
   ::
@@ -382,6 +390,27 @@
     %=  state
       external  (~(put by external.state) from new-alma)
     ==
+  ==
+::
+++  poke-ucal-invitation
+  |=  inv=invitation:ucal-store
+  ^-  (quip card _state)
+  ::  no cards produced here
+  :-  ~
+  =/  key=[calendar-code event-code]  [calendar-code event-code]:data.event.inv
+  =/  our-status=(unit rsvp)
+      ::  if the event expects an rsvp we should mark that we haven't
+      ::  responded yet.
+      ?:  rsvp-required.inv
+        ~
+      ::  if it's an event we haven't seen before we should also mark
+      ::  that we haven't responded yet. this _shouldn't_ happen in an
+      ::  ideal world but we can handle it anyway.
+      (~(gut by outgoing-rsvps.state) key ~)
+  ::  we always want to overwrite our old notion of the event
+  %=  state
+    invited-to  (~(add-event al invited-to.state) event.inv)
+    outgoing-rsvps  (~(put by outgoing-rsvps.state) key our-status)
   ==
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
