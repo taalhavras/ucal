@@ -234,7 +234,7 @@
       !!
     ::  must have write access to calendar to create an event
     ?>  (can-write-cal [owner permissions]:u.target src.bowl)
-    =/  =about:ucal  [our.bowl now.bowl now.bowl]
+    =/  =about:ucal  [src.bowl now.bowl now.bowl]
     =/  new=event
       :*
         ^-  event-data
