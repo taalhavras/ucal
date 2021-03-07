@@ -299,8 +299,9 @@
     ?>  (can-write-cal [owner permissions]:u.target src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
+    =/  deleted-event=event  (need (~(get-event al alma.state) cal-code event-code))
     :-
-    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+      [[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] (make-uninvite-cards deleted-event)]
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
