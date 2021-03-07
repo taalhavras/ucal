@@ -116,8 +116,11 @@
 ::  should always be true on the initial invitation.
 ::
 +$  invitation
-  $:  =event
-      rsvp-required=flag
+  $%  [%invited =event rsvp-required=flag]
+      :: indicates that you've been removed from the event or that the
+      :: event no longer exists - either way you don't have access to it
+      :: anymore.
+      [%removed =calendar-code =event-code]
   ==
 ::  $invitation-reply: sent by ships who are invited to an event,
 ::  indicating whether they can attend or not.

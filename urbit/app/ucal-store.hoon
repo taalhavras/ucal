@@ -254,8 +254,7 @@
     =/  paths=(list path)  ~[/almanac]
     =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
-    =/  invite-cards=(list card)
-        (make-invite-cards new ~(key by invites.data.new) &)
+    =/  invite-cards=(list card)  (make-invite-cards new &)
     :-  [[%give %fact paths %ucal-to-subscriber !>(ts)] invite-cards]
     %=  state
       alma  (~(add-event al alma.state) new)
@@ -284,8 +283,7 @@
         ?|  =(era.old-event era.u.new-event)
             =(when.data.old-event when.data.u.new-event)
         ==
-    =/  invite-cards=(list card)
-        (make-invite-cards u.new-event ~(key by invites.data.u.new-event) new-rsvp)
+    =/  invite-cards=(list card)  (make-invite-cards u.new-event new-rsvp)
     :-  [[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] invite-cards]
     state(alma new-alma)
     ::
@@ -409,21 +407,29 @@
   ^-  (quip card _state)
   ::  no cards produced here
   :-  ~
-  =/  key=[calendar-code event-code]  [calendar-code event-code]:data.event.inv
-  =/  our-status=(unit rsvp)
-      ::  if the event expects an rsvp we should mark that we haven't
-      ::  responded yet.
-      ?:  rsvp-required.inv
-        ~
-      ::  if it's an event we haven't seen before we should also mark
-      ::  that we haven't responded yet. this _shouldn't_ happen in an
-      ::  ideal world but we can handle it anyway.
-      (~(gut by outgoing-rsvps.state) key ~)
-  ::  we always want to overwrite our old notion of the event
-  %=  state
-    invited-to  (~(add-event al invited-to.state) event.inv)
-    outgoing-rsvps  (~(put by outgoing-rsvps.state) key our-status)
-  ==
+  ?:  ?=([%invited *] inv)
+    =/  key=[calendar-code event-code]  [calendar-code event-code]:data.event.inv
+    =/  our-status=(unit rsvp)
+        ::  if the event expects an rsvp we should mark that we haven't
+        ::  responded yet.
+        ?:  rsvp-required.inv
+          ~
+        ::  if it's an event we haven't seen before we should also mark
+        ::  that we haven't responded yet. this _shouldn't_ happen in an
+        ::  ideal world but we can handle it anyway.
+        (~(gut by outgoing-rsvps.state) key ~)
+    ::  we always want to overwrite our old notion of the event
+    %=  state
+      invited-to  (~(add-event al invited-to.state) event.inv)
+      outgoing-rsvps  (~(put by outgoing-rsvps.state) key our-status)
+    ==
+  ?:  ?=([%removed *] inv)
+    =/  key=[calendar-code event-code]  +.inv
+    %=  state
+      invited-to  (~(delete-event al invited-to.state) +.key -.key)
+      outgoing-rsvps  (~(del by outgoing-rsvps.state) key)
+    ==
+  !!
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek
@@ -548,23 +554,53 @@
     [b a]
   [a b]
 ::
+++  make-invitation-poke-card
+  |=  [to=@p inv=invitation:ucal-store]
+  ^-  card
+  =/  wir=wire
+      ?:  ?=([%invited *] inv)
+        (weld /inviting/(scot %p to) [calendar-code event-code ~]:data.event.inv)
+      ?:  ?=([%removed *] inv)
+        (weld /uninviting/(scot %p to) [calendar-code event-code ~]:inv)
+      !!
+  :*  %pass
+      wir
+      %agent
+      [to %ucal-store]
+      %poke
+      %ucal-invitation
+      !>(`invitation:ucal-store`inv)
+  ==
+::
 ++  make-invite-cards
-  |=  [=event ships=(set @p) rsvp-required=flag]
+  |=  [=event rsvp-required=flag]
   ^-  (list card)
-  =/  inv=invitation:ucal-store  [event rsvp-required]
+  =/  inv=invitation:ucal-store  [%invited event rsvp-required]
+  =/  ships=(set @p)  ~(key by invites.data.event)
+  ::  the organizer should never be getting a card here - but they
+  ::  shouldn't be in the invites map to begin with.
+  ?<  (~(has in ships) organizer.about.data.event)
   %~  tap
     in
   ^-  (set card)
-  ::  don't send invitations to the organizer
-  %-  ~(run in (~(del in ships) organizer.about.data.event))
+  %-  ~(run in ships)
   |=  who=@p
   ^-  card
-  :*  %pass
-      /inviting/(scot %p who)
-      %agent
-      [our.bowl %ucal-store]
-      %poke
-      %ucal-invitation
-      !>(inv)
-  ==
+  (make-invitation-poke-card who inv)
+::
+++  make-uninvite-cards
+  |=  =event
+  ^-  (list card)
+  =/  inv=invitation:ucal-store  [%removed [calendar-code event-code]:data.event]
+  =/  ships=(set @p)  ~(key by invites.data.event)
+  ::  the organizer should never be getting a card here - but they
+  ::  shouldn't be in the invites map to begin with.
+  ?<  (~(has in ships) organizer.about.data.event)
+  %~  tap
+    in
+  ^-  (set card)
+  %-  ~(run in ships)
+  |=  who=@p
+  ^-  card
+  (make-invitation-poke-card who inv)
 --
