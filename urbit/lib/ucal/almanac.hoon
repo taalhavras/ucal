@@ -120,11 +120,10 @@
               cur(rsvp.data (need status.rsvp))
             ::  using got, will crash if @p not invited
             ::  TODO is that desired?
-            =/  inv=invite  (~(got by invites.data.cur) who.rsvp)
-            ?~  status.rsvp
+            =/  old-status=(unit ^rsvp)  (~(got by invites.data.cur) who.rsvp)
+            ?~  old-status
               cur(invites.data (~(del by invites.data.cur) who.rsvp)) :: uninvite @p
-            =/  new-invite=invite  inv(rsvp status.rsvp)
-            cur(invites.data (~(put by invites.data.cur) who.rsvp new-invite))
+            cur(invites.data (~(put by invites.data.cur) who.rsvp status.rsvp))
         [`new-event new-event +.acc]
       ?~  new-event
         [~ alma]
