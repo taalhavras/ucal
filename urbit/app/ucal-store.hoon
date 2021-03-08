@@ -460,7 +460,7 @@
   ^-  (quip card _state)
   =/  =event  (need (~(get-event al alma.state) [calendar-code event-code]:reply))
   ::  must be getting this from a ship who is invited to the event
-  ?>  (~(has by invites.data.event) src.bowl)
+  ?>  |(=(src.bowl organizer.about.data.event) (~(has by invites.data.event) src.bowl))
   =/  hash=@  (get-event-invite-hash event)
   ?.  =(hash hash.reply)
     `state
