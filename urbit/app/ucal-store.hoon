@@ -92,6 +92,11 @@
       ::  if we're invited to an event we find out through these pokes
       =^  cards  state  (poke-ucal-invitation:uc !<(invitation:ucal-store vase))
       [cards this]
+    ::
+        %ucal-invitation-reply
+      ::
+      =^  cards  state  (poke-ucal-invitation-reply:uc !<(invitation-reply:ucal-store vase))
+      [cards this]
     ==
   ::
   ++  on-watch
@@ -449,6 +454,26 @@
       outgoing-rsvps  (~(del by outgoing-rsvps.state) key)
     ==
   !!
+::
+++  poke-ucal-invitation-reply
+  |=  reply=invitation-reply:ucal-store
+  ^-  (quip card _state)
+  =/  =event  (need (~(get-event al alma.state) [calendar-code event-code]:reply))
+  ::  must be getting this from a ship who is invited to the event
+  ?>  (~(has by invites.data.event) src.bowl)
+  =/  hash=@  (get-event-invite-hash event)
+  ?.  =(hash hash.reply)
+    `state
+  =/  change=rsvp-change:ucal-store
+      :^    calendar-code.reply
+          event-code.reply
+        src.bowl
+      `status.reply
+  =/  [(unit ^event) new-alma=almanac]  (~(update-rsvp al alma.state) change)
+  =/  rid=resource  (resource-for-calendar calendar-code.reply)
+  =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]
+  :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+  state(alma new-alma)
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek

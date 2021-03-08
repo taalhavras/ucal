@@ -746,4 +746,12 @@
     :-  cc
     [%a (turn evs event-to-json)]
   --
+::  +get-event-invite-hash: calculate the mug of the era and moment of
+::  an event. used to verify that rsvps to events are for the latest
+::  version of the event.
+::
+++  get-event-invite-hash
+  |=  =event
+  ^-  @
+  (mug [era.event when.data.event])
 --
