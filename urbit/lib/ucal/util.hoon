@@ -687,13 +687,13 @@
     (so:dejs (~(got by p.jon) 'event-code'))
   ++  convert-change-rsvp
     |=  jon=json
-    ^-  rsvp-change:ucal-store
+    ^-  [calendar-code event-code @p flag]
     =,  format
     ?>  ?=([%o *] jon)
     :^    (so:dejs (~(got by p.jon) 'calendar-code'))
         (so:dejs (~(got by p.jon) 'event-code'))
       ((se:dejs %p) (~(got by p.jon) 'who'))
-    (bind (~(get by p.jon) 'status') (corl rsvp so:dejs))
+    (bo:dejs (~(got by p.jon) 'invite'))
   ++  convert-import
     |=  jon=json
     ^-  path

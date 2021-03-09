@@ -305,13 +305,9 @@
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  target=(unit cal)
-        (~(get-calendar al alma.state) cal-code)
-    ::  target calendar must exist
-    ?~  target
-      !!
+    =/  target=cal  (need (~(get-calendar al alma.state) cal-code))
     ::  must have write access to calendar to delete an event
-    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
+    ?>  (can-write-cal [owner permissions]:target src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
     =/  deleted-event=event  (need (~(get-event al alma.state) cal-code event-code))
@@ -320,13 +316,21 @@
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
-    =/  input=rsvp-change:ucal-store  +.action
+    =/  input  +.action
+    ::  must have write access to calendar to invite/uninvite anybody
+    =/  target=cal  (need (~(get-calendar al alma.state) calendar-code.input))
+    ?>  (can-write-cal [owner permissions]:target src.bowl)
+    =/  change=rsvp-change:ucal-store
+        :^    calendar-code.input
+            event-code.input
+          who.input
+        ?:(invite.input [~ ~] ~)
     =/  [new-event=(unit event) new-alma=almanac]
-        (~(update-rsvp al alma.state) input)
+        (~(update-rsvp al alma.state) change)
     ?~  new-event
       `state
     =/  rid=resource  (resource-for-calendar calendar-code.input)
-    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed input]
+    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]
     :-
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
     state(alma new-alma)
@@ -468,7 +472,7 @@
       :^    calendar-code.reply
           event-code.reply
         src.bowl
-      `status.reply
+      ``status.reply
   =/  [(unit ^event) new-alma=almanac]  (~(update-rsvp al alma.state) change)
   =/  rid=resource  (resource-for-calendar calendar-code.reply)
   =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]

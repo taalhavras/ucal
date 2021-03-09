@@ -116,14 +116,23 @@
         =/  new-event=event
             ::  first check if the change is for the host
             ?:  =(who.rsvp organizer.about.data.cur)
-              ::  cannot uninvite organizer, so status can't be ~
-              cur(rsvp.data (need status.rsvp))
-            ::  using got, will crash if @p not invited
-            ::  TODO is that desired?
-            =/  old-status=(unit ^rsvp)  (~(got by invites.data.cur) who.rsvp)
+              ::  cannot uninvite organizer and organizer should always
+              ::  have an rsvp status.
+              cur(rsvp.data (need (need status.rsvp)))
+            =/  old-status=(unit (unit ^rsvp))  (~(get by invites.data.cur) who.rsvp)
             ?~  old-status
-              cur(invites.data (~(del by invites.data.cur) who.rsvp)) :: uninvite @p
-            cur(invites.data (~(put by invites.data.cur) who.rsvp status.rsvp))
+              ::  in this case the ship wasn't previously invited. the
+              ::  change must be [~ ~] - an initial invite
+              ?>  =(status.rsvp [~ ~])
+              cur(invites.data (~(put by invites.data.cur) who.rsvp ~))
+            ::  in this case the ship has previously been invited. any
+            ::  invitation change is fine (including a reset to
+            ::  "unanswered" even if they haven't responded)
+            ?~  status.rsvp
+              ::  uninviting the @p
+              cur(invites.data (~(del by invites.data.cur) who.rsvp))
+            ::  overwriting previous invitation status
+            cur(invites.data (~(put by invites.data.cur) who.rsvp u.status.rsvp))
         [`new-event new-event +.acc]
       ?~  new-event
         [~ alma]

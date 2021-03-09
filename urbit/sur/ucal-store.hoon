@@ -24,8 +24,9 @@
   $:  =calendar-code
       =event-code
       who=@p
-      :: if ~, then uninvite the @p
-      status=(unit rsvp)
+      :: if ~, then the @p is uninvited
+      :: if [~ ~], the @p is added to invites without a status
+      status=(unit (unit rsvp))
   ==
 ::
 +$  permission-change
@@ -74,10 +75,14 @@
           =calendar-code
           =event-code
       ==
-      :: - cancel event?
       :: - change rsvp
       $:  %change-rsvp
-          =rsvp-change
+          =calendar-code
+          =event-code
+          who=@p
+          ::  if &, invite the @p to the event
+          ::  if |, uninvite the @p from the event
+          invite=flag
       ==
       :: - import calendar from file
       $:  %import-from-ics
