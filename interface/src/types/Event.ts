@@ -86,6 +86,8 @@ export class Era {
     const { type, interval, rrule } = this
     const moDay = moment(day)
 
+    const afterStart = moDay.isSameOrAfter(start, 'day')
+
     const untilMatch = !!type.until && moDay.isSameOrBefore(type.until)
     const instancesMatch = !!type.instances && false // How to calculate the number of instances?
     const typeMatch = (type.infinite !== undefined) || untilMatch || instancesMatch
@@ -96,7 +98,7 @@ export class Era {
 
     const repeatMatch = rrule.daily !== undefined || weeklyMatch || monthlyMatch || yearlyMatch
 
-    return typeMatch && repeatMatch
+    return afterStart && typeMatch && repeatMatch
   }
 
   getRepeatInterval = () : RepeatInterval => {

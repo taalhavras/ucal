@@ -282,6 +282,7 @@ button.dark:hover {
   border-radius: 8px;
   left: 10%;
   width: 80%;
+  overflow: hidden;
 }
 
 #yearly-view-modal {

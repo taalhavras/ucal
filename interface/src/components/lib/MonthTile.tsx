@@ -2,10 +2,9 @@ import React, { Component } from 'react'
 
 import { Text, Box, Button } from '@tlon/indigo-react'
 import moment from 'moment'
-import Calendar, { NavDirection } from '../../types/Calendar'
+import { NavDirection } from '../../types/Calendar'
 import DateCircle from './DateCircle'
 import { getMonthDays } from '../../lib/dates'
-import { display } from 'styled-system'
 
 interface Props {
   selectedDay: Date
