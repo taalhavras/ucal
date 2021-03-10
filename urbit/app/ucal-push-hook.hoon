@@ -73,11 +73,11 @@
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
 ::
-++  should-proxy-update
-  |=  =vase
-  ^-  flag
+++  transform-proxy-update
+  |=  vas=vase
+  ^-  (unit vase)
   ::  TODO for now just always accept
-  &
+  `vas
 ::  NOTE: must be kept in sync with +resource-for-update in ucal-pull-hook
 ::
 ++  resource-for-update
