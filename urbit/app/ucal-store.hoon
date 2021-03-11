@@ -331,8 +331,13 @@
       `state
     =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]
-    :-
-    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+    =/  invite-card=card
+        =/  inv=invitation:ucal-store
+            ?.  invite.input
+              [%removed [calendar-code event-code]:input]
+            [%invited u.new-event &]
+        (make-invitation-poke-card who.input inv)
+    :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] invite-card]
     state(alma new-alma)
     ::
       %import-from-ics
