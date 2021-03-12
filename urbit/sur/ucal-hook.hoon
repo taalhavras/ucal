@@ -16,6 +16,8 @@
   $%  [%query-cals who=@p]
       ::  forwards poke to target's store (can be local)
       [%proxy-poke target=@p store-action=action:ucal-store]
+      ::  used to respond to invites (pokes a foreign ucal-store)
+      [%invitation-response =calendar-code:ucal-store =event-code:ucal-store status=rsvp:ucal-store]
   ==
 ::  $update: sent by the push-hook in response to an action
 ::
