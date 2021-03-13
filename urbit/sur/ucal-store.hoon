@@ -62,7 +62,7 @@
           =detail
           when=moment
           era=(unit era)
-          =invites
+          invited=(set @p)
           tzid=tape
       ==
       ::

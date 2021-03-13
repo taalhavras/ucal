@@ -250,6 +250,8 @@
       !!
     ::  must have write access to calendar to create an event
     ?>  (can-write-cal [owner permissions]:u.target src.bowl)
+    ::  organizer can't be an invitee
+    ?<  (~(has in invited.input) src.bowl)
     =/  =about:ucal  [src.bowl now.bowl now.bowl]
     =/  new=event
       :*
@@ -260,7 +262,7 @@
           about
           detail.input
           when.input
-          invites.input
+          (malt (turn ~(tap in invited.input) |=(who=@p [who ~])))
           %yes  :: organizer is attending own event by default
           tzid.input
         ==

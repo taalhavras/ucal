@@ -642,20 +642,19 @@
     (so:dejs:format (~(got by p.jon) 'calendar-code'))
   ++  convert-create-event
     |=  jon=json
-    ^-  [calendar-code (unit event-code) @p detail moment (unit era) invites tape]
+    ^-  [calendar-code (unit event-code) @p detail moment (unit era) (set @p) tape]
     =,  format
     ?>  ?=([%o *] jon)
     :*  (so:dejs (~(got by p.jon) 'calendar-code'))
         (bind (~(get by p.jon) 'event-code') so:dejs)
-        ((se:dejs:format %p) (~(got by p.jon) 'organizer'))
+        ((se:dejs %p) (~(got by p.jon) 'organizer'))
         ::  detail
         :+  (so:dejs (~(got by p.jon) 'title'))
           (bind (~(get by p.jon) 'desc') so:dejs)
         (bind (~(get by p.jon) 'location') location-from-json)
         (moment-from-json (~(got by p.jon) 'when'))
         (bind (~(get by p.jon) 'era') era-from-json)
-        ::  TODO handle invites
-        ~
+        ((as:dejs (se:dejs %p)) (~(got by p.jon) 'invited'))
         (sa:dejs (~(got by p.jon) 'tzid'))
     ==
   ++  convert-update-event
