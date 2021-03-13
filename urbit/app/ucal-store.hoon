@@ -123,6 +123,9 @@
     ?+  path
       (on-peek:def path)
     ::
+        [%x %host @tas @tas ~]
+      ``ucal-event-host+!>((~(got by outgoing-rsvps.state) [i.t.t.path i.t.t.t.path]))
+    ::
         [%x %invited-to *]
       (handle-on-peek bowl t.t.path invited-to.state)
     ::
