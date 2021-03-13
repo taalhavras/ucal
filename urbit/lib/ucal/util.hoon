@@ -754,4 +754,11 @@
   |=  =event
   ^-  @
   (mug [era.event when.data.event])
+::  +clear-invites: resets all invites to the "not responded" status
+::
+++  clear-invites
+  |=  inv=invites
+  ^-  invites
+  (~(run by inv) |=(* ~))
 --
+

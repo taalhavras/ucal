@@ -101,7 +101,7 @@
     =/  new-event=event
         ?.  reset-invites
           new-event
-        new-event(invites.data (~(run by invites.data.new-event) |=(* ~)))
+        new-event(invites.data (clear-invites:ucal-util invites.data.new-event))
     :-  `new-event
     %=  alma
       events  (~(put by events.alma) calendar-code.patch (insort rest new-event))
