@@ -123,6 +123,9 @@
     ?+  path
       (on-peek:def path)
     ::
+        [%x %invited-to *]
+      (handle-on-peek bowl t.t.path invited-to.state)
+    ::
         [%x @p *]
       =/  who=@p  `@p`(slav %p `@tas`+<:path)
       ?:  =(who our.bowl)
