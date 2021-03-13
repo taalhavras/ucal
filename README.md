@@ -191,7 +191,7 @@ branch: none
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
 
 ### invites
-branch: none
+branch: event-invites
 
 The data types for invites are floating around and through the code, but they aren't used in any way. This will involve work at the hook level and some store changes.
 
