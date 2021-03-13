@@ -4,7 +4,7 @@
 ::  calendars on [ship].
 ::
 /-  *pull-hook, *resource, ucal-store, ucal-hook, *ucal
-/+  pull-hook, default-agent
+/+  pull-hook, default-agent, ucal-util
 |%
 +$  card  card:agent:gall
 ::
@@ -58,7 +58,47 @@
       ?:  ?=([%proxy-poke *] act)
         [%pass [%proxy-poke (scot %p target.act) ~] %agent [target.act store-name:config] %poke %ucal-action !>(store-action.act)]~
       ?:  ?=([%invitation-response *] act)
-        !!
+        ::  scry for the event and the host from the local ucal-store
+        =/  ev=event
+            .^  event
+              %gx
+              (scot %p our.bowl)
+              %ucal-store
+              (scot %da now.bowl)
+              %invited-to
+              %events
+              %specific
+              calendar-code.act
+              event-code.act
+              /noun
+            ==
+        =/  host=@p
+            .^  @p
+              %gx
+              (scot %p our.bowl)
+              %ucal-store
+              (scot %da now.bowl)
+              %host
+              calendar-code.act
+              event-code.act
+              /noun
+            ==
+        =/  invr=invitation-reply:ucal-store
+            :^    status.act
+                calendar-code.act
+              event-code.act
+            (get-event-invite-hash:ucal-util ev)
+        =/  wir=wire  [%invitation-reply [calendar-code event-code ~]:act]
+        =/  car=card
+            :*  %pass
+                wir
+                %agent
+                [host %ucal-store]
+                %poke
+                %ucal-invitation-reply
+                !>(invr)
+            ==
+        ~[car]
       !!
     ::
   ==
