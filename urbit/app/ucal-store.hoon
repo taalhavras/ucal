@@ -22,11 +22,11 @@
       external=(map entity almanac)
       ::  store events we're invited to in an almanac
       invited-to=almanac
-      ::  store our current rsvp status for each event we're invited to
-      ::  along with the ship to respond to (not necessarily the
-      ::  organizer of the event - we want to send our responses to the
-      ::  ship that's hosting the calendar.
-      outgoing-rsvps=(map [calendar-code event-code] [(unit rsvp) @p])
+      ::  track the ship we should respond to for each event we're
+      ::  invited to. This is not necessarily the organizer of the
+      ::  event - we want to send our responses to the host of the
+      ::  calendar.
+      outgoing-rsvps=(map [calendar-code event-code] @p)
   ==
 ::
 +$  versioned-state
@@ -337,7 +337,16 @@
               [%removed [calendar-code event-code]:input]
             [%invited u.new-event &]
         (make-invitation-poke-card who.input inv)
-    :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] invite-card]
+    =/  updates-to-invitees=(list card)
+        ::  send an update to every invitee who ISNT the ship whose
+        ::  invite changed w/this poke (since we already created a card
+        ::  for them above).
+        %+  turn
+          ~(tap in (~(del in ~(key by invites.data.u.new-event)) who.input))
+        |=  guest=@p
+        ^-  card
+        (make-invitation-poke-card guest [%invited u.new-event |])
+    :-  [[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] invite-card updates-to-invitees]
     state(alma new-alma)
     ::
       %import-from-ics
@@ -434,30 +443,21 @@
   :-  ~
   ?:  ?=([%invited *] inv)
     =/  key=[calendar-code event-code]  [calendar-code event-code]:data.event.inv
-    =/  our-status=(unit rsvp)
-        ::  if the event expects an rsvp we should mark that we haven't
-        ::  responded yet.
-        ?:  rsvp-required.inv
-          ~
-        ::  if it's an event we haven't seen before we should also mark
-        ::  that we haven't responded yet. this _shouldn't_ happen in an
-        ::  ideal world but we can handle it anyway.
-        =/  old-entry=(unit [(unit rsvp) @p])  (~(get by outgoing-rsvps.state) key)
-        ?~  old-entry
-          ~
-        ?>  =(+.u.old-entry src.bowl)
-        -.u.old-entry
     ::  we always want to overwrite our old notion of the event
+    =/  deleted-from=almanac
+        (~(delete-event al invited-to.state) +.key -.key)
     ::  src.bowl is the ship that sent us this poke, which means it's
-    ::  the one we want to send our response to.
+    ::  the one we want to send our response to. make sure that we're
+    ::  not getting invitations from multiple ships for the same event.
+    ?>  =(src.bowl (~(gut by outgoing-rsvps.state) key src.bowl))
     %=  state
-      invited-to  (~(add-event al invited-to.state) event.inv)
-      outgoing-rsvps  (~(put by outgoing-rsvps.state) key [our-status src.bowl])
+      invited-to  (~(add-event al deleted-from) event.inv)
+      outgoing-rsvps  (~(put by outgoing-rsvps.state) key src.bowl)
     ==
   ?:  ?=([%removed *] inv)
     =/  key=[calendar-code event-code]  +.inv
-    =/  old-entry=[(unit rsvp) @p]  (~(got by outgoing-rsvps.state) key)
-    ?>  =(+.old-entry src.bowl)
+    =/  hosting-ship=@p  (~(got by outgoing-rsvps.state) key)
+    ?>  =(hosting-ship src.bowl)
     %=  state
       invited-to  (~(delete-event al invited-to.state) +.key -.key)
       outgoing-rsvps  (~(del by outgoing-rsvps.state) key)
@@ -478,10 +478,13 @@
           event-code.reply
         src.bowl
       ``status.reply
-  =/  [(unit ^event) new-alma=almanac]  (~(update-rsvp al alma.state) change)
+  =/  [upd=(unit ^event) new-alma=almanac]  (~(update-rsvp al alma.state) change)
   =/  rid=resource  (resource-for-calendar calendar-code.reply)
   =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]
-  :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+  ::  send out an update to subscribers as well as to all invited ships
+  ::  (including the respondee) so they know the current status of other
+  ::  invites.
+  :-  [[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] (make-invite-cards (need upd) |)]
   state(alma new-alma)
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
