@@ -654,7 +654,8 @@
         (bind (~(get by p.jon) 'location') location-from-json)
         (moment-from-json (~(got by p.jon) 'when'))
         (bind (~(get by p.jon) 'era') era-from-json)
-        ((as:dejs (se:dejs %p)) (~(got by p.jon) 'invited'))
+        ::  default to empty list (no invites) if key not included
+        ((as:dejs (se:dejs %p)) (~(gut by p.jon) 'invited' [%a ~]))
         (sa:dejs (~(got by p.jon) 'tzid'))
     ==
   ++  convert-update-event
