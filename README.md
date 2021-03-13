@@ -110,6 +110,10 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 | `%x ship %events %specific cal-code event-code` | event                                        | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
 | `%x ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
 | `%x ship %events %inrange cal-code start end`   | [(list event) (list projected-event)]        | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
+|  `%x %host cal-code event-code`    |  @p  |  the ship hosting a particular event we're invited to |
+
+#### Invitation scrys
+The above scrys can also be used to retrieve information about events you've been invited to. You won't have access to calendar data for these events (unless you separately have access to it), but by using `%invited-to` instead of an `@p` in the path all scries that produce events will get you events you've been invited to. These scries are the only way to see these events if you don't have access to the calendars they're hsoted on.
 
 ### Timezones in ucal
 All scries that produce events can have `/timezone/ZONE_NAME` included after the ship. This means that the events produced wil have
