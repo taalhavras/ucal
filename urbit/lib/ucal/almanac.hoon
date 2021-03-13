@@ -93,8 +93,16 @@
           tzid.data  (fall tzid.patch tzid.data.cur)
           era  (fall era.patch era.cur)
         ==
-    :-
-      `new-event
+    ::  reset invites for all guests if the era or moment has changed
+    =/  reset-invites=flag
+        ?|  !=(era.cur era.new-event)
+            !=(when.data.cur when.data.new-event)
+        ==
+    =/  new-event=event
+        ?.  reset-invites
+          new-event
+        new-event(invites.data (~(run by invites.data.new-event) |=(* ~)))
+    :-  `new-event
     %=  alma
       events  (~(put by events.alma) calendar-code.patch (insort rest new-event))
     ==

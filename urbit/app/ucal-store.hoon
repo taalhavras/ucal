@@ -295,8 +295,8 @@
     =/  ts=to-subscriber:ucal-store  [rid %update %event-changed input now.bowl]
     ::  we need new rsvps if the era or moment are being changed.
     =/  new-rsvp=flag
-        ?|  =(era.old-event era.u.new-event)
-            =(when.data.old-event when.data.u.new-event)
+        ?|  !=(era.old-event era.u.new-event)
+            !=(when.data.old-event when.data.u.new-event)
         ==
     =/  invite-cards=(list card)  (make-invite-cards u.new-event new-rsvp)
     :-  [[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)] invite-cards]
