@@ -48,7 +48,9 @@ export default class Calendar {
     calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar.clearEvents()))
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
-      updatedCalendar?.events.push(event)
+      if (updatedCalendar && !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)) {
+        updatedCalendar?.events.push(event)
+      }
       all.set(event.calendarCode, updatedCalendar)
     })
 
