@@ -1,4 +1,4 @@
-/-  ucal-store
+/-  ucal, ucal-store
 |%
 ::  +public-calendars: reserved term used in the resource that represents calendar metadata
 ++  public-calendars  `term`%public-calendars
@@ -17,7 +17,7 @@
       ::  forwards poke to target's store (can be local)
       [%proxy-poke target=@p store-action=action:ucal-store]
       ::  used to respond to invites (pokes a foreign ucal-store)
-      [%invitation-response =calendar-code:ucal-store =event-code:ucal-store status=rsvp:ucal-store]
+      [%invitation-response =calendar-code:ucal =event-code:ucal status=rsvp:ucal-store]
   ==
 ::  $update: sent by the push-hook in response to an action
 ::
