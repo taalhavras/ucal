@@ -19,7 +19,7 @@
       ::  used to respond to invites (pokes a foreign ucal-store)
       [%invitation-response =calendar-code:ucal =event-code:ucal status=rsvp:ucal-store]
   ==
-::  $update: sent by the push-hook in response to an action
+::  $update: sent by the push-hook in response to a %query-cals poke
 ::
 +$  update
   $%  [%metadata source=@p items=(list metadata)]
