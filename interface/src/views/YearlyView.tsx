@@ -17,13 +17,13 @@ export default class YearlyView extends Component<ViewProps, State> {
     this.state = {}
   }
 
-  selectDay = (day: Date) => (event: React.MouseEvent<HTMLElement>) : void => {
+  selectDay = (day: Date) => (e: React.MouseEvent<HTMLElement>) : void => {
     const { props: { selectedDay, selectDay } } = this
-    event.preventDefault()
-    event.stopPropagation()
+    e.preventDefault()
+    e.stopPropagation()
 
     if (!this.state.showDaySummary && selectedDay.getTime() !== day.getTime()) {
-      selectDay(day)(event)
+      selectDay(day)(e)
     }
 
     if (day.getTime() === this.state.showDaySummary?.getTime()) {
@@ -53,7 +53,7 @@ export default class YearlyView extends Component<ViewProps, State> {
             <MonthTile year={selectedDay.getFullYear()} month={month} {...this.props} selectDay={selectDay} />
           </Box>)}
         </Box>
-        {!!showDaySummary && <Box id="yearly-view-modal" onClick={hideDaySummary}>
+        {!!showDaySummary && <Box id="yearly-view-modal" className='modal' onClick={hideDaySummary}>
           <Box className="content">
             <Text textAlign='center' fontSize={1}>{moment(selectedDay).format('ddd, MMMM D - YYYY')}</Text>
             {events.length > 0 && <Box marginTop='16px' display='flex' flexDirection='column'>

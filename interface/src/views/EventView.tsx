@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import _, { capitalize } from 'lodash';
 
-import { Text, Box, Button, StatelessTextInput, StatelessTextArea, Checkbox } from '@tlon/indigo-react';
+import { Text, Box, Button, StatelessTextInput, StatelessTextArea, Checkbox, Row } from '@tlon/indigo-react';
 import moment from 'moment';
 import Calendar from '../types/Calendar';
 import { match, RouteComponentProps, useLocation, withRouter } from 'react-router-dom';
-import { History, Location } from 'history'
+import { History, Location, LocationState } from 'history'
 import Event, { EventForm, EventLoc, RepeatInterval, Weekday, WEEKDAYS } from '../types/Event';
 import DatePicker from '../components/lib/DatePicker';
 import TimePicker from '../components/lib/TimePicker';
@@ -50,6 +50,7 @@ export interface EventViewState {
   allDay: boolean
   //TODO: add all event props here
   event?: Event
+  prevPath?: Location<LocationState>
 }
 
 class EventView extends Component<Props, EventViewState> {
@@ -61,12 +62,15 @@ class EventView extends Component<Props, EventViewState> {
     const eventToEdit = events.find(({ eventCode }) => eventCode === event)
 
     this.state = {
-      ...this.generateState(props, eventToEdit),
+      ...this.initState(props, eventToEdit),
       ...(eventToEdit || {})
     }
   }
 
-  generateState = (props: Props, event?: Event) : EventViewState => {
+  static getCalendarCode = (props: Props) => 
+    (props.calendars.find((c) => c.title === 'default' && c.owner === props.ship) || props.calendars[0])?.calendarCode
+
+  initState = (props: Props, event?: Event) : EventViewState => {
     const { startTime, endTime } = getDefaultStartEndTimes()
     if (event) {
       return event.toFormFormat()
@@ -77,7 +81,7 @@ class EventView extends Component<Props, EventViewState> {
     const end = moment(start).add(30, 'minutes').toDate()
 
     return {
-      calendarCode: props.calendars[0]?.calendarCode,
+      calendarCode: EventView.getCalendarCode(props),
       organizer: props.ship,
       title: '',
       desc: '',
@@ -90,19 +94,22 @@ class EventView extends Component<Props, EventViewState> {
       startTime,
       endTime,
     }
-}
+  }
 
   static getDerivedStateFromProps = (props: Props, state: EventViewState) => {
-    return { ...state, calendarCode: props.calendars[0]?.calendarCode }
+    if (!state.calendarCode) {
+      return { ...state, calendarCode: EventView.getCalendarCode(props) }
+    }
+    return state
   }
 
   saveEvent = async () => {
-    const { state, props, generateState } = this
+    const { state, props, initState } = this
     const eventToSave = new EventForm(state)
     try {
       const updated = Boolean(state.event)
       await props.actions.saveEvent(eventToSave, updated)
-      this.setState(generateState(props))
+      this.setState(initState(props))
       props.history.goBack()
     } catch (e) {
       console.log('SAVE EVENT ERROR:', e)
@@ -110,12 +117,11 @@ class EventView extends Component<Props, EventViewState> {
   }
 
   deleteEvent = async () : Promise<void> => {
-    const { props: { actions, history }, state: { event } } = this
+    const { props: { actions, history }, state: { event, prevPath } } = this
     if (confirm('Are you sure you want to delete this event?')) {
       await actions.deleteEvent(event)
       await actions.getEvents()
-      // TODO: refresh the state
-      history.goBack()
+      history.replace(prevPath || '/~calendar')
     }
   }
 
@@ -160,6 +166,11 @@ class EventView extends Component<Props, EventViewState> {
     this.setState({ repeatInterval: e.target.value as RepeatInterval })
   }
 
+  selectCalendar = (e: React.ChangeEvent<HTMLSelectElement>) : void => {
+    console.log(1, e.target.value)
+    this.setState({ calendarCode: e.target.value as string })
+  }
+
   disableSave = () : boolean => {
     const { state } = this
     if (!state.event) {
@@ -175,10 +186,10 @@ class EventView extends Component<Props, EventViewState> {
   }
 
   render() {
-    const { state: { title, desc, location, start, end, repeatInterval, weekdays, event, allDay, startTime, endTime },
-      props: { history },
+    const { state: { title, desc, location, start, end, repeatInterval, weekdays, event, allDay, startTime, endTime, calendarCode },
+      props: { history, calendars },
       saveEvent, deleteEvent, updateValue, selectDate, updateDescription, selectTime, toggleAllday,
-      setRepeatInterval, disableSave, toggleWeekday } = this
+      setRepeatInterval, disableSave, toggleWeekday, selectCalendar } = this
 
     const saveDisabled = disableSave()
 
@@ -189,6 +200,16 @@ class EventView extends Component<Props, EventViewState> {
         <Button disabled={saveDisabled} className='dark' marginRight='20px' onClick={saveEvent}>Save</Button>
         {!!(event?.title) && <Button onClick={deleteEvent}>Delete</Button>}
       </Box>
+
+      <Row className='calendar-select'>
+        <Text margin='6px 8px 0px 0px' fontSize='14px'>Calendar: </Text>
+        <select value={calendarCode} onChange={selectCalendar}>
+          {calendars.map((c, ind) => <option key={`select-calendar-${ind}`} value={c.calendarCode}>
+            {c.calendarCode}
+          </option>)}
+        </select>
+      </Row>
+
       <Box width='100%' display='flex' flexDirection='row'>
         <DatePicker selectedDay={start} selectDate={selectDate(true)} />
         {!allDay && <TimePicker selectedTime={startTime} selectTime={selectTime(true)} />}
@@ -196,6 +217,7 @@ class EventView extends Component<Props, EventViewState> {
         <DatePicker selectedDay={end} selectDate={selectDate(false)} startDate={start} />
         {!allDay && <TimePicker selectedTime={endTime} selectTime={selectTime(false)} />}
       </Box>
+
       <Box width='100%' display='flex' flexDirection='row' margin='20px 0px 0px' alignItems='center'>
         <Checkbox selected={allDay} onClick={toggleAllday} color='black' />
         <Text fontSize='14px' margin='0px 12px'>All day</Text>
@@ -213,6 +235,7 @@ class EventView extends Component<Props, EventViewState> {
           </Box>)}
         </Box>}
       </Box>
+
       <StatelessTextInput fontSize="14px" placeholder="Add location" width='60%' margin="20px 0px 0px" onChange={updateValue(EventField.location)} value={location.address} />
       <StatelessTextArea fontSize="14px" margin="20px 0px 0px" height="160px" placeholder="Add description" width='60%' onChange={updateDescription} value={desc} />
     </Box>
