@@ -4,6 +4,8 @@ import UrbitApi from './api'
 import InitialReducer from './reducers/initial'
 import UpdateReducer from './reducers/update'
 import Store from './store'
+import { CalendarViewState } from '../views/CalendarView'
+import { calendarFormat } from 'moment'
 
 // TODO: break out event types
 
@@ -22,18 +24,37 @@ export default class Actions {
     return calendars
   }
 
-  createCalendar = async (title: string, isPublic = false) : Promise<void> => {
-    await this.api.action('ucal-store', 'ucal-action', {
-      'create-calendar': {
-        title,
-        permissions: {
-          readers: [],
-          writers: [],
-          acolytes: [],
-          public: isPublic
+  saveCalendar = async (data : CalendarViewState, update = false) : Promise<void> => {
+    console.log('SAVING:', JSON.stringify(Calendar.toExportFormat(data, update)))
+    
+    if (data.calendar?.title !== data.title) {
+      await this.api.action('ucal-store', 'ucal-action', Calendar.toExportFormat(data, update))
+    }
+    if (data.calendar && data.calendar?.permissions?.public !== data.public) {
+      const payload = { 'change-permissions': {'calendar-code': data.calendar.calendarCode } }
+      payload['change-permissions'][data.public ? 'make-public' : 'make-private'] = null
+
+      await this.api.action('ucal-store', 'ucal-action', payload)
+    }
+    
+    // Handle permissions changes
+
+    await this.getCalendars()
+  }
+
+  deleteCalendar = async (calendar: Calendar) : Promise<boolean> => {
+    const confirmed = confirm('Are you sure you want to delete this calendar? This cannot be undone.')
+
+    if (confirmed) {
+      await this.api.action('ucal-store', 'ucal-action', {
+        'delete-calendar': {
+          'calendar-code': calendar.calendarCode,
         }
-      }
-    })
+      })
+      await this.getCalendars()
+    }
+    
+    return confirmed
   }
 
   getEvents = async () : Promise<Event[]> => {
@@ -61,4 +82,6 @@ export default class Actions {
     await this.api.action('ucal-store', 'ucal-action', event.toExportFormat(update))
     await this.getEvents()
   }
+
+  toggleCalendar = (calendar: Calendar) => () => this.store.updateStore({ data: { calendars: this.store.state.calendars.map((c) => c.toggle(calendar)) } })
 }

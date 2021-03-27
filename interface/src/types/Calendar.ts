@@ -1,3 +1,4 @@
+import { CalendarViewState } from '../views/CalendarView'
 import Event from './Event'
 
 export enum Timeframe {
@@ -16,6 +17,19 @@ export interface Permissions {
   readers: string[]
   writers: string[]
   acolytes: string[]
+  public: boolean
+}
+
+export const DEFAULT_PERMISSIONS : Permissions = {
+  readers: [],
+  writers: [],
+  acolytes: [],
+  public: false,
+}
+
+export interface CalendarCreationData extends Permissions {
+  title: string
+  calendar?: Calendar
 }
 
 export default class Calendar {
@@ -29,6 +43,9 @@ export default class Calendar {
   active = true
 
   constructor(data: any) {
+    if (data instanceof Calendar) {
+      return Object.assign(this, data)
+    }
     this.owner = data.owner
     this.calendarCode = data['calendar-code']
     this.title = data.title
@@ -42,13 +59,32 @@ export default class Calendar {
     return this
   }
 
+  toggle = (calendar: Calendar) => {
+    if (calendar.calendarCode === this.calendarCode) {
+      this.active = !this.active
+    }
+    return this
+  }
+
+  toFormFormat = () : CalendarViewState => ({
+    title: this.title,
+    ...this.permissions,
+    calendar: this
+  })
+
+  isUnchanged = (state: CalendarViewState) => {
+    return state.title === this.title &&
+      state.public === this.permissions.public
+  }
+
   static generateCalendars = (calendars: Calendar[], events: Event[]) : Calendar[] => {
     const all = new Map<string, Calendar | undefined>()
 
     calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar.clearEvents()))
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
-      if (updatedCalendar && !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)) {
+      console.log(updatedCalendar?.active)
+      if (updatedCalendar?.active && !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)) {
         updatedCalendar?.events.push(event)
       }
       all.set(event.calendarCode, updatedCalendar)
@@ -73,6 +109,24 @@ export default class Calendar {
     .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
     .filter((e) => e.isOnDay(date))
     .sort((a, b) => a.compareTo(b))
+
+  static toExportFormat = (data: CalendarViewState, update: boolean) => {
+    const formattedData = {
+      title: data.title,
+      permissions: {
+        readers: data.readers,
+        writers: data.writers,
+        acolytes: data.acolytes,
+        public: data.public,
+      }
+    }
+
+    return update ? {
+      'update-calendar': formattedData
+    } : {
+      'create-calendar': formattedData
+    }
+  }
 }
 
 export interface ViewProps {

@@ -9,8 +9,9 @@ import light from './components/themes/light'
 import dark from './components/themes/dark'
 
 import { Box } from '@tlon/indigo-react'
-import CalendarView from './views/CalendarView'
+import CalendarWrapper from './views/CalendarWrapper'
 import Store, { StoreState } from './logic/store'
+import CalendarView from './views/CalendarView'
 import EventView from './views/EventView'
 import Actions from './logic/actions'
 import UrbitApi from './logic/api'
@@ -57,13 +58,15 @@ export class App extends Component<Props, State> {
     return (
       <BrowserRouter>
         <ThemeProvider theme={state.dark ? dark : light}>
-        <Box display='flex' flexDirection='column' position='absolute' backgroundColor='white' height='100%' width='100%' px={[0,4]} pb={[0,4]}>
-        <HeaderBar/>
-        <Route exact path="/~calendar" render={ () => <CalendarView {...state} actions={this.actions} />}/>
-        <Route exact path="/~calendar/:timeframe/:displayDay" render={ () => <CalendarView {...state} actions={this.actions} />}/>
-        <Route exact path="/~calendar/event" render={ () => <EventView {...state} calendars={state.calendars} actions={this.actions} ship={this.api.authTokens.ship} />}/>
-        <Route exact path="/~calendar/event/:calendar/:event" render={ () => <EventView {...state} actions={this.actions} ship={this.api.authTokens.ship} />}/>
-        </Box>
+          <Box display='flex' flexDirection='column' position='absolute' backgroundColor='white' height='100%' width='100%' px={[0,4]} pb={[0,4]}>
+            <HeaderBar/>
+            <Route exact path="/~calendar" render={ () => <CalendarWrapper {...state} actions={this.actions} />}/>
+            <Route exact path="/~calendar/create" render={ () => <CalendarView {...state} actions={this.actions} ship={this.api.authTokens.ship} />}/>
+            <Route exact path="/~calendar/calendar/edit/:calendar" render={ () => <CalendarView {...state} calendars={state.calendars} actions={this.actions} ship={this.api.authTokens.ship} />}/>
+            <Route exact path="/~calendar/:timeframe/:displayDay" render={ () => <CalendarWrapper {...state} actions={this.actions} />}/>
+            <Route exact path="/~calendar/event" render={ () => <EventView {...state} calendars={state.calendars} actions={this.actions} ship={this.api.authTokens.ship} />}/>
+            <Route exact path="/~calendar/event/:calendar/:event" render={ () => <EventView {...state} actions={this.actions} ship={this.api.authTokens.ship} />}/>
+          </Box>
         </ThemeProvider>
       </BrowserRouter>
     )

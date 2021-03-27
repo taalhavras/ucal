@@ -2,6 +2,7 @@ import Actions from './actions'
 import Store from './store'
 import UrbitApi from './api'
 import { warnError } from '../lib/format'
+import { DEFAULT_PERMISSIONS } from '../types/Calendar'
 
 export default class Subscription {
   actions: Actions
@@ -30,7 +31,7 @@ export default class Subscription {
 
       if (calendars.length < 1) {
         try {
-          await this.actions.createCalendar('default')
+          await this.actions.saveCalendar({ title: 'default', ...DEFAULT_PERMISSIONS })
           await this.actions.getCalendars()
         } catch (error) {}
       }
@@ -41,7 +42,7 @@ export default class Subscription {
 
       if (error.toString().includes('Not found')) {
         try {
-          await this.actions.createCalendar('default')
+          await this.actions.saveCalendar({ title: 'default', ...DEFAULT_PERMISSIONS })
           await this.actions.getCalendars()
         } catch (createError) {
           warnError('CREATE CALENDAR')(createError)
