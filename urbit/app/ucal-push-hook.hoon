@@ -153,7 +153,7 @@
         %ucal-store
         (scot %da now.bowl)
         us
-        /almanac
+        /almanac/noun
       ==
   =/  cc=calendar-code  name.rid
   =/  cal=calendar  (need (~(get-calendar al alma) cc))
