@@ -18,7 +18,7 @@ module.exports = {
 ```
 Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `|mount %` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
 
-### Pokes
+### ucal-store pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
 Here's a table of how JSON should be formatted for each poke
@@ -99,7 +99,7 @@ era:
 }
 </pre>
 
-### Scrys
+### ucal-store scrys
 Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
 `cal-code` and `event-code` are unique per calendar/event and are just `@tas`s (they're just uuids). For the scry for events in range, start and end are `@da`s. `ship` is an `@p` whose almanac (a collection of calendars and events) we're examining.
 | Path                                     | Return type                                  | Notes                                                                                                                                                                                                                                                                                                                   |
@@ -120,6 +120,13 @@ times adjusted to the specified timezone. Some examples with EST as the timezone
 /gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun
 ```
 You'll need to run `timezone-store`on your ship with some imported data for this to work. See the `timezone-store` section below for more details on how to set this up.
+
+### ucal-pull-hook pokes
+| Poke                 | Json                                                                                                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| %query-cals          | <pre>{'query-cals': {'who': 'some-ship'}}<pre>                                                                                                                                  |
+| %invitation-response | <pre>{'invitation-response': {<br>    'calendar-code': 'some-code',<br>    'event-code': 'some-code',<br>    'status': 'yes' // either 'yes', 'no', or 'maybe'<br>  }<br>}<pre> |
+
 
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
@@ -161,8 +168,8 @@ If an import contains data previously in the store, the old data is overwritten.
 ```
 if you want a truly blank slate.
 
-### Inviting ships to your events
-Not yet implemented.
+### Invitations
+To invite/uninvite ships from a calendar use the `change-rsvp` poke on `ucal-store` - this is also equivalent to creating an event with those ships in the invited set. To see what events you are invited to you can use any scries that produce events from the above table, using `%invited-to` in the path instead of a ship name. To respond to invitations, poke your local `ucal-pull-hook` (see the pull-hook section for the details).
 
 ### Permissions
 Permissions are implemented at the calendar level. Ships fall into three
