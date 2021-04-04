@@ -18,7 +18,7 @@ module.exports = {
 ```
 Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `|mount %` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
 
-### Pokes
+### ucal-store pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
 
 Here's a table of how JSON should be formatted for each poke
@@ -27,11 +27,11 @@ Here's a table of how JSON should be formatted for each poke
 | %create-calendar    | `{'create-calendar': {'calendar-code': 'abcd-efgh', 'title': 'my-cal'}}`|
 | %update-calendar    | <pre>{'update-calendar': {'calendar-code': 'abcd-efgh',<br />'title': 'new-title' // optional, though pointless not to include   } }<pre>|
 | %delete-calendar    | <pre>{'delete-calendar': {'calendar-code': 'some-code'}}<pre>|
-| %create-event       | <pre>{'create-event': {'calendar-code': 'some-code', <br />  'event-code': 'event-code', // optional <br /> 'organizer': '~zod', <br /> 'title': 'my-event',<br/> 'desc': 'some-description', // optional <br /> 'tzid': 'utc', <br /> 'location': some-location, // optional <br /> 'when': some-moment, <br /> 'era': some-era // optional  } }<pre>|
+| %create-event       | <pre>{'create-event': {'calendar-code': 'some-code', <br />  'event-code': 'event-code', // optional <br /> 'organizer': '~zod', <br /> 'title': 'my-event',<br/> 'desc': 'some-description', // optional <br /> 'tzid': 'utc', <br /> 'location': some-location, // optional <br /> 'when': some-moment, <br /> 'era': some-era, // optional <br /> 'invited': ['~nel', '~bus'] // optional - no invites if not included } }<pre>|
 | %update-event       | <pre>{'update-event': {'calendar-code': 'some-code', <br />'event-code': 'event-code',     <br />'title': 'new-title', // optional     <br />'desc': 'some-description', // optional, can specify null     <br />'location': some-location, // optional, can specify null     <br />'when': some-moment, // optional     <br />'era': some-era, // optional, can specify null     <br />'tzid': 'utc' // optional   } }<pre> |
 | %delete-event       | <pre>{'delete-event': {'calendar-code': 'some-code', 'event-code': 'event-code'   } }<pre>|
-| %change-rsvp        | <pre>{'change-rsvp': {'calendar-code': 'some-code', <br />'event-code': 'event-code',  <br />'who': '~zod',  <br />'status': 'new-status', // optional, if not specified it's an uninvite   } }<pre>                                                                                                                                                                                           |
-| %import-from-ics    | <pre>{'import-from-ics': {'path': 'some-path' } }<pre>                                                                                                                                                                                                                                                                                                                               |
+| %change-rsvp        | <pre>{'change-rsvp': {'calendar-code': 'some-code', <br />'event-code': 'event-code',  <br />'who': '~zod',  <br />'invite': some-bool   } }<pre>                                                                                                                                                                                           |
+| %import-from-ics    | <pre>{'import-from-ics': {'path': 'some-path'   } }<pre>                                                                                                                                                                                                                                                                                                                               |
 | %change-permissions | <pre>{'change-permissions': {'calendar-code': 'some-code',<br />// now we have ONE of the following     <br />// 1.<br />'change' : {'who': 'some-ship', 'role': 'some-role'} // role is either reader, writer, or acolyte<br />// 2.<br />'make-public': null     <br />// 3.<br />'make-private': null   } }<pre>                                                                                                     |
 
 
@@ -99,7 +99,7 @@ era:
 }
 </pre>
 
-### Scrys
+### ucal-store scrys
 Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively).
 `cal-code` and `event-code` are unique per calendar/event and are just `@tas`s (they're just uuids). For the scry for events in range, start and end are `@da`s. `ship` is an `@p` whose almanac (a collection of calendars and events) we're examining.
 | Path                                     | Return type                                  | Notes                                                                                                                                                                                                                                                                                                                   |
@@ -125,11 +125,25 @@ times adjusted to the specified timezone. Some examples with EST as the timezone
 ```
 You'll need to run `timezone-store`on your ship with some imported data for this to work. See the `timezone-store` section below for more details on how to set this up.
 
+### ucal-pull-hook pokes
+| Poke                 | Json                                                                                                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| %query-cals          | <pre>{'query-cals': {'who': 'some-ship'}}<pre> |
+| %invitation-response | <pre>{'invitation-response': {<br>    'calendar-code': 'some-code',<br>    'event-code': 'some-code',<br>    'status': 'yes' // either 'yes', 'no', or 'maybe'<br>  }<br>}<pre> |
+
+Again, the best documentation for these is the source (specifically the `++on-poke` arm in `ucal-pull-hook.hoon`) but here's an overview. `%invitation-response` is hopefully fairly obvious - it just sends an rsvp for a specified event. `%query-cals` sends a request to a given ship for all the calendar metadata that we (the sender) have access to. Responses to this poke can be accessed via a scry (documented below).
+
+### ucal-pull-hook scrys
+These scries can also be suffixed with either noun or json, depending on what you want.
+| Scry              | Return type     | Notes                                             |
+|-------------------|-----------------|---------------------------------------------------|
+| `%x %metadata @p` | (list metadata) | metadata are [owner=@p title=cord =calendar-code] |
+
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
 
 ### Other useful generators
-`+all-calendars, =who (unit @p), =local flag` : Dumps a list of metadata (`[owner title code]` tuples) so you can quickly see what calendars are in the store for a given ship (defaults to current ship if not specified). If local is specified to be false, queries the pull-hook instead (we'll elaborate on this later). Useful in conjunction with...
+`+all-calendars, =who (unit @p), =local flag` : Dumps a list of metadata (`[owner title code]` tuples) so you can quickly see what calendars are in the store for a given ship (defaults to current ship if not specified). If local is specified to be false, queries the pull-hook instead. Useful in conjunction with...
 
 `+events-in-range =calendar-code start=@da end=@da, who=(unit @p)` : Gets the events in the specified date range for the specified calendar on the specified ship (who). if no ship is specified we again default to the current ship.
 
@@ -165,8 +179,8 @@ If an import contains data previously in the store, the old data is overwritten.
 ```
 if you want a truly blank slate.
 
-### Inviting ships to your events
-Not yet implemented.
+### Invitations
+To invite/uninvite ships from a calendar use the `change-rsvp` poke on `ucal-store` - this is also equivalent to creating an event with those ships in the invited set. To see what events you are invited to you can use any scries that produce events from the above table, using `%invited-to` in the path instead of a ship name. To respond to invitations, poke your local `ucal-pull-hook` (see the pull-hook section for the details).
 
 ### Permissions
 Permissions are implemented at the calendar level. Ships fall into three
@@ -194,10 +208,10 @@ branch: none
 
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
 
-### invites
+### recurrent event invites
 branch: event-invites
 
-The data types for invites are floating around and through the code, but they aren't used in any way. This will involve work at the hook level and some store changes.
+Currently invites are implemented naively for recurring events (one invite for all events). These should certainly be maintained per event.
 
 ### pH Testing (broken as of network breach)
 branch: none

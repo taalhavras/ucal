@@ -11,6 +11,7 @@
       to-subscriber:ucal-store
       %ucal-to-subscriber
       %ucal-pull-hook
+      0  0
   ==
   ::
 +$  agent  (push-hook:push-hook config)
@@ -45,12 +46,12 @@
         =/  us=@tas  (scot %p our.bowl)
         =/  cals=(list calendar)
             .^  (list calendar)
-              %gy
+              %gx
               us
               %ucal-store
               (scot %da now.bowl)
               us
-              /calendars
+              /calendars/noun
             ==
         %+  turn
           ::  only expose calendars the querying ship can access
@@ -152,7 +153,7 @@
         %ucal-store
         (scot %da now.bowl)
         us
-        /almanac
+        /almanac/noun
       ==
   =/  cc=calendar-code  name.rid
   =/  cal=calendar  (need (~(get-calendar al alma) cc))

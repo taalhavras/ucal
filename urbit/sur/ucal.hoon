@@ -58,15 +58,7 @@
 ::
 +$  rsvp  ?(%yes %no %maybe)
 ::
-+$  invite
-  $:  note=@t
-      optional=?
-      ::  if ~, then the invited party hasn't responded
-      rsvp=(unit rsvp)
-      sent-at=@da
-  ==
-::
-+$  invites  (map @p invite)
++$  invites  (map @p (unit rsvp))
 ::  $calendar-permissions: different permission settings a calendar can have.
 ::  readers: ships that can subscribe to the calendar
 ::  writers: ships that can edit the calendar and create events

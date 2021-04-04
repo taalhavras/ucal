@@ -20,6 +20,13 @@
       alma=almanac
       ::  map of entity to almanac, to track almanacs pulled from remote ships
       external=(map entity almanac)
+      ::  store events we're invited to in an almanac
+      invited-to=almanac
+      ::  track the ship we should respond to for each event we're
+      ::  invited to. This is not necessarily the organizer of the
+      ::  event - we want to send our responses to the host of the
+      ::  calendar.
+      outgoing-rsvps=(map [calendar-code event-code] @p)
   ==
 ::
 +$  versioned-state
@@ -76,9 +83,19 @@
       =^  cards  state  (poke-ucal-action:uc !<(action:ucal-store vase))
       [cards this]
     ::
-        %ucal-to-subscriber
+        ?(%ucal-to-subscriber %ucal-to-subscriber-0)
       ::  this is where updates from ucal-pull-hook come through.
       =^  cards  state  (poke-ucal-to-subscriber:uc !<(to-subscriber:ucal-store vase))
+      [cards this]
+    ::
+        %ucal-invitation
+      ::  if we're invited to an event we find out through these pokes
+      =^  cards  state  (poke-ucal-invitation:uc !<(invitation:ucal-store vase))
+      [cards this]
+    ::
+        %ucal-invitation-reply
+      ::
+      =^  cards  state  (poke-ucal-invitation-reply:uc !<(invitation-reply:ucal-store vase))
       [cards this]
     ==
   ::
@@ -105,6 +122,12 @@
     ^-  (unit (unit cage))
     ?+  path
       (on-peek:def path)
+    ::
+        [%x %host @tas @tas ~]
+      ``ucal-event-host+!>((~(got by outgoing-rsvps.state) [i.t.t.path i.t.t.t.path]))
+    ::
+        [%x %invited-to *]
+      (handle-on-peek bowl t.t.path invited-to.state)
     ::
         [%x @p *]
       =/  who=@p  `@p`(slav %p `@tas`+<:path)
@@ -197,7 +220,7 @@
     ?>  (can-write-cal [owner permissions]:u.new-cal src.bowl)
     =/  rid=resource  (resource-for-calendar calendar-code.u.new-cal)
     =/  ts=to-subscriber:ucal-store  [rid %update %calendar-changed input now.bowl]
-    =/  cag=cage  [%ucal-to-subscriber !>(ts)]
+    =/  cag=cage  [%ucal-to-subscriber-0 !>(ts)]
     :-  ~[[%give %fact ~[/almanac] cag]]
     state(alma new-alma)
     ::
@@ -212,8 +235,15 @@
     =/  cal-update=card
         =/  rid=resource  (resource-for-calendar code)
         =/  removed=to-subscriber:ucal-store  [rid %update %calendar-removed code]
-        [%give %fact ~[/almanac] %ucal-to-subscriber !>(removed)]
-    :-  ~[cal-update]
+        [%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(removed)]
+    =/  uninvites=(list card)
+        =|  acc=(list card)
+        =/  all-events=(list event)  (need (~(get-events-bycal al alma.state) code))
+        |-
+        ?~  all-events
+          acc
+        (weld (make-uninvite-cards i.all-events) acc)
+    :-  [cal-update uninvites]
     %=  state
       alma  (~(delete-calendar al alma.state) code)
     ==
@@ -226,7 +256,9 @@
       !!
     ::  must have write access to calendar to create an event
     ?>  (can-write-cal [owner permissions]:u.target src.bowl)
-    =/  =about:ucal  [our.bowl now.bowl now.bowl]
+    ::  organizer can't be an invitee
+    ?<  (~(has in invited.input) src.bowl)
+    =/  =about:ucal  [src.bowl now.bowl now.bowl]
     =/  new=event
       :*
         ^-  event-data
@@ -236,7 +268,7 @@
           about
           detail.input
           when.input
-          invites.input
+          (malt (turn ~(tap in invited.input) |=(who=@p [who ~])))
           %yes  :: organizer is attending own event by default
           tzid.input
         ==
@@ -245,7 +277,8 @@
     =/  paths=(list path)  ~[/almanac]
     =/  rid=resource  (resource-for-calendar calendar-code.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-added new]
-    :-  [%give %fact paths %ucal-to-subscriber !>(ts)]~
+    =/  invite-cards=(list card)  (make-invite-cards new &)
+    :-  [[%give %fact paths %ucal-to-subscriber-0 !>(ts)] invite-cards]
     %=  state
       alma  (~(add-event al alma.state) new)
     ==
@@ -259,42 +292,69 @@
       !!
     ::  must have write access to calendar to update an event
     ?>  (can-write-cal [owner permissions]:u.target src.bowl)
+    =/  old-event=event
+        %-  need
+        (~(get-event al alma.state) [calendar-code event-code]:patch.input)
     =/  [new-event=(unit event) new-alma=almanac]
         (~(update-event al alma.state) input now.bowl)
     ?~  new-event
       `state  :: nonexistent update
     =/  rid=resource  (resource-for-calendar calendar-code.patch.input)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-changed input now.bowl]
-    :-
-    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+    ::  we need new rsvps if the era or moment are being changed.
+    =/  new-rsvp=flag
+        ?|  !=(era.old-event era.u.new-event)
+            !=(when.data.old-event when.data.u.new-event)
+        ==
+    =/  invite-cards=(list card)  (make-invite-cards u.new-event new-rsvp)
+    :-  [[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)] invite-cards]
     state(alma new-alma)
     ::
       %delete-event
     =/  cal-code  calendar-code.+.action
     =/  event-code  event-code.+.action
-    =/  target=(unit cal)
-        (~(get-calendar al alma.state) cal-code)
-    ::  target calendar must exist
-    ?~  target
-      !!
+    =/  target=cal  (need (~(get-calendar al alma.state) cal-code))
     ::  must have write access to calendar to delete an event
-    ?>  (can-write-cal [owner permissions]:u.target src.bowl)
+    ?>  (can-write-cal [owner permissions]:target src.bowl)
     =/  rid=resource  (resource-for-calendar cal-code)
     =/  ts=to-subscriber:ucal-store  [rid %update %event-removed cal-code event-code]
+    =/  deleted-event=event  (need (~(get-event al alma.state) cal-code event-code))
     :-
-    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+      [[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)] (make-uninvite-cards deleted-event)]
     state(alma (~(delete-event al alma.state) event-code cal-code))
     ::
       %change-rsvp
-    =/  input=rsvp-change:ucal-store  +.action
+    =/  input  +.action
+    ::  must have write access to calendar to invite/uninvite anybody
+    =/  target=cal  (need (~(get-calendar al alma.state) calendar-code.input))
+    ?>  (can-write-cal [owner permissions]:target src.bowl)
+    =/  change=rsvp-change:ucal-store
+        :^    calendar-code.input
+            event-code.input
+          who.input
+        ?:(invite.input [~ ~] ~)
     =/  [new-event=(unit event) new-alma=almanac]
-        (~(update-rsvp al alma.state) input)
+        (~(update-rsvp al alma.state) change)
     ?~  new-event
       `state
     =/  rid=resource  (resource-for-calendar calendar-code.input)
-    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed input]
-    :-
-    ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+    =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]
+    =/  invite-card=card
+        =/  inv=invitation:ucal-store
+            ?.  invite.input
+              [%removed [calendar-code event-code]:input]
+            [%invited u.new-event &]
+        (make-invitation-poke-card who.input inv)
+    =/  updates-to-invitees=(list card)
+        ::  send an update to every invitee who ISNT the ship whose
+        ::  invite changed w/this poke (since we already created a card
+        ::  for them above).
+        %+  turn
+          ~(tap in (~(del in ~(key by invites.data.u.new-event)) who.input))
+        |=  guest=@p
+        ^-  card
+        (make-invitation-poke-card guest [%invited u.new-event |])
+    :-  [[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)] invite-card updates-to-invitees]
     state(alma new-alma)
     ::
       %import-from-ics
@@ -323,7 +383,7 @@
         (apply-permissions-update permissions.target input)
     =/  rid=resource  (resource-for-calendar cc)
     =/  ts=to-subscriber:ucal-store  [rid %update %permissions-changed cc updated]
-    :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber !>(ts)]]
+    :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
     %=  state
       alma  (~(add-calendar al alma.state) target(permissions updated))
     ==
@@ -383,6 +443,57 @@
       external  (~(put by external.state) from new-alma)
     ==
   ==
+::
+++  poke-ucal-invitation
+  |=  inv=invitation:ucal-store
+  ^-  (quip card _state)
+  ::  no cards produced here
+  :-  ~
+  ?:  ?=([%invited *] inv)
+    =/  key=[calendar-code event-code]  [calendar-code event-code]:data.event.inv
+    ::  we always want to overwrite our old notion of the event
+    =/  deleted-from=almanac
+        (~(delete-event al invited-to.state) +.key -.key)
+    ::  src.bowl is the ship that sent us this poke, which means it's
+    ::  the one we want to send our response to. make sure that we're
+    ::  not getting invitations from multiple ships for the same event.
+    ?>  =(src.bowl (~(gut by outgoing-rsvps.state) key src.bowl))
+    %=  state
+      invited-to  (~(add-event al deleted-from) event.inv)
+      outgoing-rsvps  (~(put by outgoing-rsvps.state) key src.bowl)
+    ==
+  ?:  ?=([%removed *] inv)
+    =/  key=[calendar-code event-code]  +.inv
+    =/  hosting-ship=@p  (~(got by outgoing-rsvps.state) key)
+    ?>  =(hosting-ship src.bowl)
+    %=  state
+      invited-to  (~(delete-event al invited-to.state) +.key -.key)
+      outgoing-rsvps  (~(del by outgoing-rsvps.state) key)
+    ==
+  !!
+::
+++  poke-ucal-invitation-reply
+  |=  reply=invitation-reply:ucal-store
+  ^-  (quip card _state)
+  =/  =event  (need (~(get-event al alma.state) [calendar-code event-code]:reply))
+  ::  must be getting this from a ship who is invited to the event
+  ?>  |(=(src.bowl organizer.about.data.event) (~(has by invites.data.event) src.bowl))
+  =/  hash=@  (get-event-invite-hash event)
+  ?.  =(hash hash.reply)
+    `state
+  =/  change=rsvp-change:ucal-store
+      :^    calendar-code.reply
+          event-code.reply
+        src.bowl
+      ``status.reply
+  =/  [upd=(unit ^event) new-alma=almanac]  (~(update-rsvp al alma.state) change)
+  =/  rid=resource  (resource-for-calendar calendar-code.reply)
+  =/  ts=to-subscriber:ucal-store  [rid %update %rsvp-changed change]
+  ::  send out an update to subscribers as well as to all invited ships
+  ::  (including the respondee) so they know the current status of other
+  ::  invites.
+  :-  [[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)] (make-invite-cards (need upd) |)]
+  state(alma new-alma)
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek
@@ -506,4 +617,54 @@
   ?:  (lth b a)
     [b a]
   [a b]
+::
+++  make-invitation-poke-card
+  |=  [to=@p inv=invitation:ucal-store]
+  ^-  card
+  =/  wir=wire
+      ?:  ?=([%invited *] inv)
+        (weld /inviting/(scot %p to) [calendar-code event-code ~]:data.event.inv)
+      ?:  ?=([%removed *] inv)
+        (weld /uninviting/(scot %p to) [calendar-code event-code ~]:inv)
+      !!
+  :*  %pass
+      wir
+      %agent
+      [to %ucal-store]
+      %poke
+      %ucal-invitation
+      !>(`invitation:ucal-store`inv)
+  ==
+::
+++  make-invite-cards
+  |=  [=event rsvp-required=flag]
+  ^-  (list card)
+  =/  inv=invitation:ucal-store  [%invited event rsvp-required]
+  =/  ships=(set @p)  ~(key by invites.data.event)
+  ::  the organizer should never be getting a card here - but they
+  ::  shouldn't be in the invites map to begin with.
+  ?<  (~(has in ships) organizer.about.data.event)
+  %~  tap
+    in
+  ^-  (set card)
+  %-  ~(run in ships)
+  |=  who=@p
+  ^-  card
+  (make-invitation-poke-card who inv)
+::
+++  make-uninvite-cards
+  |=  =event
+  ^-  (list card)
+  =/  inv=invitation:ucal-store  [%removed [calendar-code event-code]:data.event]
+  =/  ships=(set @p)  ~(key by invites.data.event)
+  ::  the organizer should never be getting a card here - but they
+  ::  shouldn't be in the invites map to begin with.
+  ?<  (~(has in ships) organizer.about.data.event)
+  %~  tap
+    in
+  ^-  (set card)
+  %-  ~(run in ships)
+  |=  who=@p
+  ^-  card
+  (make-invitation-poke-card who inv)
 --

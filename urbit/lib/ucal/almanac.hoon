@@ -93,8 +93,16 @@
           tzid.data  (fall tzid.patch tzid.data.cur)
           era  (fall era.patch era.cur)
         ==
-    :-
-      `new-event
+    ::  reset invites for all guests if the era or moment has changed
+    =/  reset-invites=flag
+        ?|  !=(era.cur era.new-event)
+            !=(when.data.cur when.data.new-event)
+        ==
+    =/  new-event=event
+        ?.  reset-invites
+          new-event
+        new-event(invites.data (clear-invites:ucal-util invites.data.new-event))
+    :-  `new-event
     %=  alma
       events  (~(put by events.alma) calendar-code.patch (insort rest new-event))
     ==
@@ -116,15 +124,23 @@
         =/  new-event=event
             ::  first check if the change is for the host
             ?:  =(who.rsvp organizer.about.data.cur)
-              ::  cannot uninvite organizer, so status can't be ~
-              cur(rsvp.data (need status.rsvp))
-            ::  using got, will crash if @p not invited
-            ::  TODO is that desired?
-            =/  inv=invite  (~(got by invites.data.cur) who.rsvp)
+              ::  cannot uninvite organizer and organizer should always
+              ::  have an rsvp status.
+              cur(rsvp.data (need (need status.rsvp)))
+            =/  old-status=(unit (unit ^rsvp))  (~(get by invites.data.cur) who.rsvp)
+            ?~  old-status
+              ::  in this case the ship wasn't previously invited. the
+              ::  change must be [~ ~] - an initial invite
+              ?>  =(status.rsvp [~ ~])
+              cur(invites.data (~(put by invites.data.cur) who.rsvp ~))
+            ::  in this case the ship has previously been invited. any
+            ::  invitation change is fine (including a reset to
+            ::  "unanswered" even if they haven't responded)
             ?~  status.rsvp
-              cur(invites.data (~(del by invites.data.cur) who.rsvp)) :: uninvite @p
-            =/  new-invite=invite  inv(rsvp status.rsvp)
-            cur(invites.data (~(put by invites.data.cur) who.rsvp new-invite))
+              ::  uninviting the @p
+              cur(invites.data (~(del by invites.data.cur) who.rsvp))
+            ::  overwriting previous invitation status
+            cur(invites.data (~(put by invites.data.cur) who.rsvp u.status.rsvp))
         [`new-event new-event +.acc]
       ?~  new-event
         [~ alma]

@@ -642,20 +642,20 @@
     (so:dejs:format (~(got by p.jon) 'calendar-code'))
   ++  convert-create-event
     |=  jon=json
-    ^-  [calendar-code (unit event-code) @p detail moment (unit era) invites tape]
+    ^-  [calendar-code (unit event-code) @p detail moment (unit era) (set @p) tape]
     =,  format
     ?>  ?=([%o *] jon)
     :*  (so:dejs (~(got by p.jon) 'calendar-code'))
         (bind (~(get by p.jon) 'event-code') so:dejs)
-        ((se:dejs:format %p) (~(got by p.jon) 'organizer'))
+        ((se:dejs %p) (~(got by p.jon) 'organizer'))
         ::  detail
         :+  (so:dejs (~(got by p.jon) 'title'))
           (bind (~(get by p.jon) 'desc') so:dejs)
         (bind (~(get by p.jon) 'location') location-from-json)
         (moment-from-json (~(got by p.jon) 'when'))
         (bind (~(get by p.jon) 'era') era-from-json)
-        ::  TODO handle invites
-        ~
+        ::  default to empty list (no invites) if key not included
+        ((as:dejs (se:dejs %p)) (~(gut by p.jon) 'invited' [%a ~]))
         (sa:dejs (~(got by p.jon) 'tzid'))
     ==
   ++  convert-update-event
@@ -687,13 +687,13 @@
     (so:dejs (~(got by p.jon) 'event-code'))
   ++  convert-change-rsvp
     |=  jon=json
-    ^-  rsvp-change:ucal-store
+    ^-  [calendar-code event-code @p flag]
     =,  format
     ?>  ?=([%o *] jon)
     :^    (so:dejs (~(got by p.jon) 'calendar-code'))
         (so:dejs (~(got by p.jon) 'event-code'))
       ((se:dejs %p) (~(got by p.jon) 'who'))
-    (bind (~(get by p.jon) 'status') (corl rsvp so:dejs))
+    (bo:dejs (~(got by p.jon) 'invite'))
   ++  convert-import
     |=  jon=json
     ^-  path
@@ -748,4 +748,19 @@
     :-  cc
     [%a (turn evs event-to-json)]
   --
+::  +get-event-invite-hash: calculate the mug of the era and moment of
+::  an event. used to verify that rsvps to events are for the latest
+::  version of the event.
+::
+++  get-event-invite-hash
+  |=  =event
+  ^-  @
+  (mug [era.event when.data.event])
+::  +clear-invites: resets all invites to the "not responded" status
+::
+++  clear-invites
+  |=  inv=invites
+  ^-  invites
+  (~(run by inv) |=(* ~))
 --
+

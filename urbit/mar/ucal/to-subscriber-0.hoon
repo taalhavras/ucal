@@ -5,7 +5,7 @@
 ++  grow
   |%
   ++  noun  to-subscriber
-  ++  to-subscriber-0  to-subscriber
+  ++  to-subscriber  ^to-subscriber
   --
 ::
 ++  grab
