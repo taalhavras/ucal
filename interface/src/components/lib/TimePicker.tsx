@@ -35,7 +35,7 @@ export default class DatePicker extends Component<Props, State> {
     const quarterHours = getQuarterHours()
       
     return <Box>
-      <Box margin='20px 0px 0px 12px' padding="8px" borderRadius="4px"
+      <Box margin='16px 0px 0px 12px' padding="8px" borderRadius="4px"
         backgroundColor="#f1f3f4"
         onClick={toggleDate} cursor='pointer'>
         <Text fontSize='14px'>{selectedTime}</Text>

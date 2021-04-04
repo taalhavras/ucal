@@ -705,7 +705,9 @@
     =,  format
     ?>  ?=([%o *] jon)
     :-  (so:dejs (~(got by p.jon) 'calendar-code'))
-    %.  jon
+    ::  FIXME bit of a silly workaround - should probably
+    ::  just rework how the jsons are structured.
+    %.  [%o (~(del by p.jon) 'calendar-code')]
     %-  of:dejs
     :~  :-  %change
         |=  jon=json

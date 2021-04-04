@@ -29,10 +29,10 @@ Here's a table of how JSON should be formatted for each poke
 | %delete-calendar    | <pre>{'delete-calendar': {'calendar-code': 'some-code'}}<pre>|
 | %create-event       | <pre>{'create-event': {'calendar-code': 'some-code', <br />  'event-code': 'event-code', // optional <br /> 'organizer': '~zod', <br /> 'title': 'my-event',<br/> 'desc': 'some-description', // optional <br /> 'tzid': 'utc', <br /> 'location': some-location, // optional <br /> 'when': some-moment, <br /> 'era': some-era, // optional <br /> 'invited': ['~nel', '~bus'] // optional - no invites if not included } }<pre>|
 | %update-event       | <pre>{'update-event': {'calendar-code': 'some-code', <br />'event-code': 'event-code',     <br />'title': 'new-title', // optional     <br />'desc': 'some-description', // optional, can specify null     <br />'location': some-location, // optional, can specify null     <br />'when': some-moment, // optional     <br />'era': some-era, // optional, can specify null     <br />'tzid': 'utc' // optional   } }<pre> |
-| %delete-event       | <pre>{'delete-event': {'calendar-code': 'some-code',     'event-code': 'event-code'   } }<pre>|
+| %delete-event       | <pre>{'delete-event': {'calendar-code': 'some-code', 'event-code': 'event-code'   } }<pre>|
 | %change-rsvp        | <pre>{'change-rsvp': {'calendar-code': 'some-code', <br />'event-code': 'event-code',  <br />'who': '~zod',  <br />'invite': some-bool   } }<pre>                                                                                                                                                                                           |
 | %import-from-ics    | <pre>{'import-from-ics': {'path': 'some-path'   } }<pre>                                                                                                                                                                                                                                                                                                                               |
-| %change-permissions | <pre>{'change-permissions': {'calendar-code': 'some-code',<br />// now we have ONE of the following     <br />// 1.<br />'who': 'some-ship', <br />'role': 'some-role' // either reader, writer, or acolyte<br />// 2.<br />'make-public': null     <br />// 3.<br />'make-private': null   } }<pre>                                                                                                     |
+| %change-permissions | <pre>{'change-permissions': {'calendar-code': 'some-code',<br />// now we have ONE of the following     <br />// 1.<br />'change' : {'who': 'some-ship', 'role': 'some-role'} // role is either reader, writer, or acolyte<br />// 2.<br />'make-public': null     <br />// 3.<br />'make-private': null   } }<pre>                                                                                                     |
 
 
 The general format of a cell type in JSON is a dictionary of field name to value.
@@ -110,6 +110,10 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 | `%x ship %events %specific cal-code event-code` | event                                        | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
 | `%x ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
 | `%x ship %events %inrange cal-code start end`   | [(list event) (list projected-event)]        | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
+|  `%x %host cal-code event-code`    |  @p  |  the ship hosting a particular event we're invited to |
+
+#### Invitation scrys
+The above scrys can also be used to retrieve information about events you've been invited to. You won't have access to calendar data for these events (unless you separately have access to it), but by using `%invited-to` instead of an `@p` in the path all scries that produce events will get you events you've been invited to. These scries are the only way to see these events if you don't have access to the calendars they're hsoted on.
 
 ### Timezones in ucal
 All scries that produce events can have `/timezone/ZONE_NAME` included after the ship. This means that the events produced wil have
@@ -205,7 +209,7 @@ branch: none
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
 
 ### recurrent event invites
-branch: none
+branch: event-invites
 
 Currently invites are implemented naively for recurring events (one invite for all events). These should certainly be maintained per event.
 
