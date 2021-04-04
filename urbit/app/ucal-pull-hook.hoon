@@ -124,11 +124,11 @@
   |=  pax=path
   ^-  (unit (unit cage))
   ?+    pax  (on-peek:def pax)
-      [%y %metadata @p *]
+      [%x %metadata @p *]
     =/  target=entity  `entity`(slav %p `@tas`i.t.t.pax)
     ?.  (~(has by entries.state) target)
       ~
-    ``noun+!>((~(get ja entries.state) target))
+    ``ucal-metadata+!>((~(get ja entries.state) target))
   ==
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def

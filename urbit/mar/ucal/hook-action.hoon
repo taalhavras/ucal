@@ -1,4 +1,4 @@
-/-  ucal-hook, ucal-store
+/-  ucal-hook, ucal
 /+  ucal-util
 |_  act=action:ucal-hook
 ++  grow
@@ -27,12 +27,12 @@
     ::
     ++  parse-invitation-response
       |=  jon=json
-      ^-  [calendar-code:ucal event-code:ucal rsvp:ucal-store]
+      ^-  [calendar-code:ucal event-code:ucal rsvp:ucal]
       =,  format
       ?>  ?=([%o *] jon)
       :+  (so:dejs (~(got by p.jon) 'calendar-code'))
         (so:dejs (~(got by p.jon) 'event-code'))
-      ((cu:dejs rsvp:ucal-store so:dejs) (~(got by p.jon) 'status'))
+      ((cu:dejs rsvp:ucal so:dejs) (~(got by p.jon) 'status'))
     --
   --
 ::

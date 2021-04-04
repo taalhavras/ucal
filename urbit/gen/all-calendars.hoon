@@ -14,13 +14,13 @@
 ?.  local
   :: get metadata from the pull-hook
   .^  (list metadata:ucal-hook)
-    %gy
+    %gx
     us
     %ucal-pull-hook
     (scot %da now)
     %metadata
     them
-    ~
+    /noun
   ==
 ::  get metadata from local store
 =/  res=(list calendar)
@@ -30,9 +30,7 @@
       %ucal-store
       (scot %da now)
       them
-      %calendars
-      %noun
-      ~
+      /calendars/noun
     ==
 %+  turn
   res
