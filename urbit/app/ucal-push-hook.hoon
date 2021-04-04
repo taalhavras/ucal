@@ -11,6 +11,7 @@
       to-subscriber:ucal-store
       %ucal-to-subscriber
       %ucal-pull-hook
+      0  0
   ==
   ::
 +$  agent  (push-hook:push-hook config)
