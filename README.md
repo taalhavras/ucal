@@ -124,15 +124,22 @@ You'll need to run `timezone-store`on your ship with some imported data for this
 ### ucal-pull-hook pokes
 | Poke                 | Json                                                                                                                                                                  |
 |----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| %query-cals          | <pre>{'query-cals': {'who': 'some-ship'}}<pre>                                                                                                                                  |
+| %query-cals          | <pre>{'query-cals': {'who': 'some-ship'}}<pre> |
 | %invitation-response | <pre>{'invitation-response': {<br>    'calendar-code': 'some-code',<br>    'event-code': 'some-code',<br>    'status': 'yes' // either 'yes', 'no', or 'maybe'<br>  }<br>}<pre> |
 
+Again, the best documentation for these is the source (specifically the `++on-poke` arm in `ucal-pull-hook.hoon`) but here's an overview. `%invitation-response` is hopefully fairly obvious - it just sends an rsvp for a specified event. `%query-cals` sends a request to a given ship for all the calendar metadata that we (the sender) have access to. Responses to this poke can be accessed via a scry (documented below).
+
+### ucal-pull-hook scrys
+These scries can also be suffixed with either noun or json, depending on what you want.
+| Scry              | Return type     | Notes                                             |
+|-------------------|-----------------|---------------------------------------------------|
+| `%x %metadata @p` | (list metadata) | metadata are [owner=@p title=cord =calendar-code] |
 
 ### Creating a calendar/event with a generator
 Run `:ucal-store|create-calendar some-title-cord` to create a calendar. The same syntax can be used for creating events, with `create-event` instead (there's a different set of arguments). The generators can be found in `urbit/gen/ucal-store` and an explanation of this syntax is [here.](https://github.com/timlucmiptev/gall-guide/blob/master/generators.md)
 
 ### Other useful generators
-`+all-calendars, =who (unit @p), =local flag` : Dumps a list of metadata (`[owner title code]` tuples) so you can quickly see what calendars are in the store for a given ship (defaults to current ship if not specified). If local is specified to be false, queries the pull-hook instead (we'll elaborate on this later). Useful in conjunction with...
+`+all-calendars, =who (unit @p), =local flag` : Dumps a list of metadata (`[owner title code]` tuples) so you can quickly see what calendars are in the store for a given ship (defaults to current ship if not specified). If local is specified to be false, queries the pull-hook instead. Useful in conjunction with...
 
 `+events-in-range =calendar-code start=@da end=@da, who=(unit @p)` : Gets the events in the specified date range for the specified calendar on the specified ship (who). if no ship is specified we again default to the current ship.
 
@@ -197,10 +204,10 @@ branch: none
 
 The data structure used to currently store events (the almanac) is naively implemented and can be improved. I think there's an ordered map somewhere in the la/graph-store branch of the main urbit repo (++mop) that we may be able to use here. It might also be worth implementing an [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree) as this seems to be the most efficient data structure for these types of queries.
 
-### invites
+### recurrent event invites
 branch: none
 
-The data types for invites are floating around and through the code, but they aren't used in any way. This will involve work at the hook level and some store changes.
+Currently invites are implemented naively for recurring events (one invite for all events). These should certainly be maintained per event.
 
 ### pH Testing (broken as of network breach)
 branch: none
