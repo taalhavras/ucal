@@ -46,12 +46,12 @@
         =/  us=@tas  (scot %p our.bowl)
         =/  cals=(list calendar)
             .^  (list calendar)
-              %gy
+              %gx
               us
               %ucal-store
               (scot %da now.bowl)
               us
-              /calendars
+              /calendars/noun
             ==
         %+  turn
           ::  only expose calendars the querying ship can access

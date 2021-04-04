@@ -100,6 +100,17 @@
         ~[car]
       !!
     ::
+        %noun
+      ?>  =(our.bowl src.bowl)
+      ?+    q.vase  (on-poke:def mark vase)
+          %print-state
+        ~&  state
+        `this
+      ::
+          %reset-state
+        `this(state *versioned-state)
+      ==
+    ::
   ==
 ++  on-agent
   |~  [=wire =sign:agent:gall]
