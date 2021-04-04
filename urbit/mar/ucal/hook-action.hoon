@@ -16,7 +16,6 @@
         %.  jon
         %-  of:dejs
         :~  [%query-cals parse-query-cals]
-            [%proxy-poke parse-proxy-poke]
             [%invitation-response parse-invitation-response]
         ==
     ::
@@ -25,13 +24,6 @@
       ^-  @p
       ?>  ?=([%o *] jon)
       ((se:dejs:format %p) (~(got by p.jon) 'who'))
-    ::
-    ++  parse-proxy-poke
-      |=  jon=json
-      ^-  [@p action:ucal-store]
-      ?>  ?=([%o *] jon)
-      :-  ((se:dejs:format %p) (~(got by p.jon) 'target'))
-      (ucal-action-from-json:ucal-util (~(got by p.jon) 'store-action'))
     ::
     ++  parse-invitation-response
       |=  jon=json

@@ -55,8 +55,6 @@
       ?:  ?=([%query-cals *] act)
         =/  pax=path  ~[(scot %p who.act) public-calendars:ucal-hook]
         [%pass `wire`pax %agent [who.act push-hook-name:config] %watch pax]~
-      ?:  ?=([%proxy-poke *] act)
-        [%pass [%proxy-poke (scot %p target.act) ~] %agent [target.act store-name:config] %poke %ucal-action !>(store-action.act)]~
       ?:  ?=([%invitation-response *] act)
         ::  scry for the event and the host from the local ucal-store
         =/  ev=event
