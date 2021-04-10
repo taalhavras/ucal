@@ -10,7 +10,7 @@
   |%
   ++  noun  action:ucal-hook
   ++  json
-    |^  |=  jon=json
+    |^  |=  jon=^json
         ^-  action:ucal-hook
         =,  format
         %.  jon
@@ -20,13 +20,13 @@
         ==
     ::
     ++  parse-query-cals
-      |=  jon=json
+      |=  jon=^json
       ^-  @p
       ?>  ?=([%o *] jon)
       ((se:dejs:format %p) (~(got by p.jon) 'who'))
     ::
     ++  parse-invitation-response
-      |=  jon=json
+      |=  jon=^json
       ^-  [calendar-code:ucal event-code:ucal rsvp:ucal]
       =,  format
       ?>  ?=([%o *] jon)
