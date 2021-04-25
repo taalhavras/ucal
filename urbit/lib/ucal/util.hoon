@@ -451,6 +451,7 @@
   --
 ::
 ++  event-data-to-json
+  =<
   |=  data=event-data
   ^-  json
   =,  format
@@ -470,7 +471,25 @@
       ['start' (time:enjs start)]
       ['end' (time:enjs end)]
       ['tzid' (tape:enjs tzid.data)]
+      ['invited' (invites-to-json invites.data)]
   ==
+  |%
+  ++  invites-to-json
+    |=  inv=invites
+    ^-  json
+    ::  map @p to null (no response) or the invite status if they have
+    ::((as:dejs (se:dejs %p)) (~(gut by p.jon) 'invited' [%a ~]))
+    =,  format
+    %-  pairs:enjs
+    %+  turn
+      ~(tap by inv)
+    |=  [k=@p status=(unit rsvp)]
+    ^-  [@t json]
+    :-  (scot %p k)
+    ?~  status
+      *json
+    [%s `@t`u.status]
+  --
 ::
 ++  event-to-json
   |=  ev=event
@@ -713,7 +732,12 @@
         |=  jon=json
         ^-  [@p (unit calendar-role)]
         ?>  ?=([%o *] jon)
-        :-  ((se:dejs %p) (~(got by p.jon) 'who'))  (bind (~(get by p.jon) 'role') (corl calendar-role so:dejs))
+        =/  role-json=json  (~(got by p.jon) 'role')
+        =/  role=(unit calendar-role)
+            ?~  role-json
+              ~
+            `((corl calendar-role so:dejs) role-json)
+        [((se:dejs %p) (~(got by p.jon) 'who')) role]
         [%make-public |=(jon=json ~)]
         [%make-private |=(jon=json ~)]
     ==
