@@ -1,3 +1,4 @@
+import { arraysMatch } from '../lib/arrays'
 import { CalendarViewState } from '../views/CalendarView'
 import Event from './Event'
 
@@ -20,6 +21,13 @@ export interface Permissions {
   public: boolean
 }
 
+export const permissionsMatch = (current: Permissions, changed: Permissions) => {
+  return current.public === changed.public
+    && arraysMatch(current.readers, changed.readers)
+    && arraysMatch(current.writers, changed.writers)
+    && arraysMatch(current.acolytes, changed.acolytes)
+}
+
 export const DEFAULT_PERMISSIONS : Permissions = {
   readers: [],
   writers: [],
@@ -27,9 +35,21 @@ export const DEFAULT_PERMISSIONS : Permissions = {
   public: false,
 }
 
+export type CalendarPermission = 'reader' | 'writer' | 'acolyte' | null
+
+export interface CalendarPermissionsChange {
+  who: string,
+  role?: CalendarPermission,
+}
+
 export interface CalendarCreationData extends Permissions {
   title: string
   calendar?: Calendar
+  changes: CalendarPermissionsChange[]
+  readers: string[]
+  writers: string[]
+  acolytes: string[]
+  public: boolean
 }
 
 export default class Calendar {
@@ -69,12 +89,18 @@ export default class Calendar {
   toFormFormat = () : CalendarViewState => ({
     title: this.title,
     ...this.permissions,
-    calendar: this
+    calendar: this,
+    changes: [],
+    reader: '',
+    writer: '',
+    acolyte: '',
   })
 
   isUnchanged = (state: CalendarViewState) => {
-    return state.title === this.title &&
-      state.public === this.permissions.public
+    const titleUnchanged = state.title === this.title
+    const permissionsUnchanged = permissionsMatch(this.permissions, { ...state })
+
+    return titleUnchanged && permissionsUnchanged
   }
 
   static generateCalendars = (calendars: Calendar[], events: Event[]) : Calendar[] => {
@@ -83,7 +109,6 @@ export default class Calendar {
     calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar.clearEvents()))
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
-      console.log(updatedCalendar?.active)
       if (updatedCalendar?.active && !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)) {
         updatedCalendar?.events.push(event)
       }

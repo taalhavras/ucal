@@ -203,12 +203,15 @@ export interface EventAbout {
 }
 
 export class EventInvite {
+  ship: string
   note: string
   optional: boolean
   rsvp: Rsvp
   sentAt: Date
 
   constructor (data: any) {
+    console.log('INVITE', data)
+    this.ship = data.ship
     this.note = data.note
     this.optional = data.optional
     this.rsvp = data.rsvp
@@ -233,6 +236,7 @@ export class EventForm {
   start: Date
   end: Date
   era?: Era
+  invited: string[]
   startTime: string
   endTime: string
   allDay: boolean
@@ -249,6 +253,7 @@ export class EventForm {
     if (data.repeatInterval !== RepeatInterval.doesNotRepeat) {
       this.era = new Era().fromRepeatInterval(data.repeatInterval, data.weekdays)
     }
+    this.invited = data.invited || []
     this.allDay = data.allDay
     this.startTime = data.startTime
     this.endTime = data.endTime
@@ -295,7 +300,8 @@ export class EventForm {
       tzid: this.tzid,
       location: this.location.toExportFormat(),
       when: { period: this.getPeriod() },
-      era: this.era
+      era: this.era,
+      invited: this.invited
     }
 
     if (update) {
@@ -322,6 +328,7 @@ export default class Event {
   modified: Date
 
   constructor({ data, era }) {
+    console.log('EVENT DATA', data)
     this.eventCode = data['event-code']
     this.calendarCode = data['calendar-code']
     this.organizer = data.organizer
@@ -364,6 +371,8 @@ export default class Event {
       allDay: Math.round(moment(this.getStart()).diff(this.getEnd(), 'hours')) === 24,
       startTime: getHoursMinutes(this.getStart()),
       endTime: getHoursMinutes(this.getEnd()),
+      invited: this.invites.map(({ ship }) => ship),
+      invite: '',
       event: this
     }
   }

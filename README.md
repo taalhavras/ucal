@@ -16,7 +16,7 @@ module.exports = {
 };
 
 ```
-Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `|mount %` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
+Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `|mount %`, `|commit %home`, and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
 
 ### ucal-store pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
