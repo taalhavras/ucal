@@ -328,7 +328,6 @@ export default class Event {
   modified: Date
 
   constructor({ data, era }) {
-    console.log('EVENT DATA', data)
     this.eventCode = data['event-code']
     this.calendarCode = data['calendar-code']
     this.organizer = data.organizer

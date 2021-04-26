@@ -62,6 +62,7 @@ export default class Actions {
 
   getEvents = async () : Promise<Event[]> => {
     const events = await this.api.scry<any>('ucal-store', '/events')
+    console.log('EVENT DATA', events)
     this.store.updateStore({ data: { events } })
     return events
   }
