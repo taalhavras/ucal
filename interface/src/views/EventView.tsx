@@ -196,7 +196,7 @@ class EventView extends Component<Props, EventViewState> {
     if (cleanedShip) {
       const formattedShip = cleanedShip[0] === '~' ? cleanedShip : `~${cleanedShip}`
 
-      if (!invited.includes(formattedShip)) {
+      if (!invited.includes(formattedShip) && !(formattedShip === `~${this.props.ship}`)) {
         this.setState({ invited: invited.concat(formattedShip) })
       }
 
@@ -240,7 +240,7 @@ class EventView extends Component<Props, EventViewState> {
       <Box width='100%' display='flex' flexDirection='row'>
         <DatePicker selectedDay={start} selectDate={selectDate(true)} />
         {!allDay && <TimePicker selectedTime={startTime} selectTime={selectTime(true)} />}
-        <Text fontSize="1" margin="28px 12px 0px">to</Text>
+        <Text fontSize="1" margin="24px 12px 0px">to</Text>
         <DatePicker selectedDay={end} selectDate={selectDate(false)} startDate={start} />
         {!allDay && <TimePicker selectedTime={endTime} selectTime={selectTime(false)} />}
       </Box>

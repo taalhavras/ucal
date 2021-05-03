@@ -156,6 +156,11 @@ export class Era {
   }
 }
 
+export interface Invite {
+  ship: string
+  status: 'yes' | 'no' | 'maybe' | null
+}
+
 export class Period {
   period: {
     start: Date, // in milliseconds since epoch
@@ -200,23 +205,6 @@ export interface EventAbout {
   organizer: string
   created: Date
   modified: Date
-}
-
-export class EventInvite {
-  ship: string
-  note: string
-  optional: boolean
-  rsvp: Rsvp
-  sentAt: Date
-
-  constructor (data: any) {
-    console.log('INVITE', data)
-    this.ship = data.ship
-    this.note = data.note
-    this.optional = data.optional
-    this.rsvp = data.rsvp
-    this.sentAt = new Date(data.sentAt)
-  }
 }
 
 export enum Rsvp {
@@ -322,7 +310,7 @@ export default class Event {
   when: Period
   era?: Era
   tzid: string
-  invites: EventInvite[]
+  invited: Invite[] // Map<string, string | null>
   rsvp: Rsvp
   created: Date
   modified: Date
@@ -339,7 +327,7 @@ export default class Event {
       this.era = new Era(era)
     }
     this.tzid = data.tzid
-    this.invites = (data.invites || []).map((invite) => new EventInvite(invite))
+    this.invited = Event.generateInviteStatus(data.invited)
     this.rsvp = data.rsvp || Rsvp.yes
     this.created = new Date(data['date-created'])
     this.modified = new Date(data['last-modified'])
@@ -370,7 +358,7 @@ export default class Event {
       allDay: Math.round(moment(this.getStart()).diff(this.getEnd(), 'hours')) === 24,
       startTime: getHoursMinutes(this.getStart()),
       endTime: getHoursMinutes(this.getEnd()),
-      invited: this.invites.map(({ ship }) => ship),
+      invited: this.invited.map(({ ship }) => ship),
       invite: '',
       event: this
     }
@@ -381,4 +369,16 @@ export default class Event {
   }
 
   compareTo = (b: Event) : number => Number(moment(this.getStart()).format('hhmm')) - Number(moment(b.getStart()).format('hhmm'))
+
+  static generateInviteStatus = (invited: any) => {
+    const invites = []
+
+    if (invited) {
+      for (let key in invited) {
+        invites.push({ ship: key, status: invited[key] })
+      }
+    }
+
+    return invites
+  }
 }
