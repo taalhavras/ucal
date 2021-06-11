@@ -1,23 +1,48 @@
-import React, { Component } from 'react';
-import _, { capitalize } from 'lodash';
+import React, { useState } from "react"
+import _ from "lodash"
 
-import { Text, Box, Button, StatelessTextInput, StatelessTextArea, Checkbox, Row } from '@tlon/indigo-react';
-import moment from 'moment';
-import Calendar from '../types/Calendar';
-import { match, RouteComponentProps, useLocation, withRouter } from 'react-router-dom';
-import { History, Location, LocationState } from 'history'
-import Event, { EventForm, EventLoc, RepeatInterval, Weekday, WEEKDAYS } from '../types/Event';
-import DatePicker from '../components/lib/DatePicker';
-import TimePicker from '../components/lib/TimePicker';
-import Actions from '../logic/actions';
-import { getDefaultStartEndTimes } from '../lib/dates';
-import { addOrRemove } from '../lib/arrays';
+import {
+  Text,
+  Box,
+  Button,
+  StatelessTextInput,
+  StatelessTextArea,
+  Checkbox,
+  Row,
+} from "@tlon/indigo-react"
+import moment from "moment"
+import {
+  match,
+  RouteComponentProps,
+  withRouter,
+  useHistory,
+} from "react-router-dom"
+import { Location, LocationState } from "history"
+import Event, {
+  EventForm,
+  EventLoc,
+  RepeatInterval,
+  Weekday,
+  WEEKDAYS,
+} from "../types/Event"
+import DatePicker from "../components/lib/DatePicker"
+import TimePicker from "../components/lib/TimePicker"
+import { getDefaultStartEndTimes } from "../lib/dates"
+import { addOrRemove } from "../lib/arrays"
+import UrbitApi from "../logic/api"
+import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
 
-const REPEAT_INTERVALS = [RepeatInterval.doesNotRepeat, RepeatInterval.daily, RepeatInterval.weekly, RepeatInterval.monthly, RepeatInterval.yearly]
+const REPEAT_INTERVALS = [
+  RepeatInterval.doesNotRepeat,
+  RepeatInterval.daily,
+  RepeatInterval.weekly,
+  RepeatInterval.monthly,
+  RepeatInterval.yearly,
+]
 
 enum EventField {
-  title = 'title',
-  location = 'location'
+  title = "title",
+  location = "location",
 }
 
 interface RouterProps {
@@ -26,12 +51,8 @@ interface RouterProps {
 }
 
 interface Props extends RouteComponentProps<RouterProps> {
-  history: History
   location: Location
   match: match<RouterProps>
-  calendars: Calendar[]
-  actions: Actions
-  ship: string
 }
 
 export interface EventViewState {
@@ -53,193 +74,294 @@ export interface EventViewState {
   prevPath?: Location<LocationState>
 }
 
-class EventView extends Component<Props, EventViewState> {
-  constructor(props) {
-    super(props)
+const EventView: React.FC<Props> = ({ location, match }) => {
+  const {
+    authTokens: { ship },
+  } = new UrbitApi()
+  const history = useHistory()
+  const { calendars, saveEvent, deleteEvent, getEvents } =
+    useCalendarsAndEvents()
+  const { calendar, event } = match.params
+  const { events } = calendars.find(
+    ({ calendarCode }) => calendarCode === calendar
+  ) || { events: [] }
+  const eventToEdit = events.find(({ eventCode }) => eventCode === event)
 
-    const { calendar, event } = props.match.params
-    const { events } = (props.calendars.find(({ calendarCode }) => calendarCode === calendar) || { events: [] })
-    const eventToEdit = events.find(({ eventCode }) => eventCode === event)
+  const getCalendarCode = () =>
+    (
+      calendars.find((c) => c.title === "default" && c.owner === ship) ||
+      calendars[0]
+    )?.calendarCode
 
-    this.state = {
-      ...this.initState(props, eventToEdit),
-      ...(eventToEdit || {})
-    }
-  }
+  const dateQueryParam = new URLSearchParams(location.search).get("date")
+  const start = dateQueryParam ? new Date(Number(dateQueryParam)) : new Date()
+  const end = moment(start).add(30, "minutes").toDate()
 
-  static getCalendarCode = (props: Props) => 
-    (props.calendars.find((c) => c.title === 'default' && c.owner === props.ship) || props.calendars[0])?.calendarCode
-
-  initState = (props: Props, event?: Event) : EventViewState => {
+  const initState = (event?: Event): EventViewState => {
     const { startTime, endTime } = getDefaultStartEndTimes()
     if (event) {
       return event.toFormFormat()
     }
 
-    const dateQueryParam = new URLSearchParams(props.location.search).get('date')
-    const start = dateQueryParam ? new Date(Number(dateQueryParam)) : new Date()
-    const end = moment(start).add(30, 'minutes').toDate()
-
     return {
-      calendarCode: EventView.getCalendarCode(props),
-      organizer: props.ship,
-      title: '',
-      desc: '',
-      location: new EventLoc({ address: '' }),
+      calendarCode: getCalendarCode(),
+      organizer: ship,
+      title: "",
+      desc: "",
+      location: new EventLoc({ address: "" }),
       start,
       end,
       repeatInterval: RepeatInterval.doesNotRepeat,
-      weekdays: [moment(start).format('ddd').toLowerCase() as Weekday],
+      weekdays: [moment(start).format("ddd").toLowerCase() as Weekday],
       allDay: false,
       startTime,
       endTime,
     }
   }
 
-  static getDerivedStateFromProps = (props: Props, state: EventViewState) => {
-    if (!state.calendarCode) {
-      return { ...state, calendarCode: EventView.getCalendarCode(props) }
-    }
-    return state
-  }
+  const [eventState, setEventState] = useState<EventViewState>({
+    ...initState(eventToEdit),
+    ...(eventToEdit || {}),
+    weekdays: [moment(start).format("ddd").toLowerCase() as Weekday],
+  })
 
-  saveEvent = async () => {
-    const { state, props, initState } = this
-    const eventToSave = new EventForm(state)
+  const saveEventHandler = async () => {
+    const eventToSave = new EventForm(eventState)
     try {
-      const updated = Boolean(state.event)
-      await props.actions.saveEvent(eventToSave, updated)
-      this.setState(initState(props))
-      props.history.goBack()
+      const updated = Boolean(eventState.event)
+      saveEvent(eventToSave, updated)
+      setEventState(initState())
+      await getEvents()
+      history.goBack()
     } catch (e) {
-      console.log('SAVE EVENT ERROR:', e)
+      console.log("SAVE EVENT ERROR:", e)
     }
   }
 
-  deleteEvent = async () : Promise<void> => {
-    const { props: { actions, history }, state: { event, prevPath } } = this
-    if (confirm('Are you sure you want to delete this event?')) {
-      await actions.deleteEvent(event)
-      await actions.getEvents()
-      history.replace(prevPath || '/~calendar')
+  const deleteEventHandler = async (): Promise<void> => {
+    if (confirm("Are you sure you want to delete this event?")) {
+      deleteEvent(eventState.event)
+      await getEvents()
+      history.replace(eventState.prevPath || "/~calendar")
     }
   }
 
-  updateValue = (field: EventField) => (e: React.ChangeEvent<HTMLInputElement>) : void => {
+  const updateValueHandler = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: EventField
+  ): void => {
+    e.preventDefault()
     const values = {}
     if (field === EventField.location) {
-      values['location'] = new EventLoc({ address: e.target.value })
+      values["location"] = new EventLoc({ address: e.target.value })
     } else {
       values[field] = e.target.value
     }
-    
-    this.setState(values)
+
+    setEventState({ ...eventState, ...values })
   }
 
-  updateDescription = (e: React.ChangeEvent<HTMLTextAreaElement>) : void => {
-    this.setState({ desc: e.target.value })
+  const updateDescriptionHandler = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ): void => {
+    setEventState({ ...eventState, desc: e.target.value })
   }
 
-  selectDate = (isStart: boolean) => (date: Date) => {
+  const selectDate = (isStart: boolean) => (date: Date) => {
     if (isStart) {
-      this.setState({ start: date })
+      setEventState({ ...eventState, start: date })
     } else {
-      this.setState({ end: date })
+      setEventState({ ...eventState, end: date })
     }
   }
 
-  selectTime = (isStart: boolean) => (time: string) => {
+  const selectTime = (isStart: boolean) => (time: string) => {
     if (isStart) {
-      this.setState({ startTime: time })
+      setEventState({ ...eventState, startTime: time })
     } else {
-      this.setState({ endTime: time })
+      setEventState({ ...eventState, endTime: time })
     }
   }
 
-  toggleAllday = () => {
-    this.setState({ allDay: !this.state.allDay })
+  const toggleAllday = () => {
+    setEventState({ ...eventState, allDay: !eventState.allDay })
   }
 
-  setRepeatInterval = (e: React.ChangeEvent<HTMLSelectElement>) : void => {
+  const setRepeatInterval = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     e.stopPropagation()
     e.preventDefault()
-    this.setState({ repeatInterval: e.target.value as RepeatInterval })
+    setEventState({
+      ...eventState,
+      repeatInterval: e.target.value as RepeatInterval,
+    })
   }
 
-  selectCalendar = (e: React.ChangeEvent<HTMLSelectElement>) : void => {
-    console.log(1, e.target.value)
-    this.setState({ calendarCode: e.target.value as string })
+  const selectCalendar = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    setEventState({ ...eventState, calendarCode: e.target.value as string })
   }
 
-  disableSave = () : boolean => {
-    const { state } = this
-    if (!state.event) {
-      return !state.title
+  const disableSave = (): boolean => {
+    if (!eventState.event) {
+      return !eventState.title
     }
 
-    return state.event.isUnchanged(state)
+    return eventState.event.isUnchanged(eventState)
   }
 
-  toggleWeekday = (weekday: Weekday) => () : void => {
-    const { state: { weekdays } } = this
-    this.setState({ weekdays: addOrRemove(weekdays, weekday) })
+  const toggleWeekday = (weekday: Weekday) => (): void => {
+    setEventState({
+      ...eventState,
+      weekdays: addOrRemove(eventState.weekdays, weekday),
+    })
   }
+  const saveDisabled = disableSave()
 
-  render() {
-    const { state: { title, desc, location, start, end, repeatInterval, weekdays, event, allDay, startTime, endTime, calendarCode },
-      props: { history, calendars },
-      saveEvent, deleteEvent, updateValue, selectDate, updateDescription, selectTime, toggleAllday,
-      setRepeatInterval, disableSave, toggleWeekday, selectCalendar } = this
-
-    const saveDisabled = disableSave()
-
-    return <Box height='100%' p='4' display='flex' flexDirection='column' borderWidth={['none', '1px']} borderStyle="solid" borderColor="washedGray">
-      <Box width='100%' display='flex' flexDirection='row'>
-        <Button fontSize='16px' marginRight='20px' onClick={history.goBack}>X</Button>
-        <StatelessTextInput fontSize="1" placeholder="Event title" width='40%' marginRight='20px' onChange={updateValue(EventField.title)} value={title} />
-        <Button disabled={saveDisabled} className='dark' marginRight='20px' onClick={saveEvent}>Save</Button>
-        {!!(event?.title) && <Button onClick={deleteEvent}>Delete</Button>}
+  return (
+    <Box
+      height="100%"
+      p="4"
+      display="flex"
+      flexDirection="column"
+      borderWidth={["none", "1px"]}
+      borderStyle="solid"
+      borderColor="washedGray"
+    >
+      <Box width="100%" display="flex" flexDirection="row">
+        <Button fontSize="16px" marginRight="20px" onClick={history.goBack}>
+          X
+        </Button>
+        <StatelessTextInput
+          fontSize="1"
+          placeholder="Event title"
+          width="40%"
+          marginRight="20px"
+          onChange={(e) => updateValueHandler(e, EventField.title)}
+          value={eventState.title}
+        />
+        <Button
+          disabled={saveDisabled}
+          className="dark"
+          marginRight="20px"
+          onClick={() => saveEventHandler()}
+        >
+          Save
+        </Button>
+        {!!eventState.event?.title && (
+          <Button onClick={() => deleteEventHandler()}>Delete</Button>
+        )}
       </Box>
 
-      <Row className='calendar-select'>
-        <Text margin='6px 8px 0px 0px' fontSize='14px'>Calendar: </Text>
-        <select value={calendarCode} onChange={selectCalendar}>
-          {calendars.map((c, ind) => <option key={`select-calendar-${ind}`} value={c.calendarCode}>
-            {c.calendarCode}
-          </option>)}
+      <Row className="calendar-select">
+        <Text margin="6px 8px 0px 0px" fontSize="14px">
+          Calendar:{" "}
+        </Text>
+        <select
+          value={eventState.calendarCode}
+          onChange={(e) => selectCalendar(e)}
+        >
+          {calendars.map((c, ind) => (
+            <option key={`select-calendar-${ind}`} value={c.calendarCode}>
+              {c.calendarCode}
+            </option>
+          ))}
         </select>
       </Row>
 
-      <Box width='100%' display='flex' flexDirection='row'>
-        <DatePicker selectedDay={start} selectDate={selectDate(true)} />
-        {!allDay && <TimePicker selectedTime={startTime} selectTime={selectTime(true)} />}
-        <Text fontSize="1" margin="28px 12px 0px">to</Text>
-        <DatePicker selectedDay={end} selectDate={selectDate(false)} startDate={start} />
-        {!allDay && <TimePicker selectedTime={endTime} selectTime={selectTime(false)} />}
+      <Box width="100%" display="flex" flexDirection="row">
+        <DatePicker
+          selectedDay={eventState.start}
+          selectDate={selectDate(true)}
+        />
+        {!eventState.allDay && (
+          <TimePicker
+            selectedTime={eventState.startTime}
+            selectTime={selectTime(true)}
+          />
+        )}
+        <Text fontSize="1" margin="28px 12px 0px">
+          to
+        </Text>
+        <DatePicker
+          selectedDay={eventState.end}
+          selectDate={selectDate(false)}
+          startDate={eventState.start}
+        />
+        {!eventState.allDay && (
+          <TimePicker
+            selectedTime={eventState.endTime}
+            selectTime={selectTime(false)}
+          />
+        )}
       </Box>
 
-      <Box width='100%' display='flex' flexDirection='row' margin='20px 0px 0px' alignItems='center'>
-        <Checkbox selected={allDay} onClick={toggleAllday} color='black' />
-        <Text fontSize='14px' margin='0px 12px'>All day</Text>
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="row"
+        margin="20px 0px 0px"
+        alignItems="center"
+      >
+        <Checkbox
+          selected={eventState.allDay}
+          onClick={toggleAllday}
+          color="black"
+        />
+        <Text fontSize="14px" margin="0px 12px">
+          All day
+        </Text>
         <Box className="repeat-interval">
-          <select value={repeatInterval} onChange={setRepeatInterval}>
-            {REPEAT_INTERVALS.map((ri, ind) => <option key={`ri-${ind}`} value={ri.toString()}>
-              {ri.toString()}
-            </option>)}
+          <select
+            value={eventState.repeatInterval}
+            onChange={(e) => setRepeatInterval(e)}
+          >
+            {REPEAT_INTERVALS.map((ri, ind) => (
+              <option key={`ri-${ind}`} value={ri.toString()}>
+                {ri.toString()}
+              </option>
+            ))}
           </select>
         </Box>
-        {repeatInterval === RepeatInterval.weekly && <Box display="flex" flexDirection="row" alignItems="center" marginLeft="16px">
-          {WEEKDAYS.map((weekday) => <Box className={`weekday ${weekdays.includes(weekday) ? 'selected' : ''}`}
-            onClick={toggleWeekday(weekday)}  key={`weekday-${weekday}`}>
-            <Text fontWeight="bold">{weekday[0].toUpperCase()}</Text>
-          </Box>)}
-        </Box>}
+        {eventState.repeatInterval === RepeatInterval.weekly && (
+          <Box
+            display="flex"
+            flexDirection="row"
+            alignItems="center"
+            marginLeft="16px"
+          >
+            {WEEKDAYS.map((weekday) => (
+              <Box
+                className={`weekday ${
+                  eventState.weekdays.includes(weekday) ? "selected" : ""
+                }`}
+                onClick={toggleWeekday(weekday)}
+                key={`weekday-${weekday}`}
+              >
+                <Text fontWeight="bold">{weekday[0].toUpperCase()}</Text>
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
 
-      <StatelessTextInput fontSize="14px" placeholder="Add location" width='60%' margin="20px 0px 0px" onChange={updateValue(EventField.location)} value={location.address} />
-      <StatelessTextArea fontSize="14px" margin="20px 0px 0px" height="160px" placeholder="Add description" width='60%' onChange={updateDescription} value={desc} />
+      <StatelessTextInput
+        fontSize="14px"
+        placeholder="Add location"
+        width="60%"
+        margin="20px 0px 0px"
+        onChange={(e) => updateValueHandler(e, EventField.location)}
+        value={eventState?.location?.address}
+      />
+      <StatelessTextArea
+        fontSize="14px"
+        margin="20px 0px 0px"
+        height="160px"
+        placeholder="Add description"
+        width="60%"
+        onChange={(e) => updateDescriptionHandler(e)}
+        value={eventState?.desc}
+      />
     </Box>
-  }
+  )
 }
 
 export default withRouter(EventView)

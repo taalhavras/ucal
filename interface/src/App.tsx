@@ -1,75 +1,73 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState } from "react"
 import { BrowserRouter, Route } from "react-router-dom"
-import _ from 'lodash'
+import _ from "lodash"
 import HeaderBar from "./components/lib/header-bar.js"
 
-import { ThemeProvider } from 'styled-components'
+import { ThemeProvider } from "styled-components"
 
-import light from './components/themes/light'
-import dark from './components/themes/dark'
+import { CalendarAndEventProvider } from "./hooks/useCalendarsAndEvents"
+import { UserLocationProvider } from "./hooks/useUserLocation"
 
-import { Box } from '@tlon/indigo-react'
-import CalendarWrapper from './views/CalendarWrapper'
-import Store, { StoreState } from './logic/store'
-import CalendarView from './views/CalendarView'
-import EventView from './views/EventView'
-import Actions from './logic/actions'
-import UrbitApi from './logic/api'
-import Subscription from './logic/subscription'
+import lightTheme from "./components/themes/light"
+import darkTheme from "./components/themes/dark"
 
-interface Props {}
+import { Box } from "@tlon/indigo-react"
+import CalendarWrapper from "./views/CalendarWrapper"
+import CalendarView from "./views/CalendarView"
+import EventView from "./views/EventView"
 
-interface State extends StoreState {
-  dark: boolean
+export const App: React.FC = () => {
+  const [dark, setDark] = useState(false)
+  let themeWatcher: any
+
+  const updateTheme = (updateTheme): void => {
+    setDark(updateTheme)
+  }
+
+  useEffect(() => {
+    themeWatcher = window.matchMedia("(prefers-color-scheme: dark)")
+    setDark(themeWatcher.matches)
+    themeWatcher.addListener(updateTheme)
+  })
+
+  return (
+    <BrowserRouter>
+      <ThemeProvider theme={dark ? darkTheme : lightTheme}>
+        <CalendarAndEventProvider>
+          <UserLocationProvider>
+            <Box
+              display="flex"
+              flexDirection="column"
+              position="absolute"
+              backgroundColor="white"
+              height="100%"
+              width="100%"
+              px={[0, 4]}
+              pb={[0, 4]}
+            >
+              <HeaderBar />
+              <Route exact path="/~calendar">
+                <CalendarWrapper />
+              </Route>
+              <Route exact path="/~calendar/create">
+                <CalendarView />
+              </Route>
+              <Route exact path="/~calendar/calendar/edit/:calendar">
+                <CalendarView />
+              </Route>
+              <Route exact path="/~calendar/:timeframe/:displayDay">
+                <CalendarWrapper />
+              </Route>
+              <Route exact path="/~calendar/event">
+                <EventView />
+              </Route>
+              <Route exact path="/~calendar/event/:calendar/:event">
+                <EventView />
+              </Route>
+            </Box>
+          </UserLocationProvider>
+        </CalendarAndEventProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  )
 }
-
-export class App extends Component<Props, State> {
-  themeWatcher: any
-  store: Store
-  actions: Actions
-  api: UrbitApi
-  subscription: Subscription
-
-  constructor(props) {
-    super(props)
-
-    this.store = new Store()
-    this.store.setStateHandler(this.setState.bind(this))
-    this.state = { ...this.store.state, dark: false }
-    this.api = new UrbitApi()
-    this.actions = new Actions(this.store, this.api)
-
-    this.subscription = new Subscription(this.store, this.actions, this.api)
-  }
-
-  updateTheme = (updateTheme) : void => {
-    this.setState({ dark: updateTheme })
-  }
-
-  componentDidMount() {
-    this.themeWatcher = window.matchMedia('(prefers-color-scheme: dark)')
-    this.setState({ dark: this.themeWatcher.matches })
-    this.themeWatcher.addListener(this.updateTheme)
-  }
-
-  render() {
-    const { state } = this
-
-    return (
-      <BrowserRouter>
-        <ThemeProvider theme={state.dark ? dark : light}>
-          <Box display='flex' flexDirection='column' position='absolute' backgroundColor='white' height='100%' width='100%' px={[0,4]} pb={[0,4]}>
-            <HeaderBar/>
-            <Route exact path="/~calendar" render={ () => <CalendarWrapper {...state} actions={this.actions} />}/>
-            <Route exact path="/~calendar/create" render={ () => <CalendarView {...state} actions={this.actions} ship={this.api.authTokens.ship} />}/>
-            <Route exact path="/~calendar/calendar/edit/:calendar" render={ () => <CalendarView {...state} calendars={state.calendars} actions={this.actions} ship={this.api.authTokens.ship} />}/>
-            <Route exact path="/~calendar/:timeframe/:displayDay" render={ () => <CalendarWrapper {...state} actions={this.actions} />}/>
-            <Route exact path="/~calendar/event" render={ () => <EventView {...state} calendars={state.calendars} actions={this.actions} ship={this.api.authTokens.ship} />}/>
-            <Route exact path="/~calendar/event/:calendar/:event" render={ () => <EventView {...state} actions={this.actions} ship={this.api.authTokens.ship} />}/>
-          </Box>
-        </ThemeProvider>
-      </BrowserRouter>
-    )
-  }
-}
-

@@ -1,16 +1,16 @@
-import { CalendarViewState } from '../views/CalendarView'
-import Event from './Event'
+import { CalendarViewState } from "../views/CalendarView"
+import Event from "./Event"
 
 export enum Timeframe {
-  year = 'year',
-  month = 'month',
-  week = 'week',
-  day = 'day',
+  year = "year",
+  month = "month",
+  week = "week",
+  day = "day",
 }
 
 export enum NavDirection {
-  left = 'subtract',
-  right = 'add',
+  left = "subtract",
+  right = "add",
 }
 
 export interface Permissions {
@@ -20,7 +20,7 @@ export interface Permissions {
   public: boolean
 }
 
-export const DEFAULT_PERMISSIONS : Permissions = {
+export const DEFAULT_PERMISSIONS: Permissions = {
   readers: [],
   writers: [],
   acolytes: [],
@@ -47,11 +47,11 @@ export default class Calendar {
       return Object.assign(this, data)
     }
     this.owner = data.owner
-    this.calendarCode = data['calendar-code']
+    this.calendarCode = data["calendar-code"]
     this.title = data.title
     this.permissions = data.permissions
-    this.created = data['date-created'] && new Date(data['date-created'])
-    this.modified = data['last-modified'] && new Date(data['last-modified'])
+    this.created = data["date-created"] && new Date(data["date-created"])
+    this.modified = data["last-modified"] && new Date(data["last-modified"])
   }
 
   clearEvents = () => {
@@ -66,31 +66,40 @@ export default class Calendar {
     return this
   }
 
-  toFormFormat = () : CalendarViewState => ({
+  toFormFormat = (): CalendarViewState => ({
     title: this.title,
     ...this.permissions,
-    calendar: this
+    calendar: this,
   })
 
   isUnchanged = (state: CalendarViewState) => {
-    return state.title === this.title &&
-      state.public === this.permissions.public
+    return (
+      state.title === this.title && state.public === this.permissions.public
+    )
   }
 
-  static generateCalendars = (calendars: Calendar[], events: Event[]) : Calendar[] => {
+  static generateCalendars = (
+    calendars: Calendar[],
+    events: Event[]
+  ): Calendar[] => {
     const all = new Map<string, Calendar | undefined>()
 
-    calendars.forEach((calendar) => all.set(calendar.calendarCode, calendar.clearEvents()))
+    calendars.forEach((calendar) =>
+      all.set(calendar.calendarCode, calendar.clearEvents())
+    )
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
       console.log(updatedCalendar?.active)
-      if (updatedCalendar?.active && !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)) {
+      if (
+        updatedCalendar?.active &&
+        !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)
+      ) {
         updatedCalendar?.events.push(event)
       }
       all.set(event.calendarCode, updatedCalendar)
     })
 
-    const formattedCalendars : Calendar[] = []
+    const formattedCalendars: Calendar[] = []
     for (let item of all.values()) {
       if (item instanceof Calendar) {
         formattedCalendars.push(item)
@@ -100,15 +109,18 @@ export default class Calendar {
     return formattedCalendars
   }
 
-  static getActiveEvents = (calendars: Calendar[]) : Event[] => {
-    return calendars.filter((c) => c.active)
+  static getActiveEvents = (calendars: Calendar[]): Event[] => {
+    return calendars
+      .filter((c) => c.active)
       .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
   }
 
-  static getRelevantEvents = (calendars: Calendar[], date: Date) => calendars.filter((c) => c.active)
-    .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
-    .filter((e) => e.isOnDay(date))
-    .sort((a, b) => a.compareTo(b))
+  static getRelevantEvents = (calendars: Calendar[], date: Date) =>
+    calendars
+      .filter((c) => c.active)
+      .reduce((acc: Event[], cur: Calendar) => acc.concat(cur.events), [])
+      .filter((e) => e.isOnDay(date))
+      .sort((a, b) => a.compareTo(b))
 
   static toExportFormat = (data: CalendarViewState, update: boolean) => {
     const formattedData = {
@@ -118,24 +130,26 @@ export default class Calendar {
         writers: data.writers,
         acolytes: data.acolytes,
         public: data.public,
-      }
+      },
     }
 
-    return update ? {
-      'update-calendar': formattedData
-    } : {
-      'create-calendar': formattedData
-    }
+    return update
+      ? {
+          "update-calendar": formattedData,
+        }
+      : {
+          "create-calendar": formattedData,
+        }
   }
 }
 
 export interface ViewProps {
-  calendars: Calendar[]
   displayDay: Date
   selectedDay: Date
-  selectDay: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
-  userLocation: string
-  goToEvent: (calendarCode: string, eventCode: string) => (event: React.MouseEvent<HTMLElement>) => void
+  selectDay?: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
+  goToEvent: (
+    calendarCode: string,
+    eventCode: string
+  ) => (event: React.MouseEvent<HTMLElement>) => void
   createEvent: (day?: Date) => () => void
 }
-

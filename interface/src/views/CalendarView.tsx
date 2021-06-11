@@ -1,12 +1,20 @@
-import React, { Component } from 'react';
-import _, { capitalize } from 'lodash';
-
-import { Text, Box, Row, Button, StatelessTextInput, Checkbox } from '@tlon/indigo-react';
-import Calendar, { CalendarCreationData, DEFAULT_PERMISSIONS } from '../types/Calendar';
-import { match, RouteComponentProps, useLocation, withRouter } from 'react-router-dom';
-import { History, Location, LocationState } from 'history'
-import Actions from '../logic/actions';
-import { addOrRemove } from '../lib/arrays';
+import React, { useState } from "react"
+import _ from "lodash"
+import {
+  Text,
+  Box,
+  Row,
+  Button,
+  StatelessTextInput,
+  Checkbox,
+} from "@tlon/indigo-react"
+import Calendar, {
+  CalendarCreationData,
+  DEFAULT_PERMISSIONS,
+} from "../types/Calendar"
+import { match, RouteComponentProps, withRouter } from "react-router-dom"
+import { History, Location, LocationState } from "history"
+import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
 
 interface RouterProps {
   calendar: string
@@ -16,88 +24,108 @@ interface Props extends RouteComponentProps<RouterProps> {
   history: History
   location: Location
   match: match<RouterProps>
-  calendars: Calendar[]
-  actions: Actions
-  ship: string
 }
 
 export interface CalendarViewState extends CalendarCreationData {
   prevPath?: Location<LocationState>
 }
 
-class CalendarView extends Component<Props, CalendarViewState> {
-  constructor(props) {
-    super(props)
+const CalendarView: React.FC<Props> = ({ history, match }) => {
+  const { calendars, getCalendars, saveCalendar, deleteCalendar } =
+    useCalendarsAndEvents()
+  const { calendar } = match.params
+  const selectedCalendar = calendars.find(
+    ({ calendarCode }) => calendarCode === calendar
+  )
 
-    const { calendar } = props.match.params
-    const selectedCalendar = props.calendars.find(({ calendarCode }) => calendarCode === calendar)
-
-    this.state = {
-      ...this.initState(selectedCalendar)
-    }
-  }
-
-  initState = (calendar?: Calendar) : CalendarViewState => {
+  const initState = (calendar?: Calendar): CalendarViewState => {
     if (calendar) {
       return calendar.toFormFormat()
     }
 
     return {
-      title: '',
+      title: "",
       ...DEFAULT_PERMISSIONS,
     }
   }
 
-  saveCalendar = async () => {
-    const { props, state } = this
+  const [calendarState, setCalenderState] = useState(
+    initState(selectedCalendar)
+  )
+
+  const saveCalendarHandler = async () => {
     try {
-      props.actions.saveCalendar({ ...state }, Boolean(state.calendar))
-      props.history.goBack()
+      saveCalendar(calendarState, Boolean(calendarState.calendar))
+      getCalendars()
+      history.goBack()
     } catch (e) {
-      console.log('SAVE CALENDAR ERROR:', e)
+      console.log("SAVE CALENDAR ERROR:", e)
     }
   }
 
-  deleteCalendar = async () : Promise<void> => {
-    const { props: { actions, history }, state: { calendar, prevPath } } = this
-    const confirmed = await actions.deleteCalendar(calendar)
+  const deleteCalendarHandler = async (): Promise<void> => {
+    const confirmed = await deleteCalendar(calendarState.calendar)
     if (confirmed) {
       history.goBack()
     }
   }
 
-  changeTitle = (e: React.ChangeEvent<HTMLInputElement>) : void => {
-    this.setState({ title: e.target.value })
+  const changeTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setCalenderState({ ...calendarState, title: e.target.value })
   }
 
-  disableSave = () : boolean => {
-    const { state } = this
-    if (!state.calendar) {
-      return !state.title
+  const disableSave = (): boolean => {
+    if (!calendarState.calendar) {
+      return !calendarState.title
     }
 
-    return state.calendar.isUnchanged(state)
+    return calendarState.calendar.isUnchanged(calendarState)
   }
 
-  togglePublic = () => this.setState({ public: !this.state.public })
+  const togglePublic = () =>
+    setCalenderState({ public: !calendarState.public, ...calendarState })
 
-  render() {
-    const { state, state: { title, calendar },
-      props: { history },
-      disableSave, deleteCalendar, saveCalendar, changeTitle,
-      togglePublic } = this
+  const saveDisabled = disableSave()
 
-    const saveDisabled = disableSave()
-
-    return <Box height='100%' p='4' display='flex' flexDirection='column' borderWidth={['none', '1px']} borderStyle="solid" borderColor="washedGray">
-      <Row width='100%'>
-        <Button fontSize='16px' marginRight='20px' onClick={history.goBack}>X</Button>
-        <StatelessTextInput fontSize="1" placeholder="Calendar title" width='40%' marginRight='20px' onChange={changeTitle} value={title} />
-        <Button disabled={saveDisabled} className='dark' marginRight='20px' onClick={saveCalendar}>Save</Button>
-        {!!(calendar?.title) && <Button onClick={deleteCalendar}>Delete</Button>}
+  return (
+    <Box
+      height="100%"
+      p="4"
+      display="flex"
+      flexDirection="column"
+      borderWidth={["none", "1px"]}
+      borderStyle="solid"
+      borderColor="washedGray"
+    >
+      <Row width="100%">
+        <Button fontSize="16px" marginRight="20px" onClick={history.goBack}>
+          X
+        </Button>
+        <StatelessTextInput
+          fontSize="1"
+          placeholder="Calendar title"
+          width="40%"
+          marginRight="20px"
+          onChange={(e) => changeTitle(e)}
+          value={calendarState.title}
+        />
+        <Button
+          disabled={saveDisabled}
+          className="dark"
+          marginRight="20px"
+          onClick={() => saveCalendarHandler()}
+        >
+          Save
+        </Button>
+        {!!calendarState.calendar?.title && (
+          <Button onClick={() => deleteCalendarHandler()}>Delete</Button>
+        )}
       </Row>
       <Row marginTop="20px">
-        <Checkbox selected={state.public} onClick={togglePublic} />
+        <Checkbox
+          selected={calendarState.public}
+          onClick={() => togglePublic()}
+        />
         <Text marginLeft="8px">Public</Text>
       </Row>
       {/* readers */}
@@ -105,7 +133,7 @@ class CalendarView extends Component<Props, CalendarViewState> {
       {/* acolytes */}
       {/* public */}
     </Box>
-  }
+  )
 }
 
 export default withRouter(CalendarView)
