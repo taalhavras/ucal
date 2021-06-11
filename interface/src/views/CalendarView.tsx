@@ -56,7 +56,7 @@ const CalendarView: React.FC<Props> = ({ history, match }) => {
   const saveCalendarHandler = async () => {
     try {
       saveCalendar(calendarState, Boolean(calendarState.calendar))
-      getCalendars()
+      await getCalendars()
       history.goBack()
     } catch (e) {
       console.log("SAVE CALENDAR ERROR:", e)
@@ -83,7 +83,7 @@ const CalendarView: React.FC<Props> = ({ history, match }) => {
   }
 
   const togglePublic = () =>
-    setCalenderState({ public: !calendarState.public, ...calendarState })
+    setCalenderState({ ...calendarState, public: !calendarState.public })
 
   const saveDisabled = disableSave()
 
@@ -109,6 +109,7 @@ const CalendarView: React.FC<Props> = ({ history, match }) => {
           onChange={(e) => changeTitle(e)}
           value={calendarState.title}
         />
+        {console.log({ saveDisabled })}
         <Button
           disabled={saveDisabled}
           className="dark"
