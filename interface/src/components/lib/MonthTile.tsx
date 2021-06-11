@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React, { Component, useState } from "react"
 
 import { Text, Box, Button } from "@tlon/indigo-react"
 import moment from "moment"
@@ -21,116 +21,106 @@ interface Props {
   changeRange?: (direction: NavDirection) => () => void
 }
 
-interface State {
-  displayDay: Date
-}
+const MonthTile: React.FC<Props> = ({
+  selectedDay,
+  sidebar,
+  displayDay,
+  year,
+  month,
+  showYear,
+  showNavArrows,
+  selectDay,
+  changeRange,
+}) => {
+  const [displayDayState, setDisplayDayState] = useState(displayDay)
 
-class MonthTile extends Component<Props, State> {
-  constructor(props) {
-    super(props)
-
-    this.state = { displayDay: props.displayDay }
-  }
-
-  static getDerivedStateFromProps = (nextProps: Props, prevState: State) => {
-    return nextProps.changeRange
-      ? { displayDay: nextProps.displayDay }
-      : prevState
-  }
-
-  changeRange = (dir: NavDirection) => (): void => {
-    if (this.props.changeRange) {
-      this.props.changeRange(dir)()
+  const changeRangeHandler = (dir: NavDirection) => (): void => {
+    if (changeRange) {
+      changeRange(dir)()
     } else {
-      const {
-        state: { displayDay },
-      } = this
-      const newDisplay = moment(displayDay)[dir](1, "month").toDate()
-      this.setState({ displayDay: newDisplay })
+      const newDisplay = moment(displayDayState)[dir](1, "month").toDate()
+      setDisplayDayState(newDisplay)
     }
   }
+  const monthLocal = month === undefined ? displayDayState.getMonth() : month
+  const yearLocal = year || displayDayState.getFullYear()
+  const days = getMonthDays(yearLocal, monthLocal)
 
-  render() {
-    const {
-      props: { showYear, selectedDay, showNavArrows },
-      state: { displayDay },
-      changeRange,
-    } = this
-
-    const month =
-      this.props.month === undefined ? displayDay.getMonth() : this.props.month
-    const year = this.props.year || displayDay.getFullYear()
-    const days = getMonthDays(year, month)
-
-    return (
-      <Box display="flex" flexDirection="column">
-        <Box display="flex" flexDirection="row" justifyContent="space-between">
-          <Text
-            fontSize="14px"
-            margin="4px 0px 8px 8px"
-            opacity={
-              showYear || moment().get("month") === month ? "0.9" : "0.6"
-            }
-          >
-            {moment({ year, month }).format(showYear ? "MMMM YYYY" : "MMMM")}
-          </Text>
-          {!!showNavArrows && (
-            <Box
-              display="flex"
-              flexDirection="row"
-              justifyContent="space-between"
-            >
-              <Button
-                height="24px"
-                onClick={changeRange(NavDirection.left)}
-                fontSize="2"
-                border="none"
-              >
-                &lsaquo;
-              </Button>
-              <Button
-                height="24px"
-                onClick={changeRange(NavDirection.right)}
-                fontSize="2"
-                border="none"
-              >
-                &rsaquo;
-              </Button>
-            </Box>
+  return (
+    <Box display="flex" flexDirection="column">
+      <Box display="flex" flexDirection="row" justifyContent="space-between">
+        <Text
+          fontSize="14px"
+          margin="4px 0px 8px 8px"
+          opacity={
+            showYear || moment().get("month") === monthLocal ? "0.9" : "0.6"
+          }
+        >
+          {moment({ year: yearLocal, month: monthLocal }).format(
+            showYear ? "MMMM YYYY" : "MMMM"
           )}
+        </Text>
+        {!!showNavArrows && (
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+          >
+            <Button
+              height="24px"
+              onClick={changeRangeHandler(NavDirection.left)}
+              fontSize="2"
+              border="none"
+            >
+              &lsaquo;
+            </Button>
+            <Button
+              height="24px"
+              onClick={changeRangeHandler(NavDirection.right)}
+              fontSize="2"
+              border="none"
+            >
+              &rsaquo;
+            </Button>
+          </Box>
+        )}
+      </Box>
+      <Box display="flex" flexDirection="column">
+        <Box display="flex" flexDirection="row">
+          {["S", "M", "T", "W", "T", "F", "S"].map((v, i) => (
+            <DateCircle
+              month={monthLocal}
+              shaded
+              key={`header-${monthLocal}-${i}`}
+            >
+              {v}
+            </DateCircle>
+          ))}
         </Box>
-        <Box display="flex" flexDirection="column">
-          <Box display="flex" flexDirection="row">
-            {["S", "M", "T", "W", "T", "F", "S"].map((v, i) => (
-              <DateCircle month={month} shaded key={`header-${month}-${i}`}>
-                {v}
+        {days.map((week, ind) => (
+          <Box
+            display="flex"
+            flexDirection="row"
+            key={`${monthLocal}-week-${ind}`}
+          >
+            {week.map((day, i) => (
+              <DateCircle
+                selectDay={selectDay}
+                sidebar={sidebar}
+                month={monthLocal}
+                shaded={day.getMonth() !== monthLocal}
+                selectedDay={selectedDay}
+                day={day}
+                key={`${monthLocal}-${ind}-${i}`}
+              >
+                {day.getDate()}
               </DateCircle>
             ))}
           </Box>
-          {days.map((week, ind) => (
-            <Box
-              display="flex"
-              flexDirection="row"
-              key={`${month}-week-${ind}`}
-            >
-              {week.map((day, i) => (
-                <DateCircle
-                  {...this.props}
-                  month={month}
-                  shaded={day.getMonth() !== month}
-                  selectedDay={selectedDay}
-                  day={day}
-                  key={`${month}-${ind}-${i}`}
-                >
-                  {day.getDate()}
-                </DateCircle>
-              ))}
-            </Box>
-          ))}
-        </Box>
+        ))}
       </Box>
-    )
-  }
+    </Box>
+  )
 }
 
 export default MonthTile
