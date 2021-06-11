@@ -6,18 +6,19 @@ import moment from 'moment';
 import Calendar from '../types/Calendar';
 import { match, RouteComponentProps, useLocation, withRouter } from 'react-router-dom';
 import { History, Location, LocationState } from 'history'
-import Event, { EventForm, EventLoc, RepeatInterval, Weekday, WEEKDAYS } from '../types/Event';
+import Event, { EventForm, EventLoc, InviteChange, RepeatInterval, Weekday, WEEKDAYS } from '../types/Event';
 import DatePicker from '../components/lib/DatePicker';
 import TimePicker from '../components/lib/TimePicker';
 import Actions from '../logic/actions';
 import { getDefaultStartEndTimes } from '../lib/dates';
-import { addOrRemove } from '../lib/arrays';
+import { addOrRemove, findAdditions, findRemovals } from '../lib/arrays';
 
 const REPEAT_INTERVALS = [RepeatInterval.doesNotRepeat, RepeatInterval.daily, RepeatInterval.weekly, RepeatInterval.monthly, RepeatInterval.yearly]
 
 enum EventField {
   title = 'title',
-  location = 'location'
+  location = 'location',
+  invite = 'invite'
 }
 
 interface RouterProps {
@@ -47,10 +48,13 @@ export interface EventViewState {
   weekdays: Weekday[]
   startTime: string
   endTime: string
+  invited: string[]
+  invite: string
   allDay: boolean
   //TODO: add all event props here
   event?: Event
   prevPath?: Location<LocationState>
+  inviteChanges?: InviteChange[]
 }
 
 class EventView extends Component<Props, EventViewState> {
@@ -61,10 +65,7 @@ class EventView extends Component<Props, EventViewState> {
     const { events } = (props.calendars.find(({ calendarCode }) => calendarCode === calendar) || { events: [] })
     const eventToEdit = events.find(({ eventCode }) => eventCode === event)
 
-    this.state = {
-      ...this.initState(props, eventToEdit),
-      ...(eventToEdit || {})
-    }
+    this.state = this.initState(props, eventToEdit)
   }
 
   static getCalendarCode = (props: Props) => 
@@ -93,6 +94,8 @@ class EventView extends Component<Props, EventViewState> {
       allDay: false,
       startTime,
       endTime,
+      invited: [],
+      invite: '',
     }
   }
 
@@ -105,9 +108,18 @@ class EventView extends Component<Props, EventViewState> {
 
   saveEvent = async () => {
     const { state, props, initState } = this
-    const eventToSave = new EventForm(state)
+    const updated = Boolean(state.event)
+
+    const eventToSave = new EventForm({
+      ...state,
+      inviteChanges: updated ? [
+        ...findAdditions(state.event.invitedShips(), state.invited)
+          .map((who) => ({ who, invite: true })),
+        ...findRemovals(state.event.invitedShips(), state.invited)
+          .map((who) => ({ who, invite: false }))
+      ] : undefined
+    })
     try {
-      const updated = Boolean(state.event)
       await props.actions.saveEvent(eventToSave, updated)
       this.setState(initState(props))
       props.history.goBack()
@@ -141,8 +153,9 @@ class EventView extends Component<Props, EventViewState> {
   }
 
   selectDate = (isStart: boolean) => (date: Date) => {
+    const { end } = this.state;
     if (isStart) {
-      this.setState({ start: date })
+      this.setState({ start: date, end: moment(date).isAfter(end) ? date : end })
     } else {
       this.setState({ end: date })
     }
@@ -167,7 +180,6 @@ class EventView extends Component<Props, EventViewState> {
   }
 
   selectCalendar = (e: React.ChangeEvent<HTMLSelectElement>) : void => {
-    console.log(1, e.target.value)
     this.setState({ calendarCode: e.target.value as string })
   }
 
@@ -185,11 +197,34 @@ class EventView extends Component<Props, EventViewState> {
     this.setState({ weekdays: addOrRemove(weekdays, weekday) })
   }
 
+  addInvite = () => {
+    const { invite, invited } = this.state
+    const cleanedShip = invite.trim()
+
+    if (cleanedShip) {
+      const formattedShip = cleanedShip[0] === '~' ? cleanedShip : `~${cleanedShip}`
+
+      if (!invited.includes(formattedShip) && !(formattedShip === `~${this.props.ship}`)) {
+        this.setState({ invited: invited.concat(formattedShip) })
+      }
+
+      this.setState({ invite: '' })
+    }
+  }
+
+  removeInvite = (ship) => () => this.setState({ invited: addOrRemove(this.state.invited, ship) })
+
+  checkEnter = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      this.addInvite();
+    }
+  }
+
   render() {
-    const { state: { title, desc, location, start, end, repeatInterval, weekdays, event, allDay, startTime, endTime, calendarCode },
+    const { state: { title, desc, location, start, end, repeatInterval, weekdays, event, allDay, startTime, endTime, calendarCode, invited, invite },
       props: { history, calendars },
       saveEvent, deleteEvent, updateValue, selectDate, updateDescription, selectTime, toggleAllday,
-      setRepeatInterval, disableSave, toggleWeekday, selectCalendar } = this
+      setRepeatInterval, disableSave, toggleWeekday, selectCalendar, removeInvite, addInvite, checkEnter } = this
 
     const saveDisabled = disableSave()
 
@@ -197,7 +232,7 @@ class EventView extends Component<Props, EventViewState> {
       <Box width='100%' display='flex' flexDirection='row'>
         <Button fontSize='16px' marginRight='20px' onClick={history.goBack}>X</Button>
         <StatelessTextInput fontSize="1" placeholder="Event title" width='40%' marginRight='20px' onChange={updateValue(EventField.title)} value={title} />
-        <Button disabled={saveDisabled} className='dark' marginRight='20px' onClick={saveEvent}>Save</Button>
+        <Button disabled={saveDisabled} className={`dark ${saveDisabled ? 'disabled' : ''}`} marginRight='20px' onClick={saveEvent}>Save</Button>
         {!!(event?.title) && <Button onClick={deleteEvent}>Delete</Button>}
       </Box>
 
@@ -205,7 +240,7 @@ class EventView extends Component<Props, EventViewState> {
         <Text margin='6px 8px 0px 0px' fontSize='14px'>Calendar: </Text>
         <select value={calendarCode} onChange={selectCalendar}>
           {calendars.map((c, ind) => <option key={`select-calendar-${ind}`} value={c.calendarCode}>
-            {c.calendarCode}
+            {c.owner} - {c.title}
           </option>)}
         </select>
       </Row>
@@ -213,7 +248,7 @@ class EventView extends Component<Props, EventViewState> {
       <Box width='100%' display='flex' flexDirection='row'>
         <DatePicker selectedDay={start} selectDate={selectDate(true)} />
         {!allDay && <TimePicker selectedTime={startTime} selectTime={selectTime(true)} />}
-        <Text fontSize="1" margin="28px 12px 0px">to</Text>
+        <Text fontSize="1" margin="24px 12px 0px">to</Text>
         <DatePicker selectedDay={end} selectDate={selectDate(false)} startDate={start} />
         {!allDay && <TimePicker selectedTime={endTime} selectTime={selectTime(false)} />}
       </Box>
@@ -235,6 +270,24 @@ class EventView extends Component<Props, EventViewState> {
           </Box>)}
         </Box>}
       </Box>
+
+      <Text fontSize="1" marginTop="20px">Invites</Text>
+      <Row marginTop={invited.length && "12px"}>
+        {invited.map((ship, ind) => <Text className="invite" key={`ship-${ship}`} onClick={removeInvite(ship)}>{ind > 0 ? `, ${ship}` : ship}</Text>)}
+      </Row>
+      <StatelessTextInput onKeyPress={checkEnter} fontSize="14px" placeholder="Type ship name here" width='30%' margin="20px 0px 0px" onChange={updateValue(EventField.invite)} value={invite} />
+      <Button width='100px' marginTop='8px' onClick={addInvite}>Add Invite</Button>
+
+      {/* add rsvp section */}
+      {!!this.state.event?.invited?.length && <Box marginTop="20px">
+        <Text fontSize="1">RSVPs</Text>
+        <Box>
+          {this.state.event.invited.map(({ ship, status }, ind) => <Row key={`rsvp-${ship}`} marginTop="8px">
+            <Text>{ship} : {status || 'no response'}</Text>
+          </Row>)}
+        </Box>
+      </Box>}
+
 
       <StatelessTextInput fontSize="14px" placeholder="Add location" width='60%' margin="20px 0px 0px" onChange={updateValue(EventField.location)} value={location.address} />
       <StatelessTextArea fontSize="14px" margin="20px 0px 0px" height="160px" placeholder="Add description" width='60%' onChange={updateDescription} value={desc} />

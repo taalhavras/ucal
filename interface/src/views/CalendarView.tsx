@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
-import _, { capitalize } from 'lodash';
+import _, { capitalize, update } from 'lodash';
 
 import { Text, Box, Row, Button, StatelessTextInput, Checkbox } from '@tlon/indigo-react';
-import Calendar, { CalendarCreationData, DEFAULT_PERMISSIONS } from '../types/Calendar';
+import Calendar, { CalendarCreationData, DEFAULT_PERMISSIONS, CalendarPermission, CalendarPermissionsChange } from '../types/Calendar';
 import { match, RouteComponentProps, useLocation, withRouter } from 'react-router-dom';
 import { History, Location, LocationState } from 'history'
 import Actions from '../logic/actions';
-import { addOrRemove } from '../lib/arrays';
+import { formatShip } from '../lib/format';
+import { findAdditions, findRemovals } from '../lib/arrays';
 
 interface RouterProps {
   calendar: string
@@ -22,7 +23,11 @@ interface Props extends RouteComponentProps<RouterProps> {
 }
 
 export interface CalendarViewState extends CalendarCreationData {
-  prevPath?: Location<LocationState>
+  prevPath?: Location<LocationState>,
+  selectedCalendar?: Calendar,
+  reader: string,
+  writer: string,
+  acolyte: string,
 }
 
 class CalendarView extends Component<Props, CalendarViewState> {
@@ -33,7 +38,8 @@ class CalendarView extends Component<Props, CalendarViewState> {
     const selectedCalendar = props.calendars.find(({ calendarCode }) => calendarCode === calendar)
 
     this.state = {
-      ...this.initState(selectedCalendar)
+      ...this.initState(selectedCalendar),
+      selectedCalendar
     }
   }
 
@@ -45,16 +51,36 @@ class CalendarView extends Component<Props, CalendarViewState> {
     return {
       title: '',
       ...DEFAULT_PERMISSIONS,
+      changes: [],
+      reader: '',
+      writer: '',
+      acolyte: '',
     }
   }
 
   saveCalendar = async () => {
     const { props, state } = this
+
+    let changes : CalendarPermissionsChange[] = []
+
+    const toPermissionsChange = (role: CalendarPermission) => (who: string) : CalendarPermissionsChange => ({ who, role })
+    
+    if (state.selectedCalendar) {
+      const { readers, writers, acolytes } = state.selectedCalendar.permissions
+
+      changes = changes.concat(
+        findAdditions(readers, state.readers).map(toPermissionsChange('reader')),
+        findAdditions(writers, state.writers).map(toPermissionsChange('writer')),
+        findAdditions(acolytes, state.acolytes).map(toPermissionsChange('acolyte')),
+        findRemovals([...readers, ...writers, ...acolytes], [...state.readers, ...state.writers, ...state.acolytes])
+          .map(toPermissionsChange(undefined)),
+      )
+    }
+
     try {
-      props.actions.saveCalendar({ ...state }, Boolean(state.calendar))
+      props.actions.saveCalendar({ ...state, changes }, Boolean(state.calendar))
       props.history.goBack()
     } catch (e) {
-      console.log('SAVE CALENDAR ERROR:', e)
     }
   }
 
@@ -81,11 +107,64 @@ class CalendarView extends Component<Props, CalendarViewState> {
 
   togglePublic = () => this.setState({ public: !this.state.public })
 
+  updateValue = (type: CalendarPermission) => (e: React.ChangeEvent<HTMLInputElement>) : void => {
+    const values = {}
+    values[type] = e.target.value
+    
+    this.setState(values)
+  }
+
+  addPermission = (type: CalendarPermission) => () => {
+    const cleanedShip = this.state[type].trim()
+
+    if (cleanedShip) {
+      const formattedShip = formatShip(cleanedShip)
+
+      const existing = this.state[`${type.toString()}s`]
+      const newState = {}
+      newState[type] = ''
+
+      if (!existing.includes(formattedShip)) {
+        newState[`${type.toString()}s`] = existing.concat(formattedShip)
+      }
+
+      this.setState(newState)
+    }
+  }
+
+  removePermission = (type: CalendarPermission, ship: string) => () => {
+    const existing = this.state[`${type.toString()}s`]
+    const newState = {}
+    newState[`${type.toString()}s`] = existing.filter((s) => s !== ship)
+    this.setState(newState)
+  }
+
+  checkEnter = (type: CalendarPermission) => (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      this.addPermission(type)();
+    }
+  }
+
+  renderListInput = ({
+    title, buttonText, list, type, removeItem, addItem, value, updateValue, checkEnter, 
+  }) => {
+    return <Box marginTop='20px'>
+      <Text fontSize='1'>{title}</Text>
+      {!!list.length && <Row>
+        {list.map((reader) => <Text className='permission' marginTop='4px' key={reader} onClick={removeItem(type, reader)}>
+          {formatShip(reader)}
+        </Text>)}
+      </Row>}
+      <StatelessTextInput onKeyPress={checkEnter(type)} fontSize="14px" placeholder="Type ship name here" width='30%' margin="8px 0px 0px" onChange={updateValue(type)} value={value} />
+      <Button width='120px' marginTop='8px' onClick={addItem(type)}>{buttonText}</Button>
+    </Box>
+  }
+
   render() {
-    const { state, state: { title, calendar },
+    const { state, state: { title, calendar, readers, writers, acolytes, reader, writer, acolyte },
       props: { history },
-      disableSave, deleteCalendar, saveCalendar, changeTitle,
-      togglePublic } = this
+      disableSave, deleteCalendar, saveCalendar, changeTitle, removePermission,
+      togglePublic, checkEnter, addPermission, updateValue } = this
 
     const saveDisabled = disableSave()
 
@@ -93,17 +172,46 @@ class CalendarView extends Component<Props, CalendarViewState> {
       <Row width='100%'>
         <Button fontSize='16px' marginRight='20px' onClick={history.goBack}>X</Button>
         <StatelessTextInput fontSize="1" placeholder="Calendar title" width='40%' marginRight='20px' onChange={changeTitle} value={title} />
-        <Button disabled={saveDisabled} className='dark' marginRight='20px' onClick={saveCalendar}>Save</Button>
+        <Button disabled={saveDisabled} className={saveDisabled ? 'disabled dark' : 'dark'} marginRight='20px' onClick={saveCalendar}>Save</Button>
         {!!(calendar?.title) && <Button onClick={deleteCalendar}>Delete</Button>}
       </Row>
       <Row marginTop="20px">
         <Checkbox selected={state.public} onClick={togglePublic} />
         <Text marginLeft="8px">Public</Text>
       </Row>
-      {/* readers */}
-      {/* writers */}
-      {/* acolytes */}
-      {/* public */}
+      {this.renderListInput({
+        title: 'Readers',
+        buttonText: 'Add Reader',
+        list: readers,
+        type: 'reader',
+        removeItem: removePermission,
+        addItem: addPermission,
+        value: reader,
+        updateValue,
+        checkEnter,
+      })}
+      {this.renderListInput({
+        title: 'Writers',
+        buttonText: 'Add Writer',
+        list: writers,
+        type: 'writer',
+        removeItem: removePermission,
+        addItem: addPermission,
+        value: writer,
+        updateValue,
+        checkEnter,
+      })}
+      {this.renderListInput({
+        title: 'Acolytes',
+        buttonText: 'Add Acolyte',
+        list: acolytes,
+        type: 'acolyte',
+        removeItem: removePermission,
+        addItem: addPermission,
+        value: acolyte,
+        updateValue,
+        checkEnter,
+      })}
     </Box>
   }
 }

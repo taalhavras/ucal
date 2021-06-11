@@ -37,6 +37,8 @@ export default class Subscription {
       }
       
       await this.actions.getEvents()
+      await this.actions.getInvitedEvents()
+      await this.actions.getTest()
     } catch (error) {
       warnError('SCRY')(error)
 

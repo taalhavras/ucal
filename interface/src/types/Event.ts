@@ -1,5 +1,6 @@
 import { Rule } from '@tlon/indigo-react'
 import moment from 'moment'
+import { arraysMatch } from '../lib/arrays'
 import { isSameDay, sameMonthDay, getHoursMinutes } from '../lib/dates'
 import { EventViewState } from '../views/EventView'
 
@@ -156,6 +157,11 @@ export class Era {
   }
 }
 
+export interface Invite {
+  ship: string
+  status: 'yes' | 'no' | 'maybe' | null
+}
+
 export class Period {
   period: {
     start: Date, // in milliseconds since epoch
@@ -184,6 +190,11 @@ export class Period {
   }
 }
 
+export interface InviteChange {
+  who: string
+  invite: boolean
+}
+
 export class EventDetail {
   title: string
   desc: string
@@ -200,20 +211,6 @@ export interface EventAbout {
   organizer: string
   created: Date
   modified: Date
-}
-
-export class EventInvite {
-  note: string
-  optional: boolean
-  rsvp: Rsvp
-  sentAt: Date
-
-  constructor (data: any) {
-    this.note = data.note
-    this.optional = data.optional
-    this.rsvp = data.rsvp
-    this.sentAt = new Date(data.sentAt)
-  }
 }
 
 export enum Rsvp {
@@ -233,9 +230,12 @@ export class EventForm {
   start: Date
   end: Date
   era?: Era
+  invited: string[]
   startTime: string
   endTime: string
   allDay: boolean
+  rsvpChanges?: string[]
+  inviteChanges?: InviteChange[]
 
   constructor(data: EventViewState) {
     this.calendarCode = data.calendarCode
@@ -249,9 +249,11 @@ export class EventForm {
     if (data.repeatInterval !== RepeatInterval.doesNotRepeat) {
       this.era = new Era().fromRepeatInterval(data.repeatInterval, data.weekdays)
     }
+    this.invited = data.invited || []
     this.allDay = data.allDay
     this.startTime = data.startTime
     this.endTime = data.endTime
+    this.inviteChanges = data.inviteChanges
   }
 
   getMilliseconds = (date: Date, time: string) : number => {
@@ -282,7 +284,8 @@ export class EventForm {
     ( (!this.era && state.repeatInterval === RepeatInterval.doesNotRepeat) || !this.era?.matchesInterval(state.repeatInterval) ) &&
     this.startTime === state.startTime &&
     this.endTime === state.endTime &&
-    this.allDay === state.allDay
+    this.allDay === state.allDay &&
+    arraysMatch(this.invited, state.invited)
   }
 
   toExportFormat = (update: boolean) => {
@@ -295,7 +298,8 @@ export class EventForm {
       tzid: this.tzid,
       location: this.location.toExportFormat(),
       when: { period: this.getPeriod() },
-      era: this.era
+      era: this.era,
+      invited: this.invited,
     }
 
     if (update) {
@@ -316,7 +320,7 @@ export default class Event {
   when: Period
   era?: Era
   tzid: string
-  invites: EventInvite[]
+  invited: Invite[] // Map<string, string | null>
   rsvp: Rsvp
   created: Date
   modified: Date
@@ -333,7 +337,7 @@ export default class Event {
       this.era = new Era(era)
     }
     this.tzid = data.tzid
-    this.invites = (data.invites || []).map((invite) => new EventInvite(invite))
+    this.invited = Event.generateInviteStatus(data.invited)
     this.rsvp = data.rsvp || Rsvp.yes
     this.created = new Date(data['date-created'])
     this.modified = new Date(data['last-modified'])
@@ -364,6 +368,8 @@ export default class Event {
       allDay: Math.round(moment(this.getStart()).diff(this.getEnd(), 'hours')) === 24,
       startTime: getHoursMinutes(this.getStart()),
       endTime: getHoursMinutes(this.getEnd()),
+      invited: this.invited.map(({ ship }) => ship),
+      invite: '',
       event: this
     }
   }
@@ -373,4 +379,18 @@ export default class Event {
   }
 
   compareTo = (b: Event) : number => Number(moment(this.getStart()).format('hhmm')) - Number(moment(b.getStart()).format('hhmm'))
+
+  invitedShips = () : string[] => this.invited.map(({ ship }) => ship)
+
+  static generateInviteStatus = (invited: any) => {
+    const invites = []
+
+    if (invited) {
+      for (let key in invited) {
+        invites.push({ ship: key, status: invited[key] })
+      }
+    }
+
+    return invites
+  }
 }

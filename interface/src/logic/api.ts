@@ -1,5 +1,4 @@
 import _, { create } from 'lodash'
-import { warnError } from '../lib/format'
 
 export default class UrbitApi {
   authTokens: any
@@ -52,9 +51,8 @@ export default class UrbitApi {
     })
   }
 
-  scry<T>(app: string, path: string): Promise<T|void> {
-    console.log('SCRY', app, path)
-    return fetch(`/~/scry/${app}/~${this.authTokens.ship}${path}.json`).then((r) => {
+  scry<T>(app: string, path: string, ship?: string): Promise<T|void> {
+    return fetch(`/~/scry/${app}/${ship || `~${this.authTokens.ship}`}${path}.json`).then((r) => {
       if (r.status === 404) {
         throw new Error('Not found')
       } else if (r.status > 399) {

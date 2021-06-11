@@ -5,9 +5,6 @@ import InitialReducer from './reducers/initial'
 import UpdateReducer from './reducers/update'
 import Store from './store'
 import { CalendarViewState } from '../views/CalendarView'
-import { calendarFormat } from 'moment'
-
-// TODO: break out event types
 
 export default class Actions {
   store: Store
@@ -25,20 +22,23 @@ export default class Actions {
   }
 
   saveCalendar = async (data : CalendarViewState, update = false) : Promise<void> => {
-    console.log('SAVING:', JSON.stringify(Calendar.toExportFormat(data, update)))
-    
     if (data.calendar?.title !== data.title) {
       await this.api.action('ucal-store', 'ucal-action', Calendar.toExportFormat(data, update))
     }
     if (data.calendar && data.calendar?.permissions?.public !== data.public) {
       const payload = { 'change-permissions': {'calendar-code': data.calendar.calendarCode } }
       payload['change-permissions'][data.public ? 'make-public' : 'make-private'] = null
-
       await this.api.action('ucal-store', 'ucal-action', payload)
     }
+    if (data.calendar && data.changes) {
+      Promise.all(data.changes.map((change) => this.api.action('ucal-store', 'ucal-action', {
+        'change-permissions': {
+          'calendar-code': data.calendar.calendarCode,
+          change
+        }
+      })))
+    }
     
-    // Handle permissions changes
-
     await this.getCalendars()
   }
 
@@ -59,7 +59,15 @@ export default class Actions {
 
   getEvents = async () : Promise<Event[]> => {
     const events = await this.api.scry<any>('ucal-store', '/events')
+    console.log('EVENT DATA', events)
     this.store.updateStore({ data: { events } })
+    return events
+  }
+
+  getInvitedEvents = async () : Promise<Event[]> => {
+    const events = await this.api.scry<any>('ucal-store', '/events', 'invited-to')
+    console.log('INVITED EVENTS DATA', events)
+    // this.store.updateStore({ data: { events } })
     return events
   }
 
@@ -78,7 +86,22 @@ export default class Actions {
         delete event[key]
       }
     }
-    console.log('SAVING:', JSON.stringify(event.toExportFormat(update)))
+
+    if (event.inviteChanges) {
+      await Promise.all(
+        event.inviteChanges.map(
+          ({ who, invite }) => this.api.action('ucal-store', 'ucal-action', {
+            'change-rsvp': {
+              'calendar-code': event.calendarCode,
+              'event-code': event.eventCode,
+              who,
+              invite,
+            }
+          })
+        )
+      )
+    }
+
     await this.api.action('ucal-store', 'ucal-action', event.toExportFormat(update))
     await this.getEvents()
   }
