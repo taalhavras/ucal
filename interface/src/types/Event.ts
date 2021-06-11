@@ -1,5 +1,6 @@
 import { Rule } from '@tlon/indigo-react'
 import moment from 'moment'
+import { arraysMatch } from '../lib/arrays'
 import { isSameDay, sameMonthDay, getHoursMinutes } from '../lib/dates'
 import { EventViewState } from '../views/EventView'
 
@@ -189,6 +190,11 @@ export class Period {
   }
 }
 
+export interface InviteChange {
+  who: string
+  invite: boolean
+}
+
 export class EventDetail {
   title: string
   desc: string
@@ -228,6 +234,8 @@ export class EventForm {
   startTime: string
   endTime: string
   allDay: boolean
+  rsvpChanges?: string[]
+  inviteChanges?: InviteChange[]
 
   constructor(data: EventViewState) {
     this.calendarCode = data.calendarCode
@@ -245,6 +253,7 @@ export class EventForm {
     this.allDay = data.allDay
     this.startTime = data.startTime
     this.endTime = data.endTime
+    this.inviteChanges = data.inviteChanges
   }
 
   getMilliseconds = (date: Date, time: string) : number => {
@@ -275,7 +284,8 @@ export class EventForm {
     ( (!this.era && state.repeatInterval === RepeatInterval.doesNotRepeat) || !this.era?.matchesInterval(state.repeatInterval) ) &&
     this.startTime === state.startTime &&
     this.endTime === state.endTime &&
-    this.allDay === state.allDay
+    this.allDay === state.allDay &&
+    arraysMatch(this.invited, state.invited)
   }
 
   toExportFormat = (update: boolean) => {
@@ -289,7 +299,7 @@ export class EventForm {
       location: this.location.toExportFormat(),
       when: { period: this.getPeriod() },
       era: this.era,
-      invited: this.invited
+      invited: this.invited,
     }
 
     if (update) {
@@ -369,6 +379,8 @@ export default class Event {
   }
 
   compareTo = (b: Event) : number => Number(moment(this.getStart()).format('hhmm')) - Number(moment(b.getStart()).format('hhmm'))
+
+  invitedShips = () : string[] => this.invited.map(({ ship }) => ship)
 
   static generateInviteStatus = (invited: any) => {
     const invites = []

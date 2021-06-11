@@ -7,6 +7,7 @@ import { match, RouteComponentProps, useLocation, withRouter } from 'react-route
 import { History, Location, LocationState } from 'history'
 import Actions from '../logic/actions';
 import { formatShip } from '../lib/format';
+import { findAdditions, findRemovals } from '../lib/arrays';
 
 interface RouterProps {
   calendar: string
@@ -63,19 +64,16 @@ class CalendarView extends Component<Props, CalendarViewState> {
     let changes : CalendarPermissionsChange[] = []
 
     const toPermissionsChange = (role: CalendarPermission) => (who: string) : CalendarPermissionsChange => ({ who, role })
-    const findAdditions = (current: string[], changes: string[], role: CalendarPermission) =>
-      changes.filter((change) => !current.includes(change)).map(toPermissionsChange(role))
-      // find all of the users who were in the old lists (combined) but no longer are in any
-    const findRemovals = (current: string[], changes: string[]) => current.filter((cur) => !changes.includes(cur)).map(toPermissionsChange(undefined))
-
+    
     if (state.selectedCalendar) {
       const { readers, writers, acolytes } = state.selectedCalendar.permissions
 
       changes = changes.concat(
-        findAdditions(readers, state.readers, 'reader'),
-        findAdditions(writers, state.writers, 'writer'),
-        findAdditions(acolytes, state.acolytes, 'acolyte'),
-        findRemovals([...readers, ...writers, ...acolytes], [...state.readers, ...state.writers, ...state.acolytes]),
+        findAdditions(readers, state.readers).map(toPermissionsChange('reader')),
+        findAdditions(writers, state.writers).map(toPermissionsChange('writer')),
+        findAdditions(acolytes, state.acolytes).map(toPermissionsChange('acolyte')),
+        findRemovals([...readers, ...writers, ...acolytes], [...state.readers, ...state.writers, ...state.acolytes])
+          .map(toPermissionsChange(undefined)),
       )
     }
 

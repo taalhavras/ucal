@@ -5,9 +5,6 @@ import InitialReducer from './reducers/initial'
 import UpdateReducer from './reducers/update'
 import Store from './store'
 import { CalendarViewState } from '../views/CalendarView'
-import { calendarFormat } from 'moment'
-
-// TODO: break out event types
 
 export default class Actions {
   store: Store
@@ -67,6 +64,13 @@ export default class Actions {
     return events
   }
 
+  getInvitedEvents = async () : Promise<Event[]> => {
+    const events = await this.api.scry<any>('ucal-store', '/events', 'invited-to')
+    console.log('INVITED EVENTS DATA', events)
+    // this.store.updateStore({ data: { events } })
+    return events
+  }
+
   deleteEvent = async (event: Event) : Promise<void> => {
     await this.api.action('ucal-store', 'ucal-action', {
       'delete-event': {
@@ -82,6 +86,22 @@ export default class Actions {
         delete event[key]
       }
     }
+
+    if (event.inviteChanges) {
+      await Promise.all(
+        event.inviteChanges.map(
+          ({ who, invite }) => this.api.action('ucal-store', 'ucal-action', {
+            'change-rsvp': {
+              'calendar-code': event.calendarCode,
+              'event-code': event.eventCode,
+              who,
+              invite,
+            }
+          })
+        )
+      )
+    }
+
     await this.api.action('ucal-store', 'ucal-action', event.toExportFormat(update))
     await this.getEvents()
   }
