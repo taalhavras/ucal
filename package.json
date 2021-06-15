@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cross-env NODE_ENV=production webpack --config webpack.prod.js && gulp",
     "serve": "gulp watch",
-    "serve-interface": "cross-env NODE_ENV=development webpack-dev-server --config webpack.dev.js"
+    "serve-interface": "cross-env NODE_ENV=development webpack-dev-server --config webpack.dev.js",
+    "postinstall": "husky install"
   },
   "repository": {
     "type": "git",
@@ -25,9 +26,13 @@
     "babel-plugin-root-import": "^6.5.0",
     "clean-webpack-plugin": "^3.0.0",
     "cross-env": "^7.0.2",
+    "eslint-config-prettier": "^8.3.0",
     "file-loader": "^6.0.0",
     "gulp": "^4.0.0",
     "html-webpack-plugin": "^4.2.0",
+    "husky": "^6.0.0",
+    "lint-staged": "^11.0.0",
+    "prettier": "2.3.1",
     "react-hot-loader": "^4.12.21",
     "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
@@ -87,5 +92,8 @@
   },
   "resolutions": {
     "natives": "1.1.3"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }

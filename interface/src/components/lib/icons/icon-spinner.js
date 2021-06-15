@@ -1,9 +1,3 @@
-import React, { Component } from 'react';
+import React from "react"
 
-export class IconSpinner extends Component {
-  render() {
-    return (
-      <div className="spinner-pending"></div> 
-    );
-  }
-}
+export const IconSpinner = () => <div className="spinner-pending" />
