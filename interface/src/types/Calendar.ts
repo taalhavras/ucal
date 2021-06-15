@@ -89,7 +89,6 @@ export default class Calendar {
     )
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
-      console.log(updatedCalendar?.active)
       if (
         updatedCalendar?.active &&
         !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)

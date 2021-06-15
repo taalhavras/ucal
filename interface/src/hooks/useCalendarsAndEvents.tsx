@@ -28,8 +28,8 @@ export const CalendarAndEventContext =
 
 export const CalendarAndEventProvider: React.FC = ({ children }) => {
   const api = new UrbitApi()
-  const [events, setEvents] = useState<Event[] | undefined>(undefined)
-  const [calendars, setCalendars] = useState<Calendar[] | undefined>(undefined)
+  const [events, setEvents] = useState<Event[]>([])
+  const [calendars, setCalendars] = useState<Calendar[]>([])
   const [initialLoad, setInitialLoad] = useState(false)
 
   const getEvents = async (): Promise<void> => {

@@ -28,7 +28,7 @@ export const App: React.FC = () => {
     themeWatcher = window.matchMedia("(prefers-color-scheme: dark)")
     setDark(themeWatcher.matches)
     themeWatcher.addListener(updateTheme)
-  })
+  }, [])
 
   return (
     <BrowserRouter>

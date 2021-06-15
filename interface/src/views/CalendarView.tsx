@@ -109,7 +109,6 @@ const CalendarView: React.FC<Props> = ({ history, match }) => {
           onChange={(e) => changeTitle(e)}
           value={calendarState.title}
         />
-        {console.log({ saveDisabled })}
         <Button
           disabled={saveDisabled}
           className="dark"
