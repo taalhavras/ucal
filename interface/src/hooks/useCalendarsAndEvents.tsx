@@ -30,7 +30,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   const api = new UrbitApi()
   const [events, setEvents] = useState<Event[]>([])
   const [calendars, setCalendars] = useState<Calendar[]>([])
-  const [initialLoad, setInitialLoad] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   const getEvents = async (): Promise<void> => {
     const apiEvents = await api.scry<any>("ucal-store", "/events")
@@ -142,6 +142,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   useEffect(() => {
     if (!!calendars && !!events && calendars.length < 1) {
       getCalendars()
+      setInitialLoad(true)
     }
   }, [calendars])
 
