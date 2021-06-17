@@ -7,7 +7,7 @@ type UserLocationContextType = {
 
 export const UserLocationContext = createContext<UserLocationContextType>({
   userLocation: "",
-  setUserLocation: () => {},
+  setUserLocation: () => ({}),
 })
 
 export const UserLocationProvider: React.FC = ({ children }) => {

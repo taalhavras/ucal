@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react"
+import React, { useState } from "react"
 
 import { Text, Box, Button } from "@tlon/indigo-react"
 import moment from "moment"

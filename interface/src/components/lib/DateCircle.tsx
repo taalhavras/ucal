@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React from "react"
 import moment from "moment"
 
 import { Text } from "@tlon/indigo-react"
@@ -55,7 +55,7 @@ const DateCircle: React.FC<Props> = ({
       borderRadius="13px"
       textAlign="center"
       verticalAlign="middle"
-      opacity={!!shaded ? "0.5" : "0.9"}
+      opacity={shaded ? "0.5" : "0.9"}
     >
       {children}
     </Text>

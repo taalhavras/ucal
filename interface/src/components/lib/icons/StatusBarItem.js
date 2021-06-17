@@ -1,17 +1,12 @@
-import React, { ReactNode } from "react";
-import { Row as _Row, Icon } from "@tlon/indigo-react";
-import styled from "styled-components";
+import React from "react"
+import { Row as _Row, Icon } from "@tlon/indigo-react"
+import styled from "styled-components"
 
 const Row = styled(_Row)`
   cursor: pointer;
-`;
+`
 
-
-export function StatusBarItem({
-  badge,
-  children,
-  ...props
-}) {
+export function StatusBarItem({ badge, children, ...props }) {
   return (
     <Row
       position="relative"
@@ -37,5 +32,5 @@ export function StatusBarItem({
         />
       )}
     </Row>
-  );
+  )
 }

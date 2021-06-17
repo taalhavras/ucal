@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
 import { BrowserRouter, Route } from "react-router-dom"
-import _ from "lodash"
 import HeaderBar from "./components/lib/header-bar.js"
 
 import { ThemeProvider } from "styled-components"

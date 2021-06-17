@@ -1,7 +1,6 @@
-import { Rule } from '@tlon/indigo-react'
-import moment from 'moment'
-import { isSameDay, sameMonthDay, getHoursMinutes } from '../lib/dates'
-import { EventViewState } from '../views/EventView'
+import moment from "moment"
+import { isSameDay, sameMonthDay, getHoursMinutes } from "../lib/dates"
+import { EventViewState } from "../views/EventView"
 
 export interface Coords {
   lat: number
@@ -12,7 +11,7 @@ export class EventLoc {
   address: string
   geo?: Coords // optional when creating event
 
-  constructor (data: { address: string, geo?: Coords }) {
+  constructor(data: { address: string; geo?: Coords }) {
     this.address = data.address
     this.geo = data.geo
   }
@@ -24,11 +23,11 @@ export class EventLoc {
 
     return {
       address: this.address,
-      geo: this.geo
+      geo: this.geo,
     }
   }
 
-  compareTo = (other: EventLoc) : number => {
+  compareTo = (other: EventLoc): number => {
     if (this.address === other.address) {
       return 0
     } else if (this.address > other.address) {
@@ -40,24 +39,32 @@ export class EventLoc {
 }
 
 export enum RepeatInterval {
-  doesNotRepeat = 'Does not repeat',
-  daily = 'Daily',
-  weekly = 'Weekly',
-  monthly = 'Monthly',
-  yearly = 'Yearly',
+  doesNotRepeat = "Does not repeat",
+  daily = "Daily",
+  weekly = "Weekly",
+  monthly = "Monthly",
+  yearly = "Yearly",
 }
 
 export enum Weekday {
-  sun = 'sun',
-  mon = 'mon',
-  tue = 'tue',
-  wed = 'wed',
-  thu = 'thu',
-  fri = 'fri',
-  sat = 'sat',
+  sun = "sun",
+  mon = "mon",
+  tue = "tue",
+  wed = "wed",
+  thu = "thu",
+  fri = "fri",
+  sat = "sat",
 }
 
-export const WEEKDAYS = [ Weekday.sun, Weekday.mon, Weekday.tue, Weekday.wed, Weekday.thu, Weekday.fri, Weekday.sat ]
+export const WEEKDAYS = [
+  Weekday.sun,
+  Weekday.mon,
+  Weekday.tue,
+  Weekday.wed,
+  Weekday.thu,
+  Weekday.fri,
+  Weekday.sat,
+]
 
 export class Era {
   type: {
@@ -67,13 +74,13 @@ export class Era {
   }
   interval: number
   rrule: {
-      daily?: boolean
-      weekly?: Weekday[]
-      monthly?: {
-        on?: number
-        weekday?: Weekday[]
-      }
-      yearly?: boolean
+    daily?: boolean
+    weekly?: Weekday[]
+    monthly?: {
+      on?: number
+      weekday?: Weekday[]
+    }
+    yearly?: boolean
   }
 
   constructor(data?: any) {
@@ -82,26 +89,33 @@ export class Era {
     this.rrule = data?.rrule
   }
 
-  isOnDay = (day: Date, start: Date, end: Date) : boolean => {
-    const { type, interval, rrule } = this
+  isOnDay = (day: Date, start: Date, end: Date): boolean => {
+    const { type, rrule } = this
     const moDay = moment(day)
 
-    const afterStart = moDay.isSameOrAfter(start, 'day')
+    const afterStart = moDay.isSameOrAfter(start, "day")
 
     const untilMatch = !!type.until && moDay.isSameOrBefore(type.until)
     const instancesMatch = !!type.instances && false // How to calculate the number of instances?
-    const typeMatch = (type.infinite !== undefined) || untilMatch || instancesMatch
+    const typeMatch =
+      type.infinite !== undefined || untilMatch || instancesMatch
 
-    const weeklyMatch = !!rrule.weekly?.includes(moDay.format('ddd').toString().toLowerCase() as Weekday)
-    const monthlyMatch = !!rrule.monthly && (day.getDate() === start.getDate() || day.getDate() === end.getDate()) // TODO: handle day-of-week case
-    const yearlyMatch = !!rrule.yearly && (sameMonthDay(day, start) || sameMonthDay(day, end))
+    const weeklyMatch = !!rrule.weekly?.includes(
+      moDay.format("ddd").toString().toLowerCase() as Weekday
+    )
+    const monthlyMatch =
+      !!rrule.monthly &&
+      (day.getDate() === start.getDate() || day.getDate() === end.getDate()) // TODO: handle day-of-week case
+    const yearlyMatch =
+      !!rrule.yearly && (sameMonthDay(day, start) || sameMonthDay(day, end))
 
-    const repeatMatch = rrule.daily !== undefined || weeklyMatch || monthlyMatch || yearlyMatch
+    const repeatMatch =
+      rrule.daily !== undefined || weeklyMatch || monthlyMatch || yearlyMatch
 
     return afterStart && typeMatch && repeatMatch
   }
 
-  getRepeatInterval = () : RepeatInterval => {
+  getRepeatInterval = (): RepeatInterval => {
     if (this.rrule.daily !== undefined) {
       return RepeatInterval.daily
     } else if (this.rrule.weekly) {
@@ -113,12 +127,15 @@ export class Era {
     }
   }
 
-  getWeekdays = () : Weekday[] => this.rrule?.weekly || []
+  getWeekdays = (): Weekday[] => this.rrule?.weekly || []
 
-  fromRepeatInterval = (repeatInterval: RepeatInterval, weekdays: Weekday[]): Era => {
+  fromRepeatInterval = (
+    repeatInterval: RepeatInterval,
+    weekdays: Weekday[]
+  ): Era => {
     // if doesNotRepeat, then shouldn't do anything
     this.type = {
-      infinite: true
+      infinite: true,
     }
     this.interval = 1
 
@@ -140,7 +157,7 @@ export class Era {
     return this
   }
 
-  matchesInterval = (repeatInterval: RepeatInterval) : boolean => {
+  matchesInterval = (repeatInterval: RepeatInterval): boolean => {
     switch (repeatInterval) {
       case RepeatInterval.daily:
         return !this.rrule?.daily
@@ -158,27 +175,27 @@ export class Era {
 
 export class Period {
   period: {
-    start: Date, // in milliseconds since epoch
+    start: Date // in milliseconds since epoch
     end: Date // in milliseconds since epoch
   }
 
-  constructor(data?: { start: Date, end: Date }) {
+  constructor(data?: { start: Date; end: Date }) {
     this.period = {
       start: data?.start ? new Date(data.start) : new Date(),
       end: data?.end ? new Date(data.end) : new Date(),
     }
   }
 
-  getStart = () : Date => this.period.start
+  getStart = (): Date => this.period.start
 
-  getEnd = () : Date => this.period.end
+  getEnd = (): Date => this.period.end
 
-  setStart = (start: Date) : Period => {
+  setStart = (start: Date): Period => {
     this.period = { start, end: this.period.end }
     return this
   }
 
-  setEnd = (end: Date) : Period => {
+  setEnd = (end: Date): Period => {
     this.period = { end, start: this.period.start }
     return this
   }
@@ -189,7 +206,7 @@ export class EventDetail {
   desc: string
   location?: EventLoc
 
-  constructor (data: { title: string, desc: string, loc: any }) {
+  constructor(data: { title: string; desc: string; loc: any }) {
     this.title = data.title
     this.desc = data.desc
     this.location = data.loc ? new EventLoc(data.loc) : undefined
@@ -208,7 +225,7 @@ export class EventInvite {
   rsvp: Rsvp
   sentAt: Date
 
-  constructor (data: any) {
+  constructor(data: any) {
     this.note = data.note
     this.optional = data.optional
     this.rsvp = data.rsvp
@@ -217,9 +234,9 @@ export class EventInvite {
 }
 
 export enum Rsvp {
-  yes = 'yes',
-  no = 'no',
-  maybe = 'maybe',
+  yes = "yes",
+  no = "no",
+  maybe = "maybe",
 }
 
 export class EventForm {
@@ -228,7 +245,7 @@ export class EventForm {
   organizer: string
   title: string
   desc: string | undefined
-  tzid = 'utc'
+  tzid = "utc"
   location: EventLoc
   start: Date
   end: Date
@@ -247,23 +264,30 @@ export class EventForm {
     this.start = data.start
     this.end = data.end
     if (data.repeatInterval !== RepeatInterval.doesNotRepeat) {
-      this.era = new Era().fromRepeatInterval(data.repeatInterval, data.weekdays)
+      this.era = new Era().fromRepeatInterval(
+        data.repeatInterval,
+        data.weekdays
+      )
     }
     this.allDay = data.allDay
     this.startTime = data.startTime
     this.endTime = data.endTime
   }
 
-  getMilliseconds = (date: Date, time: string) : number => {
-    const [hours, minutes] = time.split(':')
-    return moment(date).set('minutes', Number(minutes)).set('hours', Number(hours)).toDate().getTime()
+  getMilliseconds = (date: Date, time: string): number => {
+    const [hours, minutes] = time.split(":")
+    return moment(date)
+      .set("minutes", Number(minutes))
+      .set("hours", Number(hours))
+      .toDate()
+      .getTime()
   }
 
-  getPeriod = () : { start: number, end: number } => {
+  getPeriod = (): { start: number; end: number } => {
     if (this.allDay) {
       return {
-        start: moment(this.start).startOf('day').toDate().getTime(),
-        end: moment(this.end).endOf('day').toDate().getTime(),
+        start: moment(this.start).startOf("day").toDate().getTime(),
+        end: moment(this.end).endOf("day").toDate().getTime(),
       }
     }
 
@@ -273,36 +297,39 @@ export class EventForm {
     }
   }
 
-  isUnchanged = (state: EventViewState) : boolean => {
-    return this.title === state.title &&
-    this.desc === state.desc &&
-    this.location.compareTo(state.location) === 0 &&
-    this.start === state.start &&
-    this.end === state.end &&
-    ( (!this.era && state.repeatInterval === RepeatInterval.doesNotRepeat) || !this.era?.matchesInterval(state.repeatInterval) ) &&
-    this.startTime === state.startTime &&
-    this.endTime === state.endTime &&
-    this.allDay === state.allDay
+  isUnchanged = (state: EventViewState): boolean => {
+    return (
+      this.title === state.title &&
+      this.desc === state.desc &&
+      this.location.compareTo(state.location) === 0 &&
+      this.start === state.start &&
+      this.end === state.end &&
+      ((!this.era && state.repeatInterval === RepeatInterval.doesNotRepeat) ||
+        !this.era?.matchesInterval(state.repeatInterval)) &&
+      this.startTime === state.startTime &&
+      this.endTime === state.endTime &&
+      this.allDay === state.allDay
+    )
   }
 
   toExportFormat = (update: boolean) => {
     const data = {
-      'calendar-code': this.calendarCode,
-      'event-code': this.eventCode,
+      "calendar-code": this.calendarCode,
+      "event-code": this.eventCode,
       organizer: this.organizer,
       title: this.title,
       desc: this.desc,
       tzid: this.tzid,
       location: this.location.toExportFormat(),
       when: { period: this.getPeriod() },
-      era: this.era
+      era: this.era,
     }
 
     if (update) {
       delete data.organizer
     }
 
-    return update ? { 'update-event': data } : { 'create-event': data }
+    return update ? { "update-event": data } : { "create-event": data }
   }
 }
 
@@ -322,8 +349,8 @@ export default class Event {
   modified: Date
 
   constructor({ data, era }) {
-    this.eventCode = data['event-code']
-    this.calendarCode = data['calendar-code']
+    this.eventCode = data["event-code"]
+    this.calendarCode = data["calendar-code"]
     this.organizer = data.organizer
     this.title = data.title
     this.desc = data.desc
@@ -335,16 +362,16 @@ export default class Event {
     this.tzid = data.tzid
     this.invites = (data.invites || []).map((invite) => new EventInvite(invite))
     this.rsvp = data.rsvp || Rsvp.yes
-    this.created = new Date(data['date-created'])
-    this.modified = new Date(data['last-modified'])
+    this.created = new Date(data["date-created"])
+    this.modified = new Date(data["last-modified"])
   }
 
-  getStart = () : Date => this.when.getStart()
+  getStart = (): Date => this.when.getStart()
 
-  getEnd = () : Date => this.when.getEnd()
+  getEnd = (): Date => this.when.getEnd()
 
-  isOnDay = (day: Date) : boolean => {
-    const { era, when, getStart, getEnd } = this
+  isOnDay = (day: Date): boolean => {
+    const { era, getStart, getEnd } = this
 
     if (isSameDay(getStart(), day) || isSameDay(getEnd(), day)) {
       return true
@@ -353,24 +380,28 @@ export default class Event {
     return !!era && era.isOnDay(day, getStart(), getEnd())
   }
 
-  toFormFormat = () : EventViewState => {
+  toFormFormat = (): EventViewState => {
     return {
       ...this,
-      location: new EventLoc({ address: '' }),
+      location: new EventLoc({ address: "" }),
       start: this.getStart(),
-      repeatInterval: this.era?.getRepeatInterval() || RepeatInterval.doesNotRepeat,
+      repeatInterval:
+        this.era?.getRepeatInterval() || RepeatInterval.doesNotRepeat,
       weekdays: this.era?.getWeekdays(),
       end: this.getEnd(),
-      allDay: Math.round(moment(this.getStart()).diff(this.getEnd(), 'hours')) === 24,
+      allDay:
+        Math.round(moment(this.getStart()).diff(this.getEnd(), "hours")) === 24,
       startTime: getHoursMinutes(this.getStart()),
       endTime: getHoursMinutes(this.getEnd()),
-      event: this
+      event: this,
     }
   }
 
-  isUnchanged = (state: EventViewState) : boolean => {
+  isUnchanged = (state: EventViewState): boolean => {
     return new EventForm(state).isUnchanged(this.toFormFormat())
   }
 
-  compareTo = (b: Event) : number => Number(moment(this.getStart()).format('hhmm')) - Number(moment(b.getStart()).format('hhmm'))
+  compareTo = (b: Event): number =>
+    Number(moment(this.getStart()).format("hhmm")) -
+    Number(moment(b.getStart()).format("hhmm"))
 }

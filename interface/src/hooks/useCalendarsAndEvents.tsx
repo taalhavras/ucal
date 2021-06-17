@@ -21,9 +21,9 @@ type CalendarAndEventContextType = {
 export const CalendarAndEventContext =
   createContext<CalendarAndEventContextType>({
     events: [],
-    setEvents: () => {},
+    setEvents: () => ({}),
     calendars: [],
-    setCalendars: () => {},
+    setCalendars: () => ({}),
   })
 
 export const CalendarAndEventProvider: React.FC = ({ children }) => {
@@ -39,7 +39,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
       .map((e) => new Event(e))
     setEvents(filteredEvents)
     const updatedCalendars = Calendar.generateCalendars(
-      !!calendars ? calendars : [],
+      calendars ? calendars : [],
       filteredEvents
     )
     setCalendars(updatedCalendars)
@@ -58,7 +58,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
     event: EventForm,
     update: boolean
   ): Promise<void> => {
-    for (let key in event) {
+    for (const key in event) {
       if (event[key] === undefined) {
         delete event[key]
       }
@@ -73,7 +73,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
       .filter((rc) => !!rc)
       .map((c) => new Calendar(c))
     setCalendars(
-      Calendar.generateCalendars(filteredCalendars, !!events ? events : [])
+      Calendar.generateCalendars(filteredCalendars, events ? events : [])
     )
     setInitialLoad(false)
     return apiCalendars
@@ -149,7 +149,9 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
     if (!!calendars && !!events && calendars.length < 1 && !initialLoad) {
       try {
         saveInitialCalendar()
-      } catch (error) {}
+      } catch (error) {
+        console.log({ error })
+      }
     }
   }, [calendars, initialLoad])
 
