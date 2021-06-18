@@ -1,6 +1,5 @@
 import React, { useState } from "react"
 import moment from "moment"
-
 import { Box, Text } from "@tlon/indigo-react"
 import MonthTile from "./MonthTile"
 
@@ -33,7 +32,7 @@ const DatePicker: React.FC<Props> = ({
         margin="16px 0px 0px"
         padding="8px"
         borderRadius="4px"
-        backgroundColor={endAfterStart ? "#fce8e6" : "#f1f3f4"}
+        backgroundColor={endAfterStart ? "#fce8e6" : "white"}
         onClick={toggleDate}
         cursor="pointer"
       >
