@@ -1,4 +1,4 @@
-import baseStyled from "styled-components";
+import baseStyled from "styled-components"
 
 const base = {
   white: "rgba(255,255,255,1)",
@@ -7,7 +7,7 @@ const base = {
   yellow: "rgba(255,199,0,1)",
   green: "rgba(0,159,101,1)",
   blue: "rgba(0,142,255,1)",
-};
+}
 
 const scales = {
   white05: "rgba(255,255,255,0.05)",
@@ -76,15 +76,15 @@ const scales = {
   blue80: "rgba(0,142,255,0.8)",
   blue90: "rgba(0,142,255,0.9)",
   blue100: "rgba(0,142,255,1)",
-};
+}
 
 const util = {
   cyan: "#00FFFF",
   magenta: "#FF00FF",
   yellow: "#FFFF00",
   black: "#000000",
-  gray0: "#333333"
-};
+  gray0: "#333333",
+}
 
 const theme = {
   colors: {
@@ -178,6 +178,6 @@ const theme = {
   // z-index
   zIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   breakpoints: ["550px", "750px", "960px"],
-};
-export const styled = baseStyled;
-export default theme;
+}
+export const styled = baseStyled
+export default theme

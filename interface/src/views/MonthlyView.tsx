@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React from "react"
 
 import { Box } from "@tlon/indigo-react"
 import Calendar, { Timeframe, ViewProps } from "../types/Calendar"

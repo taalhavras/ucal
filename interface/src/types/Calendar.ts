@@ -99,7 +99,7 @@ export default class Calendar {
     })
 
     const formattedCalendars: Calendar[] = []
-    for (let item of all.values()) {
+    for (const item of all.values()) {
       if (item instanceof Calendar) {
         formattedCalendars.push(item)
       }

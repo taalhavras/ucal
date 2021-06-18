@@ -1,5 +1,5 @@
-import React, { Component, useState } from "react"
-import _, { capitalize } from "lodash"
+import React, { useState } from "react"
+import { capitalize } from "lodash"
 
 import { Text, Box, Button, Checkbox, Row, Icon } from "@tlon/indigo-react"
 import moment from "moment"
