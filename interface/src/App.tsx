@@ -39,7 +39,6 @@ export const App: React.FC = () => {
               flexDirection="column"
               position="absolute"
               backgroundColor="white"
-              height="100%"
               width="100%"
               px={[0, 4]}
               pb={[0, 4]}
