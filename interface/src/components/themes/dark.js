@@ -92,8 +92,8 @@ const theme = {
     black: base.white,
 
     gray: scales.white60,
-    lightGray: scales.white30,
-    washedGray: scales.white05,
+    lightGray: scales.white50,
+    washedGray: scales.white30,
 
     red: base.red,
     lightRed: scales.red30,
