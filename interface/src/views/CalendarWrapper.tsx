@@ -1,6 +1,5 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { capitalize } from "lodash"
-
 import { Text, Box, Button, Checkbox, Row, Icon } from "@tlon/indigo-react"
 import moment from "moment"
 import Calendar, { NavDirection, Timeframe } from "../types/Calendar"
@@ -17,7 +16,6 @@ import {
   useHistory,
 } from "react-router-dom"
 import { Location, History } from "history"
-import { HOUR_HEIGHT } from "../lib/dates"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
 
 interface RouterProps {
@@ -42,6 +40,25 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const [displayDayState, setDisplayDayState] = useState(useDd)
   const [selectedDayState, setSelectedDayState] = useState(useDd)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
+  const [mobile, setMobile] = useState(false)
+  let themeWatcher: any
+
+  const updateViewport = ({ matches }): void => {
+    setMobile(matches)
+  }
+
+  useEffect(() => {
+    themeWatcher = window.matchMedia("(max-width: 600px)")
+    setMobile(themeWatcher.matches)
+    if (
+      timeframeState === Timeframe.month ||
+      timeframeState === Timeframe.year
+    ) {
+      setTimeframeState(Timeframe.day)
+      pushViewRoute(Timeframe.day, selectedDayState)
+    }
+    themeWatcher.addListener(updateViewport)
+  }, [])
 
   const pushViewRoute = (tf: Timeframe, dd: Date): void =>
     history.push(`/~calendar/${tf}/${moment(dd).format("YYYY-MM-DD")}`)
@@ -57,6 +74,11 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     e.stopPropagation()
     e.preventDefault()
     const timeframe = e.target.value as Timeframe
+    pushViewRoute(timeframe, selectedDayState)
+    setTimeframeState(timeframe)
+  }
+
+  const handleTimeFrameButton = (timeframe: Timeframe) => {
     pushViewRoute(timeframe, selectedDayState)
     setTimeframeState(timeframe)
   }
@@ -122,6 +144,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
       selectedDay={selectedDayState}
       goToEvent={goToEvent}
       createEvent={createEvent}
+      mobile={mobile}
     />
   )
   switch (timeframe) {
@@ -132,6 +155,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
           selectedDay={selectedDayState}
           goToEvent={goToEvent}
           createEvent={createEvent}
+          mobile={mobile}
         />
       )
       break
@@ -188,11 +212,33 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
           >
             {moment().format("DD")}
           </Text>
-          <Text fontSize="1" margin={`6px ${HOUR_HEIGHT}px 0px 0px`}>
-            Calendar
-          </Text>
+          {!mobile && (
+            <Text fontSize="1" margin={`6px 100px 0px 0px`}>
+              Calendar
+            </Text>
+          )}
+          {mobile && (
+            <Button onClick={createEvent()} mr="4px">
+              <Text>+</Text>
+            </Button>
+          )}
           <Button onClick={() => goToToday()}>Today</Button>
-
+          {mobile && timeframeState === Timeframe.week && (
+            <Button
+              onClick={() => handleTimeFrameButton(Timeframe.day)}
+              ml="4px"
+            >
+              Day
+            </Button>
+          )}
+          {mobile && timeframeState === Timeframe.day && (
+            <Button
+              onClick={() => handleTimeFrameButton(Timeframe.week)}
+              ml="4px"
+            >
+              Week
+            </Button>
+          )}
           <Box
             height="100%"
             display="flex"
@@ -215,12 +261,14 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
             </Button>
           </Box>
 
-          <Title selectedDay={selectedDayState} timeframe={timeframeState} />
+          {!mobile && (
+            <Title selectedDay={selectedDayState} timeframe={timeframeState} />
+          )}
         </Box>
 
         <Box
           height="100%"
-          display="flex"
+          display={mobile ? "none" : "flex"}
           flexDirection="row"
           padding="0px 8px"
           border="1px solid rgba(0, 0, 0, 0.3)"
@@ -240,7 +288,11 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
         </Box>
       </Box>
       <Row width="100%">
-        <Box display="flex" flexDirection="column" margin="32px 2% 0px 0px">
+        <Box
+          display={mobile ? "none" : "flex"}
+          flexDirection="column"
+          margin="32px 2% 0px 0px"
+        >
           <Button onClick={createEvent()} marginBottom="20px" width="100px">
             <Text fontSize="20px">+</Text>{" "}
             <Text margin="2px 0px 0px 6px" fontSize="14px">

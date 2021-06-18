@@ -151,4 +151,5 @@ export interface ViewProps {
     eventCode: string
   ) => (event: React.MouseEvent<HTMLElement>) => void
   createEvent: (day?: Date) => () => void
+  mobile?: boolean
 }

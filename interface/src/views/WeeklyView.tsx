@@ -15,6 +15,7 @@ const WeeklyView: React.FC<ViewProps> = ({
   displayDay,
   selectDay,
   goToEvent,
+  mobile,
 }) => {
   const { calendars } = useCalendarsAndEvents()
   const { userLocation } = useUserLocation()
@@ -61,7 +62,11 @@ const WeeklyView: React.FC<ViewProps> = ({
         ref={scrollToSelectedDay(Timeframe.week, selectedDay)}
       >
         <Box display="flex" flexDirection="row" width="100%">
-          <HoursBar displayDay={displayDay} userLocation={userLocation} />
+          <HoursBar
+            displayDay={displayDay}
+            userLocation={userLocation}
+            mobile={mobile}
+          />
           {days.map((day, ind) => {
             const events = Calendar.getRelevantEvents(calendars, day).map(
               (e, _ind, events) => (
@@ -70,6 +75,7 @@ const WeeklyView: React.FC<ViewProps> = ({
                   event={e}
                   events={events}
                   weeklyView={true}
+                  mobile={mobile}
                   key={`${e.calendarCode}${e.eventCode}`}
                 />
               )
