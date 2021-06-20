@@ -36,9 +36,10 @@ const Hour = styled(Text)`
 interface Props {
   displayDay: Date
   userLocation: string
+  mobile: boolean
 }
 
-const HoursBar: React.FC<Props> = ({ displayDay, userLocation }) => {
+const HoursBar: React.FC<Props> = ({ displayDay, userLocation, mobile }) => {
   const loc = (userLocation.includes(",") && userLocation) || "40.4, -74.5"
   const [lat, lon] = loc.split(",")
 
@@ -118,8 +119,10 @@ const HoursBar: React.FC<Props> = ({ displayDay, userLocation }) => {
           <Hour
             margin={
               hour === 0
-                ? `${FIRST_HOUR_MARGIN}px 4px 0px 0px`
-                : `${HOUR_HEIGHT - FIRST_HOUR_MARGIN}px 4px 0px 0px`
+                ? `${FIRST_HOUR_MARGIN}px ${mobile ? 16 : 4}px 0px 0px`
+                : `${HOUR_HEIGHT - FIRST_HOUR_MARGIN}px ${
+                    mobile ? 16 : 4
+                  }px 0px 0px`
             }
             key={`hour-${hour}`}
           >

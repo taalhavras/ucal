@@ -14,6 +14,7 @@ const DailyView: React.FC<ViewProps> = ({
   selectedDay,
   displayDay,
   goToEvent,
+  mobile,
 }) => {
   const { calendars } = useCalendarsAndEvents()
   const { userLocation } = useUserLocation()
@@ -58,7 +59,11 @@ const DailyView: React.FC<ViewProps> = ({
         ref={scrollToSelectedDay(Timeframe.day, selectedDay)}
       >
         <Box display="flex" flexDirection="row" width="100%">
-          <HoursBar displayDay={displayDay} userLocation={userLocation} />
+          <HoursBar
+            displayDay={displayDay}
+            userLocation={userLocation}
+            mobile={mobile}
+          />
           <Box
             display="flex"
             flexDirection="column"
