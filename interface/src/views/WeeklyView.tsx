@@ -40,7 +40,7 @@ const WeeklyView: React.FC<ViewProps> = ({
             width="calc(12.5% - 2px)"
             key={`weekday-header-${ind}`}
           >
-            <Text color="rgba(0,0,0,0.6)">
+            <Text color="gray">
               {moment(day).format("ddd").toLocaleUpperCase()}
             </Text>
             <DateCircle

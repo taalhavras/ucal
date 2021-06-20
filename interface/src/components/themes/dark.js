@@ -83,17 +83,17 @@ const util = {
   magenta: "#FF00FF",
   yellow: "#FFFF00",
   black: "#000000",
-  gray0: "#333333",
+  urbitBlack: "rgb(26, 26, 26)",
 }
 
 const theme = {
   colors: {
-    white: util.gray0,
+    white: util.urbitBlack,
     black: base.white,
 
     gray: scales.white60,
-    lightGray: scales.white30,
-    washedGray: scales.white05,
+    lightGray: scales.white50,
+    washedGray: scales.white30,
 
     red: base.red,
     lightRed: scales.red30,

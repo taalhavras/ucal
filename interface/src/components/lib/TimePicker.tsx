@@ -1,8 +1,6 @@
 import React, { useState } from "react"
-
 import { Box, Text } from "@tlon/indigo-react"
 import { getQuarterHours } from "../../lib/dates"
-
 interface Props {
   selectedTime: string
   selectTime: (time: string) => void
@@ -27,7 +25,7 @@ const TimePicker: React.FC<Props> = ({ selectedTime, selectTime }) => {
         margin="16px 0px 0px 12px"
         padding="8px"
         borderRadius="4px"
-        backgroundColor="#f1f3f4"
+        backgroundColor="white"
         onClick={toggleDate}
         cursor="pointer"
       >
