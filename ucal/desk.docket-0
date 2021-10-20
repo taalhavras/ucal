@@ -1,0 +1,9 @@
+:~  title+'Ucal'
+    info+'An urbit calendar.'
+    color+0x81.88c9
+    base+'calendar'
+    site+/apps/calendar
+    version+[0 0 1]
+    website+'https://github.com/finned-palmer/urbit-calendar'
+    license+'MIT'
+==
