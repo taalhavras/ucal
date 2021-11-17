@@ -8,7 +8,6 @@
   ^-  config:push-hook
   :*  %ucal-store
       /almanac :: sub path for all store updates
-      update:ucal-store
       to-subscriber:ucal-store
       %ucal-to-subscriber
       %ucal-pull-hook
@@ -18,7 +17,7 @@
 +$  agent  (push-hook:push-hook config)
 --
 %-  agent:dbug
-%+  verb
+%+  verb  |
 ^-  agent:gall
 %-  (agent:push-hook config)
 ^-  agent
@@ -29,7 +28,18 @@
 ++  on-init  on-init:def
 ++  on-save  !>(~)
 ++  on-load    on-load:def
-++  on-poke   on-poke:def
+++  on-poke
+  |=  [=mark =vase]
+  ^-  (quip card _this)
+  ?+  mark  (on-poke:def mark vase)
+        %noun
+      ?>  =(our.bowl src.bowl)
+      ?+    q.vase  (on-poke:def mark vase)
+          %print-state
+        ~&  %ucal-push-hook-has-no-state-to-print
+        `this
+      ==
+  ==
 ++  on-agent  on-agent:def
 ++  on-watch
   |=  pax=path
@@ -50,9 +60,9 @@
         =/  cals=(list calendar)
             .^  (list calendar)
               %gx
-              (scot %p our)
+              (scot %p our.bowl)
               %ucal-store
-              (scot %da now)
+              (scot %da now.bowl)
               /calendars/noun
             ==
         %+  turn
@@ -78,9 +88,9 @@
 ::
 ++  transform-proxy-update
   |=  vas=vase
-  ^-  (unit vase)
+  ^-  [(list card) (unit vase)]
   ::  TODO for now just always accept
-  `vas
+  [*(list card) (some vas)]
 ::  NOTE: must be kept in sync with +resource-for-update in ucal-pull-hook
 ::
 ++  resource-for-update
@@ -151,9 +161,9 @@
   =/  alma=almanac
       .^  almanac
         %gx
-        (scot %p our)
+        (scot %p our.bowl)
         %ucal-store
-        (scot %da now)
+        (scot %da now.bowl)
         /almanac/noun
       ==
   =/  cc=calendar-code  name.rid
