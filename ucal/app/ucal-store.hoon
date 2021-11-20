@@ -510,6 +510,15 @@
       [%events ~]
     ``ucal-events+!>((~(get-events al almanac)))
   ::
+      [%calendar-and-events *]
+    =/  c  (get-calendar t.path almanac)
+    ?~  c
+      ~
+    =/  evs  (get-events-bycal t.path almanac)
+    ?~  evs
+      ~
+    ``ucal-calendar-and-events+!>([u.c u.evs])
+  ::
       [%calendars *]
     =/  res  (get-calendar t.path almanac)
     ?~  res
