@@ -1,4 +1,5 @@
 /-  ucal, hora
+/+  lhora=hora
 ::  Core for converting ucal types into entries in .ics files.
 ::
 |%
@@ -58,7 +59,7 @@
   ^-  tape
   =/  dat=date  (yore da)
   ;:  weld
-      (skip <y.dat> |=(c=char =(c '.')))
+      (a-co:co y.dat)
       (pad-to-two-digit m.dat)
       (pad-to-two-digit d.t.dat)
       "T"
@@ -79,8 +80,32 @@
   =<
   |=  ev=event:ucal
   ^-  wall
-  !!
+  =/  is-utc=flag  =(tzid.data.ev "utc")
+  =/  [dtstart=tape dtend=tape]  (parse-start-and-end when.data.ev tzid.data.ev)
+  =/  location=tape
+  ?~  loc.detail.data.ev
+    ""
+  (trip address.u.loc.detail.data.ev)
+  :~  "BEGIN:VEVENT"
+      dtstart
+      dtend
+      (parse-uid ev)
+      :: fields from detail
+      "SUMMARY:{(trip title.detail.data.ev)}"
+      "DESCRIPTION:{(trip (fall desc.detail.data.ev ''))}"
+      "LOCATION:{location}"
+      :: fields from about
+      "ORGANIZER:{(scow %p organizer.about.data.ev)}"
+      ::  Created/Last Modified times are always in UTC
+      "CREATED:{(da-to-datetime date-created.about.data.ev &)}"
+      "LAST-MODIFIED:{(da-to-datetime last-modified.about.data.ev &)}"
+      "END:VEVENT"
+  ==
   |%
+  ++  parse-uid
+    |=  ev=event:ucal
+    ^-  tape
+    "UID:{(scow %tas event-code.data.ev)}-{(scow %tas calendar-code.data.ev)}"
   ++  era-to-rrule
     |=  e=era:hora
     ^-  tape
@@ -93,10 +118,19 @@
     ?:  ?=([%until *] et)
       (some "UNTIL={(da-to-datetime end.et is-utc)}")
     ?:  ?=([%instances *] et)
-      (some "COUNT={<num.et>}")
+      (some "COUNT={(a-co:co num.et)}")
     ?:  ?=([%infinite *] et)
       ::  Nothing needs to be specified for %infinite events
       ~
     !!
+  ::
+  ++  parse-start-and-end
+    |=  [m=moment:hora tzid=tape]
+    ^-  [tape tape]
+    =/  [start=@da end=@da]  (moment-to-range:lhora m)
+    =/  is-utc=flag  =(tzid "utc")
+    =/  tzstr=tape  ?:(is-utc "" ";TZID={tzid}")
+    :-  "DTSTART{tzstr}:{(da-to-datetime start is-utc)}"
+    "DTEND{tzstr}:{(da-to-datetime start is-utc)}"
   --
 --
