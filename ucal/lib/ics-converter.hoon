@@ -58,7 +58,10 @@
   ^-  tape
   =/  dat=date  (yore da)
   ;:  weld
-      "{<y.dat>}{(pad-to-two-digit m.dat)}{(pad-to-two-digit d.t.dat)}T"
+      (skip <y.dat> |=(c=char =(c '.')))
+      (pad-to-two-digit m.dat)
+      (pad-to-two-digit d.t.dat)
+      "T"
       (pad-to-two-digit h.t.dat)
       (pad-to-two-digit m.t.dat)
       (pad-to-two-digit s.t.dat)
