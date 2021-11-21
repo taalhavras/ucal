@@ -86,21 +86,26 @@
   ?~  loc.detail.data.ev
     ""
   (trip address.u.loc.detail.data.ev)
-  :~  "BEGIN:VEVENT"
-      dtstart
-      dtend
-      (parse-uid ev)
-      :: fields from detail
-      "SUMMARY:{(trip title.detail.data.ev)}"
-      "DESCRIPTION:{(trip (fall desc.detail.data.ev ''))}"
-      "LOCATION:{location}"
-      :: fields from about
-      "ORGANIZER:{(scow %p organizer.about.data.ev)}"
-      ::  Created/Last Modified times are always in UTC
-      "CREATED:{(da-to-datetime date-created.about.data.ev &)}"
-      "LAST-MODIFIED:{(da-to-datetime last-modified.about.data.ev &)}"
-      "END:VEVENT"
-  ==
+  :: TODO there's gotta be a better way to express the optionality of
+  :: the RRULE field here.
+  %+  weld
+    :~  "BEGIN:VEVENT"
+        dtstart
+        dtend
+        (parse-uid ev)
+        :: fields from detail
+        "SUMMARY:{(trip title.detail.data.ev)}"
+        "DESCRIPTION:{(trip (fall desc.detail.data.ev ''))}"
+        "LOCATION:{location}"
+        :: fields from about
+        "ORGANIZER:{(scow %p organizer.about.data.ev)}"
+        ::  Created/Last Modified times are always in UTC
+        "CREATED:{(da-to-datetime date-created.about.data.ev &)}"
+        "LAST-MODIFIED:{(da-to-datetime last-modified.about.data.ev &)}"
+    ==
+  ?~  era.ev
+    ~["END:VEVENT"]
+  ~[(parse-era u.era.ev when.data.ev is-utc) "END:VEVENT"]
   |%
   ++  parse-uid
     |=  ev=event:ucal
