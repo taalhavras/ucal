@@ -51,7 +51,7 @@
       (flop [line acc])
     $(acc [-.u.folded acc], line +.u.folded)
   --
-::  $da-to-datetime: parses an @da into a tape representing an ics date-time
+::  $da-to-datetime: turns an @da into a tape representing an ics date-time
 ::
 ++  da-to-datetime
   =<
@@ -106,11 +106,44 @@
     |=  ev=event:ucal
     ^-  tape
     "UID:{(scow %tas event-code.data.ev)}-{(scow %tas calendar-code.data.ev)}"
-  ++  era-to-rrule
-    |=  e=era:hora
+  ::
+  ++  parse-era
+    |=  [e=era:hora is-utc=flag]
     ^-  tape
+    =/  type-component=(unit tape)  (era-type-to-component type.e is-utc)
+    =/  interval=tape  "INTERVAL={(a-co:co interval.e)}"
+    ::  now we just have the rrule left
+    =/  recur=tape
+    ?:  ?=([%daily *] rrule.e)
+      "FREQ=DAILY"
+    ?:  ?=([%weekly *] rrule.e)
+      =/  days=(list tape)
+      %+  turn
+        ~(tap in days.rrule.e)
+      |=  w=weekday:hora
+      ^-  tape
+      ?-  w
+        %mon  "MO"
+        %tue  "TU"
+        %wed  "WE"
+        %thu  "TH"
+        %fri  "FR"
+        %sat  "SA"
+        %sun  "SU"
+      ==
+      %-  zing
+      ^-  (list tape)
+      :~  "FREQ=WEEKLY;"
+          "BYDAY="
+          (zing (join "," days))
+      ==
+    ?:  ?=([%monthly *] rrule.e)
+      !!
+    ?:  ?=([%yearly *] rrule.e)
+      "FREQ=YEARLY"
     !!
-  ::  parse an era-type to the appropriate until/to rule.
+    "RRULE:{interval};{recur}"
+  ::  convert an era-type to the appropriate until/to rule.
   ::
   ++  era-type-to-component
     |=  [et=era-type:hora is-utc=flag]
