@@ -107,8 +107,21 @@
     ^-  tape
     "UID:{(scow %tas event-code.data.ev)}-{(scow %tas calendar-code.data.ev)}"
   ::
+  ++  weekday-to-tape
+    |=  w=weekday:hora
+    ^-  tape
+    ?-  w
+      %mon  "MO"
+      %tue  "TU"
+      %wed  "WE"
+      %thu  "TH"
+      %fri  "FR"
+      %sat  "SA"
+      %sun  "SU"
+    ==
+  ::
   ++  parse-era
-    |=  [e=era:hora is-utc=flag]
+    |=  [e=era:hora when=moment:hora is-utc=flag]
     ^-  tape
     =/  type-component=(unit tape)  (era-type-to-component type.e is-utc)
     =/  interval=tape  "INTERVAL={(a-co:co interval.e)}"
@@ -118,19 +131,7 @@
       "FREQ=DAILY"
     ?:  ?=([%weekly *] rrule.e)
       =/  days=(list tape)
-      %+  turn
-        ~(tap in days.rrule.e)
-      |=  w=weekday:hora
-      ^-  tape
-      ?-  w
-        %mon  "MO"
-        %tue  "TU"
-        %wed  "WE"
-        %thu  "TH"
-        %fri  "FR"
-        %sat  "SA"
-        %sun  "SU"
-      ==
+      (turn ~(tap in days.rrule.e) weekday-to-tape)
       %-  zing
       ^-  (list tape)
       :~  "FREQ=WEEKLY;"
@@ -138,6 +139,22 @@
           (zing (join "," days))
       ==
     ?:  ?=([%monthly *] rrule.e)
+      %+  weld
+        "FREQ=MONTHLY;"
+      =/  [start=@da @da]  (moment-to-range:lhora when)
+      ?:  ?=([%on *] form.rrule.e)
+        =/  day=@ud  d.t:(yore start)
+        "BYMONTHDAY={<day>}"
+      ?:  ?=([%weekday *] form.rrule.e)
+        %+  weld
+          ?-  instance.form.rrule.e
+            %first  "1"
+            %second  "2"
+            %third  "3"
+            %fourth  "4"
+            %last  "-1"
+          ==
+        (weekday-to-tape (get-weekday:lhora start))
       !!
     ?:  ?=([%yearly *] rrule.e)
       "FREQ=YEARLY"
