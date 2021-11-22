@@ -186,6 +186,33 @@
     =/  is-utc=flag  =(tzid "utc")
     =/  tzstr=tape  ?:(is-utc "" ";TZID={tzid}")
     :-  "DTSTART{tzstr}:{(da-to-datetime start is-utc)}"
-    "DTEND{tzstr}:{(da-to-datetime start is-utc)}"
+    "DTEND{tzstr}:{(da-to-datetime end is-utc)}"
+  --
+::  +convert-calendar-and-event: make full ICS file from calendar + events
+::
+++  convert-calendar-and-events
+  =<
+  |=  [cal=calendar:ucal evs=(list event:ucal)]
+  ^-  wall
+  %-  fold-lines
+  ;:  weld
+    ^-  wall
+    :~  "BEGIN:VCALENDAR"
+        "VERSION:2.0"
+        "PRODID:{(make-prodid cal)}"
+    ==
+    `wall`(zing (turn evs convert-event))
+    `wall`~["END:VCALENDAR"]
+  ==
+  |%
+  ::  +make-prodid: make a "PRODID" - a globally unique ID
+  ::
+  ++  make-prodid
+    |=  cal=calendar:ucal
+    ^-  tape
+    ::  since these must be globally unique we combine the
+    ::  owner and calendar-code as these must be globally
+    ::  unique within ucal.
+    ;:(weld (scow %p owner.cal) "/" (trip calendar-code.cal))
   --
 --
