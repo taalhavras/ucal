@@ -1,4 +1,4 @@
-/-  ucal, ucal-almanac, ucal-store, *resource
+/-  ucal, ucal-almanac, ucal-store, *resource, ucal-components
 /+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser, tzconv=iana-conversion
 ::
 ::: local type
@@ -361,9 +361,15 @@
     ::  only the ship (or a moon) ucal-store is running on can import calendars
     ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
+    =/  =vcalendar:ucal-components
+    ?:  ?=([%path *] input)
+      (calendar-from-file:ucal-parser path.input)
+    ?:  ?=([%data *] input)
+      (calendar-from-cord:ucal-parser data.input)
+    !!
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
-          (calendar-from-file:ucal-parser path.input)
+          vcalendar
           (make-uuid eny.bowl 8)
           our.bowl
           now.bowl

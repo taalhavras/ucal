@@ -715,9 +715,14 @@
     (bo:dejs (~(got by p.jon) 'invite'))
   ++  convert-import
     |=  jon=json
-    ^-  path
+    ^-  $%([%path path] [%data @t])
+    =,  format
     ?>  ?=([%o *] jon)
-    (pa:dejs:format (~(got by p.jon) 'path'))
+    %.  jon
+    %-  of:dejs
+    :~  [%path |=(j=json `path`(pa:dejs:format j))]
+        [%data |=(j=json `@t`?:(?=([%s *] j) +.j !!))]
+    ==
   ++  convert-change-permissions
     |=  jon=json
     ^-  permission-change:ucal-store

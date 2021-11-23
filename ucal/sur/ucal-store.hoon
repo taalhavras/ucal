@@ -86,7 +86,9 @@
       ==
       :: - import calendar from file
       $:  %import-from-ics
-          =path
+          $%  [%path =path]
+              [%data data=@t]
+          ==
       ==
       ::
       $:  %change-permissions
