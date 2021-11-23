@@ -1435,20 +1435,31 @@
         ==
     [new-calendar rt rest]
   --
+::  +calendar-from-lines: builds calendar from wall
+::
+++  calendar-from-lines
+  |=  lines=wall
+  ^-  vcalendar
+  %-  parse-vcalendar
+  %+  turn
+    (unfold-lines lines)
+  ::  now trim trailing carriage-returns
+  ::
+  |=  t=tape
+  =/  n=@  (dec (lent t))
+  ?:  =((snag n t) '\0d')
+    (scag n t)
+  t
 ::  +calendar-from-file:  builds calendar from specified file
 ::
 ++  calendar-from-file
   |=  pax=path
   ^-  vcalendar
-  =/  lines=wall
-      %+  turn
-        (unfold-lines (read-file pax))
-      ::  now trim trailing carriage-returns
-      ::
-      |=  t=tape
-      =/  n=@  (dec (lent t))
-      ?:  =((snag n t) '\0d')
-        (scag n t)
-      t
-  (parse-vcalendar lines)
+  (calendar-from-lines (read-file pax))
+::  +calendar-from-cord
+::
+++  calendar-from-cord
+  |=  data=@t
+  ^-  vcalendar
+  (calendar-from-lines (turn (to-wain:format data) trip))
 --
