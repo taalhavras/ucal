@@ -74,9 +74,9 @@
     ^-  tape
     ?:((lth dig 10) "0{<dig>}" "{<dig>}")
   --
-::  +convert-event: turn a single ucal:event into VEVENT lines.
+::  +event-to-vevent: turn a single ucal:event into VEVENT lines.
 ::
-++  convert-event
+++  event-to-vevent
   =<
   |=  ev=event:ucal
   ^-  wall
@@ -188,6 +188,11 @@
     :-  "DTSTART{tzstr}:{(da-to-datetime start is-utc)}"
     "DTEND{tzstr}:{(da-to-datetime end is-utc)}"
   --
+::  Prefix/Suffix for ics files - all ics files must be wrapped in a
+::  VCALENDAR component (even single events).
+::
+++  ics-prefix  `wall`["BEGIN:VCALENDAR" "VERSION:2.0" ~]
+++  ics-suffix  `wall`["END:VCALENDAR" ~]
 ::  +convert-calendar-and-event: make full ICS file from calendar + events
 ::
 ++  convert-calendar-and-events
@@ -196,13 +201,10 @@
   ^-  wall
   %-  fold-lines
   ;:  weld
-    ^-  wall
-    :~  "BEGIN:VCALENDAR"
-        "VERSION:2.0"
-        "PRODID:{(make-prodid cal)}"
-    ==
-    `wall`(zing (turn evs convert-event))
-    `wall`~["END:VCALENDAR"]
+    ics-prefix
+    `wall`~["PRODID:{(make-prodid cal)}"]
+    `wall`(zing (turn evs event-to-vevent))
+    ics-suffix
   ==
   |%
   ::  +make-prodid: make a "PRODID" - a globally unique ID
@@ -215,4 +217,30 @@
     ::  unique within ucal.
     ;:(weld (scow %p owner.cal) "/" (trip calendar-code.cal))
   --
+::  +convert-event: convert a single event into an ICS file
+::
+++  convert-event
+  |=  ev=event:ucal
+  ^-  wall
+  %-  fold-lines
+  ;:  weld
+    ics-prefix
+    `wall`~["PRODID:{(trip event-code.data.ev)}"]
+    (event-to-vevent ev)
+    ics-suffix
+  ==
+::  +convert-events: convert a list of events into an ICS file
+::
+++  convert-events
+  |=  evs=(list event:ucal)
+  ^-  wall
+  %-  fold-lines
+  ;:  weld
+    ics-prefix
+    ::  TODO there is probably a better way of generating a PRODID
+    ::  here since it's supposed to be globally unique.
+    ~["PRODID:{(trip event-code.data:(snag 0 evs))}"]
+    `wall`(zing (turn evs event-to-vevent))
+    ics-suffix
+  ==
 --
