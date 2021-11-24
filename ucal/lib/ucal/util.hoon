@@ -153,7 +153,11 @@
   |=  [input-rng=rng len=@ud]
   ^-  [term rng]
   ?>  (gth len 0)
-  =/  [l=(list term) output-rng=rng]  (make-term-list input-rng len ~)
+  ::  This is done to avoid the term starting with a '-' if len is evenly
+  ::  divided by 4
+  =/  [first=term continuation=rng]  (get-random-char input-rng)
+  =/  [l=(list term) output-rng=rng]
+  (make-term-list continuation (dec len) ~[first])
   [`term`(crip l) output-rng]
 ::  +from-digits:  converts a list of digits to a single atom
 ::
@@ -164,7 +168,7 @@
 ::  +vcal-to-ucal: converts a vcalendar to our data representation
 ::
 ++  vcal-to-ucal
-  |=  [=vcalendar:components =calendar-code owner=@p now=@da]
+  |=  [=vcalendar:components =calendar-code owner=@p now=@da rng=_~(. og 0)]
   ^-  [calendar (list event)]
   =/  cal=calendar
     :*
@@ -176,15 +180,16 @@
       now
     ==
   :-  cal
-  %-  head
-  %+  reel
-    events.vcalendar
-  |=  [cur=vevent:components events=(list event) code=event-code]
-  ^-  [(list event) event-code]
-  =/  res=(unit event)  (vevent-to-event cur code calendar-code owner now)
+  =|  acc=(list event)
+  |-
+  ?~  events.vcalendar
+    acc
+  =/  [ec=event-code continuation=_rng]  (make-uuid rng 8)
+  =/  res=(unit event)
+  (vevent-to-event i.events.vcalendar ec calendar-code owner now)
   ?~  res
-    [events code]
-  [[u.res events] +(code)]
+    $(events.vcalendar t.events.vcalendar)
+  $(acc [u.res acc], events.vcalendar t.events.vcalendar, rng continuation)
 ::  +vevent-to-event: attempts to parse event from vevent
 ::
 ++  vevent-to-event

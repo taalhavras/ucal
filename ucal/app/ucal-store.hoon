@@ -369,14 +369,9 @@
     ?:  ?=([%data *] input)
       (calendar-from-cord:ucal-parser data.input)
     !!
-    =/  rng  ~(. og `@`eny.bowl)
+    =/  [cc=term rng=_~(. og 0)]  (make-uuid ~(. og `@`eny.bowl) 8)
     =/  [cal=calendar events=(list event)]
-        %:  vcal-to-ucal
-          vcalendar
-          -:(make-uuid rng 8)
-          our.bowl
-          now.bowl
-        ==
+        (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
     :-  ~
     %=  state
       alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
