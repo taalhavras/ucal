@@ -5,6 +5,8 @@
 ![screenshot](https://archiv.nyc3.digitaloceanspaces.com/littel-wolfur/2021.3.03..16.28.48-screen.jpg)
 
 ## Usage
+TODO explain how to use https://gist.github.com/taalhavras/91ccf630f58c2a8e2e757271ba3f54bd
+
 Clone the repository and then create a .urbitrc in the root that looks like the .urbitrc-sample file. It should look like
 ```
 module.exports = {
