@@ -192,14 +192,15 @@
     ::  only the ship (or a moon) ucal-store is running on can create new calendars
     ?>  (team:title [our src]:bowl)
     =/  input  +.action
+    =/  cc=term  -:(make-uuid ~(. og `@`eny.bowl) 8)
     =/  new=cal
       :*
-        our.bowl                                            :: ship
-        (fall calendar-code.input -:(make-uuid eny.bowl 8)) :: unique code
-        title.input                                         :: title
-        permissions.input                                   :: permissions
-        now.bowl                                            :: created
-        now.bowl                                            :: last modified
+        our.bowl                                       :: ship
+        (fall calendar-code.input cc)                  :: unique code
+        title.input                                    :: title
+        permissions.input                              :: permissions
+        now.bowl                                       :: created
+        now.bowl                                       :: last modified
       ==
     :-  ~
     %=  state
@@ -259,11 +260,12 @@
     ::  organizer can't be an invitee
     ?<  (~(has in invited.input) src.bowl)
     =/  =about:ucal  [src.bowl now.bowl now.bowl]
+    =/  ec=term  -:(make-uuid ~(. og `@`eny.bowl) 8)
     =/  new=event
       :*
         ^-  event-data
         :*
-          (fall event-code.input -:(make-uuid eny.bowl 8))
+          (fall event-code.input ec)
           calendar-code.input
           about
           detail.input
@@ -367,10 +369,11 @@
     ?:  ?=([%data *] input)
       (calendar-from-cord:ucal-parser data.input)
     !!
+    =/  rng  ~(. og `@`eny.bowl)
     =/  [cal=calendar events=(list event)]
         %:  vcal-to-ucal
           vcalendar
-          -:(make-uuid eny.bowl 8)
+          -:(make-uuid rng 8)
           our.bowl
           now.bowl
         ==

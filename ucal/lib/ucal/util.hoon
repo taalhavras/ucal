@@ -150,12 +150,11 @@
       (dec len)
     [nxt acc]
   --
-  |=  [eny=@uv len=@ud]
+  |=  [input-rng=rng len=@ud]
   ^-  [term rng]
   ?>  (gth len 0)
-  =/  [first=term rng1=rng]  (get-random-char ~(. og eny))
-  =/  [l=(list term) rng2=rng]  (make-term-list rng1 (dec len) ~[first])
-  [`term`(crip l) rng2]
+  =/  [l=(list term) output-rng=rng]  (make-term-list input-rng len ~)
+  [`term`(crip l) output-rng]
 ::  +from-digits:  converts a list of digits to a single atom
 ::
 ++  from-digits
