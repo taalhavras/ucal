@@ -138,9 +138,9 @@
   ::
   ++  make-term-list
     |*  [=rng len=@ud acc=(list term)]
-    ^-  (list term)
+    ^-  [(list term) ^rng]
     ?:  =(len 0)
-      (flop acc)
+      [(flop acc) rng]
     =/  acc=(list term)
         ?:  =(0 (mod len 4))
           [`term`'-' acc]
@@ -151,10 +151,11 @@
     [nxt acc]
   --
   |=  [eny=@uv len=@ud]
-  ^-  term
+  ^-  [term rng]
   ?>  (gth len 0)
-  =/  [first=term =rng]  (get-random-char ~(. og eny))
-  `term`(crip (make-term-list rng (dec len) ~[first]))
+  =/  [first=term rng1=rng]  (get-random-char ~(. og eny))
+  =/  [l=(list term) rng2=rng]  (make-term-list rng1 (dec len) ~[first])
+  [`term`(crip l) rng2]
 ::  +from-digits:  converts a list of digits to a single atom
 ::
 ++  from-digits
