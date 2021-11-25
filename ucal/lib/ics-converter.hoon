@@ -1,4 +1,4 @@
-/-  ucal, hora
+/-  ucal, hora, iana-components
 /+  lhora=hora
 ::  Core for converting ucal types into entries in .ics files.
 ::
@@ -243,4 +243,38 @@
     `wall`(zing (turn evs event-to-vevent))
     ics-suffix
   ==
+::  +convert-zone: converts a timezone (with optional rules) to
+::  VTIMEZONE lines
+::
+++  convert-zone
+  =<
+  |=  zone=zone:iana-components
+  ^-  wall
+  %-  fold-lines
+  ;:  weld
+      `wall`~["BEGIN:VTIMEZONE" "TZID:{(trip name.zone)}"]
+      `wall`(zing (turn entries.zone zone-entry-to-lines))
+      `wall`~["END:VTIMEZONE"]
+  ==
+  |%
+  ++  zone-entry-to-lines
+    |=  entry=zone-entry:iana-components
+    ^-  wall
+    ?:  ?=([%nothing *] rules.entry)
+      !!
+      ::(build-nothing entry)
+    ?:  ?=([%delta *] rules.entry)
+      !!
+      ::(build-delta entry delta.rules.entry)
+    ?:  ?=([%rule *] rules.entry)
+      !!
+      ::(build-rule-based entry name.rules.entry)
+    !!
+  ::
+  ++  build-nothing  !!
+  ++  build-delta  !!
+  ++  build-rule-based  !!
+  ::
+  ++  build-start-and-end  !!
+  --
 --
