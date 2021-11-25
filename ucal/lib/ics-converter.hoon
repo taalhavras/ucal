@@ -51,10 +51,16 @@
       (flop [line acc])
     $(acc [-.u.folded acc], line +.u.folded)
   --
+::  +pad-to-two-digit: helper to pad an @ud to two digits in tape form
+::
+++  pad-to-two-digit
+  |=  dig=@ud
+  ^-  tape
+  ?>  (lth dig 100)
+  ?:((lth dig 10) "0{<dig>}" "{<dig>}")
 ::  $da-to-datetime: turns an @da into a tape representing an ics date-time
 ::
 ++  da-to-datetime
-  =<
   |=  [da=@da is-utc=flag]
   ^-  tape
   =/  dat=date  (yore da)
@@ -68,12 +74,6 @@
       (pad-to-two-digit s.t.dat)
       ?:(is-utc "Z" "")
   ==
-  |%
-  ++  pad-to-two-digit
-    |=  dig=@ud
-    ^-  tape
-    ?:((lth dig 10) "0{<dig>}" "{<dig>}")
-  --
 ::  +event-to-vevent: turn a single ucal:event into VEVENT lines.
 ::
 ++  event-to-vevent
@@ -261,20 +261,66 @@
     |=  entry=zone-entry:iana-components
     ^-  wall
     ?:  ?=([%nothing *] rules.entry)
-      !!
-      ::(build-nothing entry)
+      (build-nothing entry)
     ?:  ?=([%delta *] rules.entry)
-      !!
-      ::(build-delta entry delta.rules.entry)
+      (build-delta entry delta.rules.entry)
     ?:  ?=([%rule *] rules.entry)
-      !!
       ::(build-rule-based entry name.rules.entry)
+      !!
     !!
   ::
-  ++  build-nothing  !!
-  ++  build-delta  !!
+  ++  build-nothing
+    |=  entry=zone-entry:iana-components
+    ^-  wall
+    (build-delta-or-nothing-helper entry stdoff.entry)
+  ::
+  ++  build-delta
+    |=  [entry=zone-entry:iana-components =delta:iana-components]
+    ^-  wall
+    =/  new-delta=delta:iana-components
+    ?:  =(sign.delta sign.stdoff.entry)
+      [sign.delta (add d.delta d.stdoff.entry)]
+    ?:  (gte d.delta d.stdoff.entry)
+      [sign.delta (sub d.delta d.stdoff.entry)]
+    [sign.stdoff.entry (sub d.stdoff.entry d.delta)]
+    (build-delta-or-nothing-helper entry new-delta)
+  ::  Common logic between building %nothing and %delta zones
+  ++  build-delta-or-nothing-helper
+    |=  [entry=zone-entry:iana-components =delta:iana-components]
+    ^-  wall
+    =/  offset=tape  (build-offset delta)
+    :~  standard-prefix
+        (build-dtstart from.entry)
+        "TZOFFSETTO:{offset}"
+        "TZOFFSETFROM:{offset}"
+        standard-suffix
+    ==
+  ::
   ++  build-rule-based  !!
   ::
-  ++  build-start-and-end  !!
+  ++  standard-prefix  "BEGIN:STANDARD"
+  ++  standard-suffix  "END:STANDARD"
+  ++  daylight-prefix  "BEGIN:DAYLIGHT"
+  ++  daylight-suffix  "END:DAYLIGHT"
+  ::
+  ++  build-dtstart
+    |=  from=seasoned-time:iana-components
+    ^-  tape
+    %+  weld
+      "DTSTART:"
+    (da-to-datetime when.from =(flavor.from %utc))
+  ::  +build-offset: build signed offset in hours/mins. suitable for
+  ::  tzoffset{to,from}
+  ::
+  ++  build-offset
+    |=  =delta:iana-components
+    ^-  tape
+    =/  t=tarp  (yell d.delta)
+    ?>  =(d.t 0)
+    ;:  weld
+        ?:(sign.delta "" "-")
+        (pad-to-two-digit h.t)
+        (pad-to-two-digit m.t)
+    ==
   --
 --
