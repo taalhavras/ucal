@@ -344,7 +344,14 @@
       !!
     =/  [standard=rule-mapping saving=rule-mapping]
     (pair-rules [standard saving]:rule)
-    !!
+    %-  zing
+    %+  weld
+      %+  turn
+        ~(tap by standard)
+      (cury (cury generate-lines |) entry)
+    %+  turn
+      ~(tap by saving)
+    (cury (cury generate-lines &) entry)
     |%
     +$  rule-mapping  (jar rule-entry:iana rule-entry:iana)
     ::
@@ -382,7 +389,7 @@
     ::  corresponding rules it maps to.
     ::
     ++  generate-lines
-      |=  [for=rule-entry:iana mapped=(list rule-entry:iana) saving=flag entry=zone-entry:iana]
+      |=  [saving=flag entry=zone-entry:iana for=rule-entry:iana mapped=(list rule-entry:iana)]
       ^-  wall
       ::  I _thinK_ we'll need the zone here as well?
       ::  We must have at least one mapping here.
