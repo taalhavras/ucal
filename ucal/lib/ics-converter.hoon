@@ -325,6 +325,27 @@
   ++  build-rule-based
     |=  [entry=zone-entry:iana-components rule=tz-rule:iana-components]
     ^-  wall
+    ::  Logic here is as follows:
+    ::  We must establish a mapping between the `standard` and `saving`
+    ::  rule entries so we can properly calculate TZOFFSETFROM for
+    ::  individual STANDARD/DAYLIGHT components.
+    ::
+    ::  Once we have this mapping we can go through each `standard` and
+    ::  `saving` component. For each we will generate a STANDARD/DAYLIGHT
+    ::  component _for each rule it maps to_ - i.e. if a `standard` rule
+    ::  was in effect for 3 different `saving` rules we'd need `3`
+    ::  different STANDARD components, each with a different
+    ::  TZOFFSETFROM.
+    ::
+    ?:  |(=(standard.rule ~) =(saving.rule ~))
+      ::  We should always have at least one of each kind of rule.
+      ::  Logically any case where we would only have i.e. `standard`
+      ::  rules could just be represented as multiple different zone
+      ::  entries instead. If this ever does happen it's not too hard
+      ::  to handle - we'll just need to only generate components based
+      ::  on the one list and we can just set TZOFFSETFROM to whatever
+      ::  the earlier rule-entry had.
+      !!
     !!
   ::
   ++  standard-prefix  "BEGIN:STANDARD"
