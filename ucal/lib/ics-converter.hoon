@@ -391,7 +391,6 @@
     ++  generate-lines
       |=  [saving=flag entry=zone-entry:iana for=rule-entry:iana mapped=(list rule-entry:iana)]
       ^-  wall
-      ::  I _thinK_ we'll need the zone here as well?
       ::  We must have at least one mapping here.
       ?>  !=(mapped ~)
       %-  zing
