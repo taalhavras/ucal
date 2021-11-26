@@ -1,4 +1,4 @@
-/-  ucal, hora, iana-components
+/-  ucal, hora, iana=iana-components
 /+  lhora=hora
 ::  Core for converting ucal types into entries in .ics files.
 ::
@@ -255,8 +255,8 @@
   =<
   |=  [[us=@p now=@da] zone-name=tape]
   ^-  wall
-  =/  =zone:iana-components
-  .^  zone:iana-components
+  =/  =zone:iana
+  .^  zone:iana
     %gx
     (scot %p us)
     %timezone-store
@@ -274,15 +274,15 @@
   ==
   |%
   ++  zone-entry-to-lines
-    |=  [[us=@p now=@da] entry=zone-entry:iana-components]
+    |=  [[us=@p now=@da] entry=zone-entry:iana]
     ^-  wall
     ?:  ?=([%nothing *] rules.entry)
       (build-nothing entry)
     ?:  ?=([%delta *] rules.entry)
       (build-delta entry delta.rules.entry)
     ?:  ?=([%rule *] rules.entry)
-      =/  tzr=tz-rule:iana-components
-      .^  tz-rule:iana-components
+      =/  tzr=tz-rule:iana
+      .^  tz-rule:iana
         %gx
         (scot %p us)
         %timezone-store
@@ -296,14 +296,14 @@
     !!
   ::
   ++  build-nothing
-    |=  entry=zone-entry:iana-components
+    |=  entry=zone-entry:iana
     ^-  wall
     (build-delta-or-nothing-helper entry stdoff.entry)
   ::
   ++  build-delta
-    |=  [entry=zone-entry:iana-components =delta:iana-components]
+    |=  [entry=zone-entry:iana =delta:iana]
     ^-  wall
-    =/  new-delta=delta:iana-components
+    =/  new-delta=delta:iana
     ?:  =(sign.delta sign.stdoff.entry)
       [sign.delta (add d.delta d.stdoff.entry)]
     ?:  (gte d.delta d.stdoff.entry)
@@ -312,7 +312,7 @@
     (build-delta-or-nothing-helper entry new-delta)
   ::  Common logic between building %nothing and %delta zones
   ++  build-delta-or-nothing-helper
-    |=  [entry=zone-entry:iana-components =delta:iana-components]
+    |=  [entry=zone-entry:iana =delta:iana]
     ^-  wall
     =/  offset=tape  (build-offset delta)
     :~  standard-prefix
@@ -323,7 +323,8 @@
     ==
   ::
   ++  build-rule-based
-    |=  [entry=zone-entry:iana-components rule=tz-rule:iana-components]
+    =<
+    |=  [entry=zone-entry:iana rule=tz-rule:iana]
     ^-  wall
     ::  Logic here is as follows:
     ::  We must establish a mapping between the `standard` and `saving`
@@ -346,7 +347,43 @@
       ::  on the one list and we can just set TZOFFSETFROM to whatever
       ::  the earlier rule-entry had.
       !!
+    =/  [standard=pair-rules saving=pair-rules]
+    (pair-rules [standard saving]:rule)
     !!
+    |%
+    +$  rule-mapping  (jug rule-entry:iana rule-entry:iana)
+    ::
+    ++  pair-rules
+      |=  [standard=(list rule-entry:iana) saving=(list rule-entry:iana)]
+      ^-  [rule-mapping rule-mapping]
+      :-  (determine-mappings standard saving)
+      (determine-mappings saving standard)
+    ::
+    ++  determine-mappings
+      |=  [for=(list rule-entry:iana) others=(list rule-entry:iana)]
+      ^-  rule-mapping
+      %-  reel
+       for
+      |=  [cur=rule-entry:iana acc=rule-mapping]
+      ^-  rule-mapping
+      (~(put by acc) cur (determine-single-mapping cur others))
+    ::  +determine-single-mapping: produce list of entries from `others`
+    ::  that are in the same year(s) as `for.
+    ::
+    ++  determine-single-mapping
+      |=  [for=rule-entry:iana others=(list rule-entry:iana)]
+      ^-  (list rule-entry:iana)
+      %-  skim
+        others
+      |=  cur=rule-entry:iana
+      ^-  flag
+      ::  see https://stackoverflow.com/questions/3269434 for an
+      ::  explanation of this check. The defaults chosen for `to` are
+      ::  just so that the condition returns true in those cases.
+      ?&  (lte from.for (fall to.cur from.for))
+          (lte from.cur (fall to.for from.cur))
+      ==
+    --
   ::
   ++  standard-prefix  "BEGIN:STANDARD"
   ++  standard-suffix  "END:STANDARD"
@@ -354,7 +391,7 @@
   ++  daylight-suffix  "END:DAYLIGHT"
   ::
   ++  build-dtstart
-    |=  from=seasoned-time:iana-components
+    |=  from=seasoned-time:iana
     ^-  tape
     %+  weld
       "DTSTART:"
@@ -363,7 +400,7 @@
   ::  tzoffset{to,from}
   ::
   ++  build-offset
-    |=  =delta:iana-components
+    |=  =delta:iana
     ^-  tape
     =/  t=tarp  (yell d.delta)
     ?>  =(d.t 0)
