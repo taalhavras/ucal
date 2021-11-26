@@ -1,5 +1,5 @@
 /-  ucal, hora, iana=iana-components
-/+  lhora=hora
+/+  lhora=hora, liana=iana-util
 ::  Core for converting ucal types into entries in .ics files.
 ::
 |%
@@ -58,7 +58,7 @@
   ^-  tape
   ?>  (lth dig 100)
   ?:((lth dig 10) "0{<dig>}" "{<dig>}")
-::  $da-to-datetime: turns an @da into a tape representing an ics date-time
+::  +da-to-datetime: turns an @da into a tape representing an ics date-time
 ::
 ++  da-to-datetime
   |=  [da=@da is-utc=flag]
@@ -73,6 +73,19 @@
       (pad-to-two-digit m.t.dat)
       (pad-to-two-digit s.t.dat)
       ?:(is-utc "Z" "")
+  ==
+::
+++  weekday-to-tape
+  |=  w=weekday:hora
+  ^-  tape
+  ?-  w
+    %mon  "MO"
+    %tue  "TU"
+    %wed  "WE"
+    %thu  "TH"
+    %fri  "FR"
+    %sat  "SA"
+    %sun  "SU"
   ==
 ::  +event-to-vevent: turn a single ucal:event into VEVENT lines.
 ::
@@ -111,19 +124,6 @@
     |=  ev=event:ucal
     ^-  tape
     "UID:{(scow %tas event-code.data.ev)}-{(scow %tas calendar-code.data.ev)}"
-  ::
-  ++  weekday-to-tape
-    |=  w=weekday:hora
-    ^-  tape
-    ?-  w
-      %mon  "MO"
-      %tue  "TU"
-      %wed  "WE"
-      %thu  "TH"
-      %fri  "FR"
-      %sat  "SA"
-      %sun  "SU"
-    ==
   ::
   ++  parse-era
     |=  [e=era:hora when=moment:hora is-utc=flag]
@@ -301,14 +301,9 @@
     (build-delta-or-nothing-helper entry stdoff.entry)
   ::
   ++  build-delta
-    |=  [entry=zone-entry:iana =delta:iana]
+    |=  [entry=zone-entry:iana d=delta:iana]
     ^-  wall
-    =/  new-delta=delta:iana
-    ?:  =(sign.delta sign.stdoff.entry)
-      [sign.delta (add d.delta d.stdoff.entry)]
-    ?:  (gte d.delta d.stdoff.entry)
-      [sign.delta (sub d.delta d.stdoff.entry)]
-    [sign.stdoff.entry (sub d.stdoff.entry d.delta)]
+    =/  new-delta=delta:iana  (add-deltas:liana d stdoff.entry)
     (build-delta-or-nothing-helper entry new-delta)
   ::  Common logic between building %nothing and %delta zones
   ++  build-delta-or-nothing-helper
@@ -347,11 +342,11 @@
       ::  on the one list and we can just set TZOFFSETFROM to whatever
       ::  the earlier rule-entry had.
       !!
-    =/  [standard=pair-rules saving=pair-rules]
+    =/  [standard=rule-mapping saving=rule-mapping]
     (pair-rules [standard saving]:rule)
     !!
     |%
-    +$  rule-mapping  (jug rule-entry:iana rule-entry:iana)
+    +$  rule-mapping  (jar rule-entry:iana rule-entry:iana)
     ::
     ++  pair-rules
       |=  [standard=(list rule-entry:iana) saving=(list rule-entry:iana)]
@@ -362,8 +357,8 @@
     ++  determine-mappings
       |=  [for=(list rule-entry:iana) others=(list rule-entry:iana)]
       ^-  rule-mapping
-      %-  reel
-       for
+      %+  reel
+        for
       |=  [cur=rule-entry:iana acc=rule-mapping]
       ^-  rule-mapping
       (~(put by acc) cur (determine-single-mapping cur others))
@@ -373,7 +368,7 @@
     ++  determine-single-mapping
       |=  [for=rule-entry:iana others=(list rule-entry:iana)]
       ^-  (list rule-entry:iana)
-      %-  skim
+      %+  skim
         others
       |=  cur=rule-entry:iana
       ^-  flag
@@ -383,6 +378,112 @@
       ?&  (lte from.for (fall to.cur from.for))
           (lte from.cur (fall to.for from.cur))
       ==
+    ::  +generate-lines: produce VTIMEZONE lines from a rule and the
+    ::  corresponding rules it maps to.
+    ::
+    ++  generate-lines
+      |=  [for=rule-entry:iana mapped=(list rule-entry:iana) saving=flag entry=zone-entry:iana]
+      ^-  wall
+      ::  I _thinK_ we'll need the zone here as well?
+      ::  We must have at least one mapping here.
+      ?>  !=(mapped ~)
+      %-  zing
+      (turn mapped (curr (cury generate-single-component for) [saving entry]))
+    ::
+    ++  generate-single-component
+      |=  [for=rule-entry:iana other=rule-entry:iana saving=flag entry=zone-entry:iana]
+      ^-  wall
+      =/  start=seasoned-time:iana
+      %:  build-seasoned-time:liana
+          :: FIXME improve this as per the comment
+          :: We base the start of this particular component on the
+          :: start of the mapped-to rule. Ideally this would instead be
+          :: from.for for the earliest instance of this component and
+          :: from.other for all subsequent rules. However this'll only
+          :: cause issues for really early rules so it doesn't super
+          :: matter.
+          from.other
+          `in.for
+          `on.for
+          `offset.at.for
+          `flavor.at.for
+      ==
+      ::  We need an RRULE section here as well - derive it from `from`
+      :~  ?:(saving daylight-prefix standard-prefix)
+          (build-dtstart start)
+          "TZOFFSETTO:{(build-offset (add-deltas:liana stdoff.entry save.for))}"
+          "TZOFFSETFROM:{(build-offset (add-deltas:liana stdoff.entry save.other))}"
+          (build-rrule-line for other)
+          ?:(saving daylight-suffix standard-suffix)
+      ==
+    ::
+    ++  build-rrule-line
+      |=  [for=rule-entry:iana other=rule-entry:iana]
+      ^-  tape
+      =/  day-sections=(list tape)
+      ?@  on.for
+        ~["BYMONTHDAY={<on.for>};"]
+      =/  payload  (tail on.for)
+      =/  wday=tape  (weekday-to-tape (head on.for))
+      ::  Construct rule sections that determine which day of the month
+      ::  the rule comes into effect.
+      =/  pos=tape
+      ?:  ?=([%on *] payload)
+        ::  This cannot be expressed with just BYSETPOS. Instead we use
+        ::  BYMONTHDAY with a list of 7 days starting from the specified
+        ::  bound. It doesn't matter if these days go over the end of
+        ::  the month due to how RRULEs are parsed (but that would
+        ::  indicate some sort of issue with the iana data).
+        =/  days-allowed=tape
+        %-  zing
+        %+  join
+          ","
+        %+  turn
+          (gulf +.payload (add +.payload 6))
+        |=(a=@ud `tape`<a>)
+        "BYMONTHDAY={days-allowed};"
+      ?:  ?=([%instance *] payload)
+        ?-  +.payload
+            %first   "BYSETPOS=1;"
+            %second  "BYSETPOS=2;"
+            %third   "BYSETPOS=3;"
+            %fourth  "BYSETPOS=4;"
+            %last    "BYSETPOS=-1;"
+        ==
+      !!
+      :~  "BYDAY={wday};"
+          pos
+      ==
+      =/  until=tape
+      ::  So here we need to calculate how long this rule is in effect
+      ::  for. To do so we'll need to reference the rule it's paired
+      ::  against. The rule should be ended at a date based on the start
+      ::  date of the rule. The ending year should be the min of the end
+      ::  year of the `other` rule and this rule. If neither rule has
+      ::  an ending year this is the current rule and doesn't need an
+      ::  "UNTIL" section.
+      ::
+      =/  end-year=(unit @ud)
+      ?~  to.other
+        to.for
+      ?~  to.for
+        to.other
+      (some (min u.to.other u.to.for))
+      ?~  end-year
+        ""
+      =/  end-time=seasoned-time:iana
+      %:  build-seasoned-time:liana
+          u.end-year
+          `in.for
+          `on.for
+          `offset.at.for
+          `flavor.at.for
+      ==
+      "UNTIL={(da-to-datetime when.end-time =(flavor.end-time %utc))};"
+      %-  zing
+      %+  weld
+        ~["RRULE:FREQ=YEARLY;" "BYMONTH={<in.for>};" until]
+      day-sections
     --
   ::
   ++  standard-prefix  "BEGIN:STANDARD"
