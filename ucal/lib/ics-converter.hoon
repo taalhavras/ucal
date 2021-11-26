@@ -243,30 +243,56 @@
     `wall`(zing (turn evs event-to-vevent))
     ics-suffix
   ==
-::  +convert-zone: converts a timezone (with optional rules) to
-::  VTIMEZONE lines
+::  +convert-zone: converts a timezone to VTIMEZONE lines
+::
+::
+::    Since this has to scry into the timezone-store we must pass
+::    the current @p and @da. An alternative API would be for the
+::    caller to do all scries beforehand and just pass the relevant
+::    into in but IMO that's kind of a waste.
 ::
 ++  convert-zone
   =<
-  |=  zone=zone:iana-components
+  |=  [[us=@p now=@da] zone-name=tape]
   ^-  wall
+  =/  =zone:iana-components
+  .^  zone:iana-components
+    %gx
+    (scot %p us)
+    %timezone-store
+    (scot %da now)
+    %zones
+    `@ta`(crip zone-name)
+    %noun
+    ~
+  ==
   %-  fold-lines
   ;:  weld
       `wall`~["BEGIN:VTIMEZONE" "TZID:{(trip name.zone)}"]
-      `wall`(zing (turn entries.zone zone-entry-to-lines))
+      `wall`(zing (turn entries.zone (cury zone-entry-to-lines [us now])))
       `wall`~["END:VTIMEZONE"]
   ==
   |%
   ++  zone-entry-to-lines
-    |=  entry=zone-entry:iana-components
+    |=  [[us=@p now=@da] entry=zone-entry:iana-components]
     ^-  wall
     ?:  ?=([%nothing *] rules.entry)
       (build-nothing entry)
     ?:  ?=([%delta *] rules.entry)
       (build-delta entry delta.rules.entry)
     ?:  ?=([%rule *] rules.entry)
-      ::(build-rule-based entry name.rules.entry)
-      !!
+      =/  tzr=tz-rule:iana-components
+      .^  tz-rule:iana-components
+        %gx
+        (scot %p us)
+        %timezone-store
+        (scot %da now)
+        %rules
+        name.rules.entry
+        %noun
+        ~
+      ==
+      (build-rule-based entry tzr)
     !!
   ::
   ++  build-nothing
@@ -296,7 +322,10 @@
         standard-suffix
     ==
   ::
-  ++  build-rule-based  !!
+  ++  build-rule-based
+    |=  [entry=zone-entry:iana-components rule=tz-rule:iana-components]
+    ^-  wall
+    !!
   ::
   ++  standard-prefix  "BEGIN:STANDARD"
   ++  standard-suffix  "END:STANDARD"
