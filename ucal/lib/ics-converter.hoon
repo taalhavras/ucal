@@ -391,8 +391,9 @@
     ++  generate-lines
       |=  [saving=flag entry=zone-entry:iana for=rule-entry:iana mapped=(list rule-entry:iana)]
       ^-  wall
-      ::  We must have at least one mapping here.
-      ?>  !=(mapped ~)
+      ::  We might not have any mappings here due to the IANA database
+      ::  being incomplete. This is generally only true for old dates
+      ::  (i.e. ~1950s) so we don't assert this here.
       %-  zing
       (turn mapped (curr (cury generate-single-component for) [saving entry]))
     ::
