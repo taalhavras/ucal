@@ -310,8 +310,13 @@
     |=  [entry=zone-entry:iana =delta:iana]
     ^-  wall
     =/  offset=tape  (build-offset delta)
+    :: Since zones can sometimes not have a `from` (unlike rules)
+    :: we will set a lower bound of ~1111.1.1 here. It's lower than
+    :: anything in the IANA DB ATM so I expect it to be a fine lower
+    :: bound.
+    =/  st=seasoned-time:iana  from.entry(when (max when.from.entry ~1111.1.1))
     :~  standard-prefix
-        (build-dtstart from.entry)
+        (build-dtstart st)
         "TZOFFSETTO:{offset}"
         "TZOFFSETFROM:{offset}"
         standard-suffix
