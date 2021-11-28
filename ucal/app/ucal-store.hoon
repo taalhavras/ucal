@@ -417,7 +417,7 @@
     =/  ts=to-subscriber:ucal-store  [rid %update %permissions-changed cc updated]
     :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
     %=  state
-      alma  (~(add-calendar al alma.state) target(permissions updated))
+      alma  (tail (~(change-permissions al alma.state) cc updated))
     ==
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
@@ -465,11 +465,10 @@
           (~(update-rsvp al old-alma) rsvp-change.update.ts)
         ::
             %permissions-changed
-          =/  target=cal
-              (need (~(get-calendar al old-alma) calendar-code.update.ts))
-          =/  new-permissions=calendar-permissions
-              calendar-permissions.update.ts
-          (~(add-calendar al old-alma) target(permissions new-permissions))
+          %-  tail
+          %+  ~(change-permissions al old-alma)
+            calendar-code.update.ts
+          calendar-permissions.update.ts
         ==
     %=  state
       external  (~(put by external.state) from new-alma)
