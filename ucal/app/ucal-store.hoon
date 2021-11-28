@@ -425,9 +425,7 @@
   =/  from=entity  entity.resource.ts
   =/  old-alma=almanac  (~(gut by external.state) from *almanac)
   ?-  +<.ts
-      %initial
-    ::  shouldn't be any state for this calendar prior to the update.
-    ?>  =(~ (~(get-calendar al old-alma) calendar-code.calendar.ts))
+      %entire
     =/  old-alma=almanac  (~(add-calendar al old-alma) calendar.ts)
     %=  state
       external  (~(put by external.state) from (~(add-events al old-alma) events.ts))
