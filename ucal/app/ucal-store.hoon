@@ -1,5 +1,5 @@
 /-  ucal, ucal-almanac, ucal-store, *resource, ucal-components
-/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser, tzconv=iana-conversion
+/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser, tzconv=iana-conversion, conv=ucal-ics-converter
 ::
 ::: local type
 ::
@@ -96,6 +96,16 @@
         %ucal-invitation-reply
       ::
       =^  cards  state  (poke-ucal-invitation-reply:uc !<(invitation-reply:ucal-store vase))
+      [cards this]
+    ::
+        %handle-http-response
+      ::  Logic for custom HTTP handling. Here we want to expose our
+      ::  public calendars as ICS files that can be retrieved via GET
+      ::  requests. This cannot be done via the eyre scry interface at
+      ::  this time since that requires
+      =/  req  !<  (pair @ta inbound-request:eyre)  vase
+      ~&  [mark req]
+      =^  cards  state  (poke-http-response:uc -.req +.req)
       [cards this]
     ==
   ::
@@ -498,6 +508,93 @@
   ::  invites.
   :-  [[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)] (make-invite-cards (need upd) |)]
   state(alma new-alma)
+::
+++  poke-http-response
+  =<
+  |=  [eyre-id=@ta req=inbound-request:eyre]
+  ^-  (quip card _state)
+  :_  state
+  %+  make-http-response
+    eyre-id
+  ?+    method.request.req
+    =/  data=octs
+      (as-octs:mimes:html '<h1>405 Method Not Allowed</h1>')
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  405
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/html']
+          ['Allow' 'GET']
+      ==
+    [response-header data]
+  ::
+      %'GET'
+    =/  pax=path  (stab url.request.req)
+    ~&  [%path-is pax]
+    ?>  =((lent pax) 3)
+    =/  =ship  (slav %p (snag 1 pax))
+    =/  target-almanac=(unit almanac)
+    ?:  =(ship our.bowl)
+      `alma.state
+    (~(get by external.state) `entity`ship)
+    ?~  target-almanac
+      calendar-not-found-404
+    =/  cc=calendar-code  (snag 2 pax)
+    =/  c  (~(get-calendar al u.target-almanac) cc)
+    ?~  c
+      calendar-not-found-404
+    =/  evs  (~(get-events-bycal al u.target-almanac) cc)
+    ?~  evs
+      calendar-not-found-404
+    ::  Since anyone can send us this unauthenticated GET request we
+    ::  only support requests for public calendars.
+    ::  TODO conceptually should we only allow the exposure of public
+    ::  calendars on our ship? I could see arguments for both but tbh
+    ::  since we can support both AND the other calendars were public
+    ::  anyway I don't think it really matters.
+    ?.  (is-public permissions.u.c)
+      calendar-not-found-404
+    =/  data=octs
+    %-  as-octs:mimes:html
+    %-  of-wain:format
+    (turn (convert-calendar-and-events:conv u.c u.evs) crip)
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  200
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/calendar']
+      ==
+    [response-header data]
+  ==
+  |%
+  ::  +make-http-response: helper for producing the eyre cards needed
+  ::  for manual http handling.
+  ::
+  ++  make-http-response
+    |=  [eyre-id=@ta =response-header:http data=octs]
+    ^-  (list card)
+    :~
+      [%give %fact [/http-response/[eyre-id]]~ %http-response-header !>(response-header)]
+      [%give %fact [/http-response/[eyre-id]]~ %http-response-data !>(`data)]
+      [%give %kick [/http-response/[eyre-id]]~ ~]
+    ==
+  ::  +calendar-not-found-404: standard 404 we want to send
+  ::
+  ++  calendar-not-found-404
+    ^-  [response-header:http octs]
+    =/  data=octs
+      (as-octs:mimes:html '<h1>404 Calendar not found</h1>')
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  404
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/html']
+      ==
+    [response-header data]
+  --
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek

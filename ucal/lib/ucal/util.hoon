@@ -1,6 +1,12 @@
 /-  *ucal, *hora, components=ucal-components, ucal-timezone, ucal-store, *ucal-almanac
 /+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
 |%
+::  +is-public: A calendar is public if readers is unit
+::
+++  is-public
+  |=  permissions=calendar-permissions
+  ^-  flag
+  =(readers.permissions ~)
 ::  TODO for can-{read, write}-cal do we want to allow moons the
 ::  same permissions as ships? (team:title original-ship potential-moon)
 ::  maybe just for the owner, but not other ships.
