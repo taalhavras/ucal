@@ -77,6 +77,11 @@
       ::
           %reset-state
         `this(state *versioned-state)  :: irregular syntax for bunt value
+      ::
+          %bind
+        %-  (slog leaf+"ucal-store: attempting to bind /ucal-calendars-ics" ~)
+        :_  this
+        [%pass /bind-ucal-ics %arvo %e %connect `/ucal-ics %eyre-agent]~
       ==
     ::
         %ucal-action
@@ -113,18 +118,31 @@
     |=  =path
     ^-  (quip card _this)
     :_  this
-    ~&  [%store-on-watch path]
-    ::  NOTE: the store sends subscription updates on /almanac that are proxied
-    ::  by ucal-push-hook. However, since these are per-calendar, there's no
-    ::  initial state we want to send here.
-    ?+  path  (on-watch:def path)
-        [%almanac ~]  ~
+    ?+    path  (on-watch:def path)
+        ::  NOTE: the store sends subscription updates on /almanac that are
+        ::  proxied by ucal-push-hook. However, since these are per-calendar,
+        ::  there's no initial state we want to send here.
+        [%almanac ~]
+      ~
+    ::
+        [%http-response *]
+      ((slog leaf+"ucal: eyre subscribed to {(spud path)}." ~) ~)
     ==
   ++  on-agent
     |~  [=wire =sign:agent:gall]
     ~&  [%ucal-store-on-agent wire sign]
     (on-agent:def wire sign)
-  ++  on-arvo   on-arvo:def
+  ++  on-arvo
+    |=  [=wire =sign-arvo]
+    ^-  (quip card _this)
+    ?.  ?=([%bind-ucal-ics ~] wire)
+      (on-arvo:def [wire sign-arvo])
+    ?>  ?=([%eyre %bound *] sign-arvo)
+    ?:  accepted.sign-arvo
+      %-  (slog leaf+"/ucal-calendars-ics bound successfully!" ~)
+      `this
+    %-  (slog leaf+"ucal: Binding /ucal-calendars-ics failed!" ~)
+    `this
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
