@@ -79,9 +79,9 @@
         `this(state *versioned-state)  :: irregular syntax for bunt value
       ::
           %bind
-        %-  (slog leaf+"ucal-store: attempting to bind /ucal-calendars-ics" ~)
+        %-  (slog leaf+"ucal-store: attempting to bind /ucal-ics" ~)
         :_  this
-        [%pass /bind-ucal-ics %arvo %e %connect `/ucal-ics %eyre-agent]~
+        [%pass /bind-ucal-ics %arvo %e %connect `/ucal-ics %ucal-store]~
       ==
     ::
         %ucal-action
@@ -103,13 +103,12 @@
       =^  cards  state  (poke-ucal-invitation-reply:uc !<(invitation-reply:ucal-store vase))
       [cards this]
     ::
-        %handle-http-response
+        %handle-http-request
       ::  Logic for custom HTTP handling. Here we want to expose our
       ::  public calendars as ICS files that can be retrieved via GET
       ::  requests. This cannot be done via the eyre scry interface at
       ::  this time since that requires
       =/  req  !<  (pair @ta inbound-request:eyre)  vase
-      ~&  [mark req]
       =^  cards  state  (poke-http-response:uc -.req +.req)
       [cards this]
     ==
@@ -128,10 +127,7 @@
         [%http-response *]
       ((slog leaf+"ucal: eyre subscribed to {(spud path)}." ~) ~)
     ==
-  ++  on-agent
-    |~  [=wire =sign:agent:gall]
-    ~&  [%ucal-store-on-agent wire sign]
-    (on-agent:def wire sign)
+  ++  on-agent  on-agent:def
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
@@ -139,14 +135,13 @@
       (on-arvo:def [wire sign-arvo])
     ?>  ?=([%eyre %bound *] sign-arvo)
     ?:  accepted.sign-arvo
-      %-  (slog leaf+"/ucal-calendars-ics bound successfully!" ~)
+      %-  (slog leaf+"/ucal-ics bound successfully!" ~)
       `this
-    %-  (slog leaf+"ucal: Binding /ucal-calendars-ics failed!" ~)
+    %-  (slog leaf+"ucal: Binding /ucal-ics failed!" ~)
     `this
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
-    ~&  [%peek-path-is path]
     ^-  (unit (unit cage))
     ?+  path
       (on-peek:def path)
@@ -425,7 +420,6 @@
 ++  poke-ucal-to-subscriber
   |=  ts=to-subscriber:ucal-store
   ^-  (quip card _state)
-  ~&  [%got-to-sub ts]
   ::  TODO do we want to produce cards for these? I don't think so.
   :-  ~
   =/  from=entity  entity.resource.ts
@@ -548,7 +542,6 @@
   ::
       %'GET'
     =/  pax=path  (stab url.request.req)
-    ~&  [%path-is pax]
     ?>  =((lent pax) 3)
     =/  =ship  (slav %p (snag 1 pax))
     =/  target-almanac=(unit almanac)
@@ -662,7 +655,6 @@
     ``ucal-events-in-range+!>(u.res)
   ::
       [%timezone @t %events @t *]
-    ~&  %specific-timezone-case
     =/  tzid=@t  i.t.path
     =/  variant=@t  i.t.t.t.path
     =/  convert-event-data=$-(event-data event-data)
