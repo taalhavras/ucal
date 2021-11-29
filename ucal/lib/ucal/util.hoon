@@ -726,9 +726,10 @@
     (bo:dejs (~(got by p.jon) 'invite'))
   ++  convert-import
     |=  jon=json
-    ^-  $%([%path path] [%data @t])
+    ^-  [(unit calendar-code) $%([%path path] [%data @t])]
     =,  format
     ?>  ?=([%o *] jon)
+    :-  (bind (~(get by p.jon) 'calendar-code') so:dejs)
     %.  jon
     %-  of:dejs
     :~  [%path |=(j=json `path`(pa:dejs:format j))]

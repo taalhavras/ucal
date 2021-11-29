@@ -387,12 +387,15 @@
     ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
     =/  =vcalendar:ucal-components
-    ?:  ?=([%path *] input)
+    ?:  ?=([%path *] +.input)
       (calendar-from-file:ucal-parser path.input)
-    ?:  ?=([%data *] input)
+    ?:  ?=([%data *] +.input)
       (calendar-from-cord:ucal-parser data.input)
     !!
-    =/  [cc=term rng=_~(. og 0)]  (make-uuid ~(. og `@`eny.bowl) 8)
+    =/  [cc=term rng=_~(. og 0)]
+    ?~  cc.input
+      (make-uuid ~(. og `@`eny.bowl) 8)
+    [u.cc.input ~(. og `@`eny.bowl)]
     =/  [cal=calendar events=(list event)]
         (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
     :-  ~

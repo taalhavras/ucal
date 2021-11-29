@@ -8,7 +8,7 @@
   ^-  cage
   :-  %ucal-action
   !>  ^-  action:ucal-store
-  [%import-from-ics %data data]
+  [%import-from-ics ~ %data data]
 --
 ^-  thread:spider
 |=  arg=vase

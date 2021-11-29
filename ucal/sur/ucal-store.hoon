@@ -86,6 +86,7 @@
       ==
       :: - import calendar from file
       $:  %import-from-ics
+          cc=(unit calendar-code)
           $%  [%path =path]
               [%data data=@t]
           ==
