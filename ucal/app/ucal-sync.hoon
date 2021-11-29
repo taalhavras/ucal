@@ -36,9 +36,24 @@
   ==
 ::
 ++  on-poke
-  |=  in-poke-data=cage
+  |=  [=mark =vase]
   ^-  (quip card _this)
-  !!
+  ::  Can only be poked by us or our moons
+  ?>  (team:title our.bowl src.bowl)
+  ?+    mark  `this
+      %noun
+    ?+    q.vase  (on-poke:def mark vase)
+        %print-state
+      ~&  state
+      `this
+    ::
+        %reset-state
+      `this(state *versioned-state)
+    ==
+  ::
+      %ucal-sync-action
+    !!
+  ==
 ::
 ++  on-watch  on-watch:def
 ::
