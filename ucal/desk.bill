@@ -3,4 +3,5 @@
     %ucal-store
     %ucal-pull-hook
     %ucal-push-hook
+    %ucal-sync
 ==
