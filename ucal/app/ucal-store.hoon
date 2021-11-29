@@ -398,7 +398,16 @@
     [u.cc.input ~(. og `@`eny.bowl)]
     =/  [cal=calendar events=(list event)]
         (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
-    :-  ~
+    ::  Here we publish the state of the calendar to potential
+    ::  subscribers. We do this when a calendar-code is specified in
+    ::  the poke because it's possible this is a refresh of an
+    ::  already imported calendar.
+    :-
+      ?~  cc.input
+        ~
+      =/  ts=to-subscriber:ucal-store
+      [(resource-for-calendar u.cc.input) %entire cal events]
+      ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
     %=  state
       alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
     ==
