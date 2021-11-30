@@ -7,6 +7,7 @@
   ++  ics
     %-  of-wain:format
     (turn (convert-calendar-and-events:conv cal evs) crip)
+  ++  json  calendar-and-events-to-json:util
   --
 ::
 ++  grab  :: convert from

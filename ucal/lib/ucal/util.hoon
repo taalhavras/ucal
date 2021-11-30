@@ -760,6 +760,15 @@
     ==
   --
 ::
+++  calendar-and-events-to-json
+  |=  [cal=calendar evs=(list event)]
+  ^-  json
+  =,  format
+  %-  pairs:enjs
+  :~  ['calendar' (calendar-to-json cal)]
+      ['events' [%a (turn evs event-to-json)]]
+  ==
+::
 ++  almanac-to-json
   =<
   |=  alma=almanac
@@ -789,6 +798,7 @@
     :-  cc
     [%a (turn evs event-to-json)]
   --
+::
 ::  +get-event-invite-hash: calculate the mug of the era and moment of
 ::  an event. used to verify that rsvps to events are for the latest
 ::  version of the event.
