@@ -88,7 +88,7 @@
     =/  pcs=per-cal-state  (~(got by cals.state) i.t.t.wire)
     =/  nrt=@da  (add now.bowl timeout.pcs)
     =/  new=per-cal-state  pcs(next-request-time nrt)
-    =/  ucal-card=(unit card)  (poke-ucal sign-arvo i.t.t.wire)
+    =/  ucal-card=(unit card)  (poke-ucal sign-arvo i.t.t.wire url.pcs)
     =/  update-card=card  (schedule-future-update i.t.t.wire nrt)
     =/  loc=(list card)  ?~(ucal-card ~[update-card] ~[update-card u.ucal-card])
     =.  state  state(cals (~(put by cals.state) i.t.t.wire new))
@@ -139,16 +139,19 @@
         (schedule-future-update cc.action nrt)
     ==
   ==
+::  +schedule-future-update: set a %behn timer for the specified @da
 ::
 ++  schedule-future-update
   |=  [cc=calendar-code scheduled-for=@da]
   ^-  card
   [%pass /ucal-sync/update/[cc] %arvo %b [%wait scheduled-for]]
+::  +cancel-future-update: cancel a %behn timer for the specified @da
 ::
 ++  cancel-future-update
   |=  [cc=calendar-code scheduled-for=@da]
   ^-  card
   [%pass /ucal-sync/update/[cc] %arvo %b [%rest scheduled-for]]
+::  +request-url: send a GET request to a specified url.
 ::
 ++  request-url
   |=  [url=tape cc=calendar-code]
@@ -161,11 +164,22 @@
 ::  GET request is malformed in some way.
 ::
 ++  poke-ucal
-  |=  [sign=sign-arvo cc=calendar-code]
+  |=  [sign=sign-arvo cc=calendar-code url=tape]
   ^-  (unit card)
   ?.  ?=([%iris %http-response %finished *] sign)
+    ::  No need to complain about anything here - we could
+    ::  be receiving %progess for instance.
     ~
   ?~  full-file.client-response.sign
+    ::  Here we do want to complain - this indicates that
+    ::  the data we got back couldn't be parsed to MIME
+    %-
+      %-  slog
+      :~  leaf+"ucal-sync: failed to import data from {url}"
+          leaf+"if this persists consider running the following command"
+          leaf+"to stop requests for this calendar."
+          leaf+":ucal-sync &ucal-sync-action [%remove {(trip cc)}"
+      ==
     ~
   =/  data=@t  `@t`q.data.u.full-file.client-response.sign
   =/  =task:agent:gall
