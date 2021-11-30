@@ -2,6 +2,7 @@
 /+  default-agent
 |%
 +$  card  card:agent:gall
++$  calendar-code  calendar-code:ucal
 ::  $per-cal-state: state we track per calendar.
 ::
 ::    url: The url we are fetching
@@ -11,7 +12,7 @@
 +$  per-cal-state  [url=tape timeout=@dr next-request-time=@da]
 ::
 +$  state-zero
-  $:  cals=(map calendar-code:ucal per-cal-state)
+  $:  cals=(map calendar-code per-cal-state)
   ==
 ::
 +$  versioned-state
@@ -60,25 +61,8 @@
   ::
       %ucal-sync-action
     =/  action  !<(action:ucal-sync vase)
-    ?-    -.action
-        %add
-      ::  Cannot add an already existing calendar
-      ?>  !(~(has by cals.state) cc.action)
-      ::  send a request for the calendar immediately.
-      =/  pcs=per-cal-state  [url.action timeout.action (add now.bowl timeout.action)
-      :-  state(cals (~(put by cals.state) cc.action pcs))
-      ~[(request-url url.action cc.action)]
-    ::
-        %remove
-      ::  delete entry from map and clear any future timers.
-      !!
-    ::
-        %force
-      !!
-    ::
-        %adjust
-      !!
-    ==
+    =^  cards  state  (handle-ucal-sync-poke:helper action)
+    [cards this]
   ==
 ::
 ++  on-watch  on-watch:def
@@ -90,23 +74,25 @@
 ++  on-agent  on-agent:def
 ::
 ++  on-arvo
-  |=  [wire =sign-arvo]
+  |=  [=wire =sign-arvo]
   ^-  (quip card _this)
   ?+    wire  (on-arvo:def wire sign-arvo)
-      [%ucal-sync %update cc=@ta ~]
+      [%ucal-sync %update @ta ~]
     ::  Time to re-issue a GET request for a given url
-    =/  pcs=per-cal-state  (~(got by cals.state) cc)
-    [state ~[(request-url url.pcs cc)]]
-      [%ucal-sync %request cc=@ta ~]
+    =/  pcs=per-cal-state  (~(got by cals.state) i.t.t.wire)
+    :_  this
+    `(list card)`~[(request-url url.pcs i.t.t.wire)]
+  ::
+      [%ucal-sync %request @ta ~]
     ::  Process response to our GET request
-    =/  pcs=per-cal-state  (~(got by cals.state) cc)
-    =/  nrt=@da  (add now timeout.pcs)
+    =/  pcs=per-cal-state  (~(got by cals.state) i.t.t.wire)
+    =/  nrt=@da  (add now.bowl timeout.pcs)
     =/  new=per-cal-state  pcs(next-request-time nrt)
-    =/  ucal-card=(unit card)  (poke-ucal sign-arvo cc)
-    =/  update-card=card  (schedule-future-update cc nrt)
+    =/  ucal-card=(unit card)  (poke-ucal sign-arvo i.t.t.wire)
+    =/  update-card=card  (schedule-future-update i.t.t.wire nrt)
     =/  loc=(list card)  ?~(ucal-card ~[update-card] ~[update-card u.ucal-card])
-    :-  loc
-    state(cals (~(put by cals.state) cc new))
+    =.  state  state(cals (~(put by cals.state) i.t.t.wire new))
+    [loc this]
   ==
 ::
 ++  on-fail  on-fail:def
@@ -114,6 +100,30 @@
 ::  Helper door
 ::
 |_  =bowl:gall
+++  handle-ucal-sync-poke
+  |=  =action:ucal-sync
+  ^-  (quip card _state)
+  ?-    -.action
+      %add
+    ::  Cannot add an already existing calendar
+    ?>  !(~(has by cals.state) cc.action)
+    ::  send a request for the calendar immediately.
+    =/  pcs=per-cal-state  [url.action timeout.action (add now.bowl timeout.action)]
+    :_  state(cals (~(put by cals.state) cc.action pcs))
+    ~[(request-url url.action cc.action)]
+  ::
+      %remove
+    ::  delete entry from map and clear any future timers.
+    ::  note that we may still get a response from an in-flight
+    ::  request to %iris but we'll properly handle that by crashing in
+    ::  ++on-arvo below.
+    :_  state(cals (~(del by cals.state) cc.action))
+    ~[(cancel-future-update cc.action)]
+  ::
+      %adjust
+    !!
+  ==
+::
 ++  schedule-future-update
   |=  [cc=calendar-code scheduled-for=@da]
   ^-  card
@@ -136,7 +146,7 @@
 ::  GET request is malformed in some way.
 ::
 ++  poke-ucal
-  |=  [=sign-arvo cc=calendar=code]
+  |=  [=sign-arvo cc=calendar-code]
   ^-  (unit card)
   !!
 --
