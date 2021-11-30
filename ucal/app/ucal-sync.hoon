@@ -1,4 +1,4 @@
-/-  ucal, ucal-sync
+/-  ucal, ucal-sync, ucal-store
 /+  default-agent
 |%
 +$  card  card:agent:gall
@@ -161,7 +161,15 @@
 ::  GET request is malformed in some way.
 ::
 ++  poke-ucal
-  |=  [=sign-arvo cc=calendar-code]
+  |=  [sign=sign-arvo cc=calendar-code]
   ^-  (unit card)
-  !!
+  ?.  ?=([%iris %http-response %finished *] sign)
+    ~
+  ?~  full-file.client-response.sign
+    ~
+  =/  data=@t  `@t`q.data.u.full-file.client-response.sign
+  =/  =task:agent:gall
+  [%poke %ucal-action !>(`action:ucal-store`[%import-from-ics (some cc) %data data])]
+  %-  some
+  [%pass /ucal-sync/poke-ucal/[cc] %agent [our.bowl %ucal-store] task]
 --
