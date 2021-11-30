@@ -118,10 +118,26 @@
     ::  request to %iris but we'll properly handle that by crashing in
     ::  ++on-arvo below.
     :_  state(cals (~(del by cals.state) cc.action))
-    ~[(cancel-future-update cc.action)]
+    =/  cancel-time=@da  next-request-time:(~(got by cals.state) cc.action)
+    ~[(cancel-future-update cc.action cancel-time)]
   ::
       %adjust
-    !!
+    =/  old=per-cal-state  (~(got by cals.state) cc.action)
+    ?:  =(new-timeout.action timeout.old)
+      `state
+    ::  It's possible that this ends up being the same as the existing
+    ::  next request time. However since %rest only removes a single
+    ::  timer from behn this is fine - it'll still fire only once.
+    =/  nrt=@da  (add new-timeout.action now.bowl)
+    =/  new=per-cal-state
+    %=  old
+      timeout  new-timeout.action
+      next-request-time  nrt
+    ==
+    :_  state(cals (~(put by cals.state) cc.action new))
+    :~  (cancel-future-update cc.action next-request-time.old)
+        (schedule-future-update cc.action nrt)
+    ==
   ==
 ::
 ++  schedule-future-update
@@ -130,10 +146,9 @@
   [%pass /ucal-sync/update/[cc] %arvo %b [%wait scheduled-for]]
 ::
 ++  cancel-future-update
-  |=  cc=calendar-code
+  |=  [cc=calendar-code scheduled-for=@da]
   ^-  card
-  =/  nrt=@da  next-request-time:(~(got by cals.state) cc)
-  [%pass /ucal-sync/update/[cc] %arvo %b [%rest nrt]]
+  [%pass /ucal-sync/update/[cc] %arvo %b [%rest scheduled-for]]
 ::
 ++  request-url
   |=  [url=tape cc=calendar-code]
