@@ -198,6 +198,13 @@ read access to a calendar they won't be aware of its existence (unless they
 were previously kicked from it) - `query-cals` will not report any
 calendars the querying ship isn't allowed to read.
 
+### ICS integrations
+We briefly covered importing calendars from .ics files above (see the %import-from-ics poke) but to conveniently import a calendar from a URL you can use `-fetch-ics "some-url"` - see `ted/fetch-ics.hoon` for the details!
+
+For a more robust importing experience look to `ucal-sync`. This app interacts with `ucal-store` in order to periodically "sync" calendars from urls. Please see `sur/ucal-sync.hoon` for the pokes you can send this app - the interface is pretty self explanatory. Once imported, the calendars should be treated as a read-only calendar inside of ucal. While mechanically you can still modify them by poking the store these changes will be lost when the calendar is next syncd. Other ships can still subscribe to the calendar and see updates as the calendar referred to by the url changes. If you ever stop the sync this restriction on modifying the calendar will stop applying - though if that's your end goal you should just use `fetch-ics` instead.
+
+See the section on scries for info on converting to ics (in particular discussion of the `ics` mark in the particular) but calendars can also be exposed as ics files via GET requests. This is already [baked in to how scries work](https://urbit.org/docs/arvo/eyre/external-api-ref#scry) but `ucal-store` also exposes a separate interface to allow GET requests for any public calendars in the store. For example, `curl -i localhost:8080/ucal-ics/~zod/obzf-gpup` would retrieve the calendar and associated events for a calendar owned by `~zod` with code `obzf-gpup` that a local ship knows about (note that this is _not_ necessarily a calendar created by `~zod` - it can also be a public calendar that `~zod` has subscribed to). The hope with this feature is to support integrating ucal directly with i.e. Google Calendar/Outlook as they both allow you to import calendars via a url.
+
 ## Current Roadmap
 These are the current big tasks to undertake (in no particular order).
 
