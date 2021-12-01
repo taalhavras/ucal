@@ -5,20 +5,7 @@
 ![screenshot](https://archiv.nyc3.digitaloceanspaces.com/littel-wolfur/2021.3.03..16.28.48-screen.jpg)
 
 ## Usage
-TODO explain how to use https://gist.github.com/taalhavras/91ccf630f58c2a8e2e757271ba3f54bd
-
-Clone the repository and then create a .urbitrc in the root that looks like the .urbitrc-sample file. It should look like
-```
-module.exports = {
-  URBIT_PIERS: [
-    "/path/to/first/pier/zod/home",
-    "/path/to/other/pier/nel/home"
-  ],
-  URL: 'http://localhost:*port of running ship*'
-};
-
-```
-Then run `yarn` and `yarn build` from the project root to copy the files into the target pier(s). Finally, `|mount %` and `|start %ucal-store` to get the app running. Run `|start %calendar` to activate the UI.
+First, clone the repo locally and create a `%ucal` desk on a local ship you want to install to. Then follow the instructions outlined in [this script](https://gist.github.com/taalhavras/91ccf630f58c2a8e2e757271ba3f54bd) and you should be good to go!
 
 ### ucal-store pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
