@@ -46,7 +46,11 @@
   +*  this  .                                           :: the agent itself
       uc    ~(. +> bowl)                                :: helper core
       def   ~(. (default-agent this %|) bowl)           :: default/"stub" arms
-  ++  on-init  on-init:def
+  ++  on-init
+    ^-  (quip card _this)
+    %-  (slog leaf+"ucal-store: attempting to bind /ucal-ics" ~)
+    :_  this
+    [%pass /bind-ucal-ics %arvo %e %connect `/ucal-ics %ucal-store]~
   ::
   ++  on-save
     ^-  vase
@@ -77,11 +81,6 @@
       ::
           %reset-state
         `this(state *versioned-state)  :: irregular syntax for bunt value
-      ::
-          %bind
-        %-  (slog leaf+"ucal-store: attempting to bind /ucal-ics" ~)
-        :_  this
-        [%pass /bind-ucal-ics %arvo %e %connect `/ucal-ics %ucal-store]~
       ==
     ::
         %ucal-action
