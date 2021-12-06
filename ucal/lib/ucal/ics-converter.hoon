@@ -192,7 +192,7 @@
 ::  VCALENDAR component (even single events).
 ::
 ++  ics-prefix  `wall`["BEGIN:VCALENDAR" "VERSION:2.0" ~]
-++  ics-suffix  `wall`["END:VCALENDAR" ~]
+++  ics-suffix  `wall`["END:VCALENDAR\0a" ~]
 ::  +convert-calendar-and-event: make full ICS file from calendar + events
 ::
 ++  convert-calendar-and-events
