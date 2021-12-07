@@ -4,6 +4,6 @@
     base+'calendar'
     site+/apps/calendar
     version+[0 0 1]
-    website+'https://github.com/finned-palmer/urbit-calendar'
+    website+'https://github.com/taalhavras/ucal'
     license+'MIT'
 ==
