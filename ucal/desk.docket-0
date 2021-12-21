@@ -2,7 +2,7 @@
     info+'An urbit calendar.'
     color+0x81.88c9
     base+'calendar'
-    site+/apps/calendar
+    site+/'~calendar'
     version+[0 0 1]
     website+'https://github.com/taalhavras/ucal'
     license+'MIT'
