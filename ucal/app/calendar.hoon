@@ -18,7 +18,7 @@
   :_  this
   :~  [%pass /srv %agent [our.bol %file-server] %poke filea]
       [%pass /calendar %agent [our.bol %launch] %poke launcha]
-      ==
+  ==
 ::
 ++  on-watch
   |=  =path
