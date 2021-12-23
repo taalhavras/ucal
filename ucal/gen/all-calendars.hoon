@@ -13,15 +13,15 @@
     (scot %p u.who)
 ?.  local
   :: get metadata from the pull-hook
-  :: .^  (list metadata:ucal-hook)
-    :: %gx
-    :: us
-    :: %ucal-pull-hook
-    :: (scot %da now)
-    :: %metadata
-    :: them
-    :: /noun
-  :: ==
+  .^  (list metadata:ucal-hook)
+    %gx
+    us
+    %ucal-pull-hook
+    (scot %da now)
+    %metadata
+    them
+    /noun
+  ==
 ::  get metadata from local store
 =/  res=(list calendar)
     .^  (list calendar)
