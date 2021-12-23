@@ -31,6 +31,9 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   const [events, setEvents] = useState<Event[]>([])
   const [calendars, setCalendars] = useState<Calendar[]>([])
   const [initialLoad, setInitialLoad] = useState(true)
+  //  Determine if we should be creating a default calendar. If we ever get
+  //  a calendars response w/no calendars we will try to create a default.
+  const [createDefaultCalendar, setCreateDefaultCalendar] = useState(false)
 
   const getEvents = async (): Promise<void> => {
     const apiEvents = await api.scry<any>("ucal-store", "/events")
@@ -69,6 +72,10 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
 
   const getCalendars = async (): Promise<void> => {
     const apiCalendars = await api.scry<any>("ucal-store", "/calendars")
+    if (apiCalendars.length == 0 && !createDefaultCalendar) {
+      // If we don't find any calendars we should attempt to create a default
+      setCreateDefaultCalendar(true)
+    }
     const filteredCalendars = apiCalendars
       .filter((rc) => !!rc)
       .map((c) => new Calendar(c))
@@ -108,8 +115,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   }
 
   const saveInitialCalendar = async () => {
-    await saveCalendar({ title: "default", ...DEFAULT_PERMISSIONS })
-    await getCalendars()
+    return saveCalendar({ title: "default", ...DEFAULT_PERMISSIONS })
   }
 
   const deleteCalendar = async (calendar: Calendar): Promise<boolean> => {
@@ -144,17 +150,29 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
       getCalendars()
       setInitialLoad(true)
     }
-  }, [calendars])
+  }, [calendars, events])
 
   useEffect(() => {
-    if (!!calendars && !!events && calendars.length < 1 && !initialLoad) {
-      try {
-        saveInitialCalendar()
-      } catch (error) {
-        console.log({ error })
+    let requestInProgress = false
+    const fcn = async () => {
+      if (createDefaultCalendar && !requestInProgress) {
+        requestInProgress = true
+        try {
+          await saveInitialCalendar()
+          setCreateDefaultCalendar(false)
+          const cals = await getCalendars()
+          setCalendars(Calendar.generateCalendars(cals, []))
+        } catch (error) {
+          console.log({ error })
+        }
+      }
+      return () => {
+        requestInProgress = false
       }
     }
-  }, [calendars, initialLoad])
+
+    fcn()
+  }, [createDefaultCalendar])
 
   return (
     <Provider

@@ -5,7 +5,7 @@
 ![screenshot](https://archiv.nyc3.digitaloceanspaces.com/littel-wolfur/2021.3.03..16.28.48-screen.jpg)
 
 ## Usage
-First, clone the repo locally and create a `%ucal` desk on a local ship you want to install to. Then follow the instructions outlined in [this script](https://gist.github.com/taalhavras/91ccf630f58c2a8e2e757271ba3f54bd) and you should be good to go!
+Clone the urbit repository from [here](https://github.com/urbit/urbit) first and copy the `make-app.sh` into the pkg directory. Run `./make-app.sh /path/to/pier /path/to/ucal/repo` (after creating and mounting a %ucal desk on that pier). Then `|commit %ucal` and `|install our %ucal`.
 
 ### ucal-store pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.
@@ -221,10 +221,12 @@ Created from tlon's [create-landscape-app](https://github.com/urbit/create-lands
 
 ### Development
 
-0. Ensure your have followed installation instructions above (`yarn run build`)
+0. Ensure your have followed installation instructions above
 
-1. On your Urbit ship, if you haven't already, mount your pier to Unix with `|mount %`.
+1. Copy `.urbitrc-example` to `.urbitrc` and change it to point to your pier(s).
 
-2. Once you're up and running, your application lives in the `src` folder; `src` uses [React](https://reactjs.org) to render itself -- you'll want a basic foothold with it first.
+2. Make whatever changes you want to make in the `ucal-js/src` folder. Being familiar with [React](https://reactjs.org) will be helpful here.
 
-3. Run `npm run serve-interface` to serve a dev server environment with hot reloading at `localhost:9000`.
+3. run `yarn build` from the `ucal-js` directory - this should update the js files in this repo
+
+4. run `make-app.sh` like you did in the initial setup - the new javascript should be copied over along with the other app files.

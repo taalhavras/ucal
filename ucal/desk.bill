@@ -1,4 +1,5 @@
-:~  %calendar
+:~  %file-server
+    %calendar
     %timezone-store
     %ucal-store
     %ucal-pull-hook

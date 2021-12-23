@@ -259,7 +259,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
         >
           {calendars.map((c, ind) => (
             <option key={`select-calendar-${ind}`} value={c.calendarCode}>
-              {c.calendarCode}
+              {c.title}
             </option>
           ))}
         </select>
