@@ -168,6 +168,7 @@ If an import contains data previously in the store, the old data is overwritten.
 :timezone-store %reset-state
 ```
 if you want a truly blank slate.
+This process is rather manual, so it's all been wrapped into the `fetch-timezone` thread. You can run `-ucal!fetch-timezone "url"` to download a file from a specified URL or run with no arguments to pull from the link above.
 
 ### Invitations
 To invite/uninvite ships from a calendar use the `change-rsvp` poke on `ucal-store` - this is also equivalent to creating an event with those ships in the invited set. To see what events you are invited to you can use any scries that produce events from the above table, using `%invited-to` in the path instead of a ship name. To respond to invitations, poke your local `ucal-pull-hook` (see the pull-hook section for the details).
