@@ -1,5 +1,5 @@
-/-  ucal, ucal-almanac, ucal-store, *resource
-/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser, tzconv=iana-conversion
+/-  ucal, ucal-almanac, ucal-store, *resource, ucal-components
+/+  default-agent, *ucal-util, alma-door=ucal-almanac, ucal-parser, tzconv=iana-conversion, conv=ucal-ics-converter
 ::
 ::: local type
 ::
@@ -46,7 +46,11 @@
   +*  this  .                                           :: the agent itself
       uc    ~(. +> bowl)                                :: helper core
       def   ~(. (default-agent this %|) bowl)           :: default/"stub" arms
-  ++  on-init  on-init:def
+  ++  on-init
+    ^-  (quip card _this)
+    %-  (slog leaf+"ucal-store: attempting to bind /ucal-ics" ~)
+    :_  this
+    [%pass /bind-ucal-ics %arvo %e %connect `/ucal-ics %ucal-store]~
   ::
   ++  on-save
     ^-  vase
@@ -97,28 +101,46 @@
       ::
       =^  cards  state  (poke-ucal-invitation-reply:uc !<(invitation-reply:ucal-store vase))
       [cards this]
+    ::
+        %handle-http-request
+      ::  Logic for custom HTTP handling. Here we want to expose our
+      ::  public calendars as ICS files that can be retrieved via GET
+      ::  requests. This cannot be done via the eyre scry interface at
+      ::  this time since that requires
+      =/  req  !<  (pair @ta inbound-request:eyre)  vase
+      =^  cards  state  (poke-http-response:uc -.req +.req)
+      [cards this]
     ==
   ::
   ++  on-watch
     |=  =path
     ^-  (quip card _this)
     :_  this
-    ~&  [%store-on-watch path]
-    ::  NOTE: the store sends subscription updates on /almanac that are proxied
-    ::  by ucal-push-hook. However, since these are per-calendar, there's no
-    ::  initial state we want to send here.
-    ?+  path  (on-watch:def path)
-        [%almanac ~]  ~
+    ?+    path  (on-watch:def path)
+        ::  NOTE: the store sends subscription updates on /almanac that are
+        ::  proxied by ucal-push-hook. However, since these are per-calendar,
+        ::  there's no initial state we want to send here.
+        [%almanac ~]
+      ~
+    ::
+        [%http-response *]
+      ((slog leaf+"ucal: eyre subscribed to {(spud path)}." ~) ~)
     ==
-  ++  on-agent
-    |~  [=wire =sign:agent:gall]
-    ~&  [%ucal-store-on-agent wire sign]
-    (on-agent:def wire sign)
-  ++  on-arvo   on-arvo:def
+  ++  on-agent  on-agent:def
+  ++  on-arvo
+    |=  [=wire =sign-arvo]
+    ^-  (quip card _this)
+    ?.  ?=([%bind-ucal-ics ~] wire)
+      (on-arvo:def [wire sign-arvo])
+    ?>  ?=([%eyre %bound *] sign-arvo)
+    ?:  accepted.sign-arvo
+      %-  (slog leaf+"/ucal-ics bound successfully!" ~)
+      `this
+    %-  (slog leaf+"ucal: Binding /ucal-ics failed!" ~)
+    `this
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
-    ~&  [%peek-path-is path]
     ^-  (unit (unit cage))
     ?+  path
       (on-peek:def path)
@@ -192,14 +214,15 @@
     ::  only the ship (or a moon) ucal-store is running on can create new calendars
     ?>  (team:title [our src]:bowl)
     =/  input  +.action
+    =/  cc=term  -:(make-uuid ~(. og `@`eny.bowl) 8)
     =/  new=cal
       :*
-        our.bowl                                          :: ship
-        (fall calendar-code.input (make-uuid eny.bowl 8)) :: unique code
-        title.input                                       :: title
-        permissions.input                                 :: permissions
-        now.bowl                                          :: created
-        now.bowl                                          :: last modified
+        our.bowl                                       :: ship
+        (fall calendar-code.input cc)                  :: unique code
+        title.input                                    :: title
+        permissions.input                              :: permissions
+        now.bowl                                       :: created
+        now.bowl                                       :: last modified
       ==
     :-  ~
     %=  state
@@ -259,11 +282,12 @@
     ::  organizer can't be an invitee
     ?<  (~(has in invited.input) src.bowl)
     =/  =about:ucal  [src.bowl now.bowl now.bowl]
+    =/  ec=term  -:(make-uuid ~(. og `@`eny.bowl) 8)
     =/  new=event
       :*
         ^-  event-data
         :*
-          (fall event-code.input (make-uuid eny.bowl 8))
+          (fall event-code.input ec)
           calendar-code.input
           about
           detail.input
@@ -361,14 +385,28 @@
     ::  only the ship (or a moon) ucal-store is running on can import calendars
     ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
+    =/  =vcalendar:ucal-components
+    ?:  ?=([%path *] +.input)
+      (calendar-from-file:ucal-parser path.input)
+    ?:  ?=([%data *] +.input)
+      (calendar-from-cord:ucal-parser data.input)
+    !!
+    =/  [cc=term rng=_~(. og 0)]
+    ?~  cc.input
+      (make-uuid ~(. og `@`eny.bowl) 8)
+    [u.cc.input ~(. og `@`eny.bowl)]
     =/  [cal=calendar events=(list event)]
-        %:  vcal-to-ucal
-          (calendar-from-file:ucal-parser path.input)
-          (make-uuid eny.bowl 8)
-          our.bowl
-          now.bowl
-        ==
-    :-  ~
+        (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
+    ::  Here we publish the state of the calendar to potential
+    ::  subscribers. We do this when a calendar-code is specified in
+    ::  the poke because it's possible this is a refresh of an
+    ::  already imported calendar.
+    :-
+      ?~  cc.input
+        ~
+      =/  ts=to-subscriber:ucal-store
+      [(resource-for-calendar u.cc.input) %entire cal events]
+      ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
     %=  state
       alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
     ==
@@ -385,7 +423,7 @@
     =/  ts=to-subscriber:ucal-store  [rid %update %permissions-changed cc updated]
     :-  ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
     %=  state
-      alma  (~(add-calendar al alma.state) target(permissions updated))
+      alma  (tail (~(change-permissions al alma.state) cc updated))
     ==
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
@@ -393,15 +431,12 @@
 ++  poke-ucal-to-subscriber
   |=  ts=to-subscriber:ucal-store
   ^-  (quip card _state)
-  ~&  [%got-to-sub ts]
   ::  TODO do we want to produce cards for these? I don't think so.
   :-  ~
   =/  from=entity  entity.resource.ts
   =/  old-alma=almanac  (~(gut by external.state) from *almanac)
   ?-  +<.ts
-      %initial
-    ::  shouldn't be any state for this calendar prior to the update.
-    ?>  =(~ (~(get-calendar al old-alma) calendar-code.calendar.ts))
+      %entire
     =/  old-alma=almanac  (~(add-calendar al old-alma) calendar.ts)
     %=  state
       external  (~(put by external.state) from (~(add-events al old-alma) events.ts))
@@ -433,11 +468,10 @@
           (~(update-rsvp al old-alma) rsvp-change.update.ts)
         ::
             %permissions-changed
-          =/  target=cal
-              (need (~(get-calendar al old-alma) calendar-code.update.ts))
-          =/  new-permissions=calendar-permissions
-              calendar-permissions.update.ts
-          (~(add-calendar al old-alma) target(permissions new-permissions))
+          %-  tail
+          %+  ~(change-permissions al old-alma)
+            calendar-code.update.ts
+          calendar-permissions.update.ts
         ==
     %=  state
       external  (~(put by external.state) from new-alma)
@@ -494,6 +528,92 @@
   ::  invites.
   :-  [[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)] (make-invite-cards (need upd) |)]
   state(alma new-alma)
+::
+++  poke-http-response
+  =<
+  |=  [eyre-id=@ta req=inbound-request:eyre]
+  ^-  (quip card _state)
+  :_  state
+  %+  make-http-response
+    eyre-id
+  ?+    method.request.req
+    =/  data=octs
+      (as-octs:mimes:html '<h1>405 Method Not Allowed</h1>')
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  405
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/html']
+          ['Allow' 'GET']
+      ==
+    [response-header data]
+  ::
+      %'GET'
+    =/  pax=path  (stab url.request.req)
+    ?>  =((lent pax) 3)
+    =/  =ship  (slav %p (snag 1 pax))
+    =/  target-almanac=(unit almanac)
+    ?:  =(ship our.bowl)
+      `alma.state
+    (~(get by external.state) `entity`ship)
+    ?~  target-almanac
+      calendar-not-found-404
+    =/  cc=calendar-code  (snag 2 pax)
+    =/  c  (~(get-calendar al u.target-almanac) cc)
+    ?~  c
+      calendar-not-found-404
+    =/  evs  (~(get-events-bycal al u.target-almanac) cc)
+    ?~  evs
+      calendar-not-found-404
+    ::  Since anyone can send us this unauthenticated GET request we
+    ::  only support requests for public calendars.
+    ::  TODO conceptually should we only allow the exposure of public
+    ::  calendars on our ship? I could see arguments for both but tbh
+    ::  since we can support both AND the other calendars were public
+    ::  anyway I don't think it really matters.
+    ?.  (is-public permissions.u.c)
+      calendar-not-found-404
+    =/  data=octs
+    %-  as-octs:mimes:html
+    %-  of-wain:format
+    (turn (convert-calendar-and-events:conv u.c u.evs) crip)
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  200
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/calendar']
+      ==
+    [response-header data]
+  ==
+  |%
+  ::  +make-http-response: helper for producing the eyre cards needed
+  ::  for manual http handling.
+  ::
+  ++  make-http-response
+    |=  [eyre-id=@ta =response-header:http data=octs]
+    ^-  (list card)
+    :~
+      [%give %fact [/http-response/[eyre-id]]~ %http-response-header !>(response-header)]
+      [%give %fact [/http-response/[eyre-id]]~ %http-response-data !>(`data)]
+      [%give %kick [/http-response/[eyre-id]]~ ~]
+    ==
+  ::  +calendar-not-found-404: standard 404 we want to send
+  ::
+  ++  calendar-not-found-404
+    ^-  [response-header:http octs]
+    =/  data=octs
+      (as-octs:mimes:html '<h1>404 Calendar not found</h1>')
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  404
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/html']
+      ==
+    [response-header data]
+  --
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek
@@ -509,6 +629,15 @@
   ::
       [%events ~]
     ``ucal-events+!>((~(get-events al almanac)))
+  ::
+      [%calendar-and-events *]
+    =/  c  (get-calendar t.path almanac)
+    ?~  c
+      ~
+    =/  evs  (get-events-bycal t.path almanac)
+    ?~  evs
+      ~
+    ``ucal-calendar-and-events+!>([u.c u.evs])
   ::
       [%calendars *]
     =/  res  (get-calendar t.path almanac)
@@ -535,7 +664,6 @@
     ``ucal-events-in-range+!>(u.res)
   ::
       [%timezone @t %events @t *]
-    ~&  %specific-timezone-case
     =/  tzid=@t  i.t.path
     =/  variant=@t  i.t.t.t.path
     =/  convert-event-data=$-(event-data event-data)

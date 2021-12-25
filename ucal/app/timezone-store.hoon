@@ -100,13 +100,26 @@
     ?~  files.action
       state
     $(files.action t.files.action, state (import-single-file i.files.action))
+  ?:  ?=([%import-blob *] action)
+    :-  ~
+    (import-blob data.action)
   !!
 ::
 ++  import-single-file
   |=  pax=path
   ^-  _state
+  (import-from-lines (read-file:parser-util pax))
+::
+++  import-blob
+  |=  data=@t
+  ^-  _state
+  (import-from-lines (turn (to-wain:format data) trip))
+::
+++  import-from-lines
+  |=  w=wall
+  ^-  _state
   =/  [zones=(map @t zone) rules=(map @t tz-rule) links=(map @t @t)]
-      (parse-timezones:iana-parser (read-file:parser-util pax))
+      (parse-timezones:iana-parser w)
   %=  state
     zones  (~(uni by zones.state) zones)
     rules  (~(uni by rules.state) rules)

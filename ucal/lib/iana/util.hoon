@@ -16,6 +16,16 @@
   |=  [time=@da =delta]
   ^-  @da
   (add-delta time delta(sign !sign.delta))
+::  +add-deltas: add two deltas together
+::
+++  add-deltas
+  |=  [a=delta b=delta]
+  ^-  delta
+  ?:  =(sign.a sign.b)
+    [sign.a (add d.a d.b)]
+  ?:  (gte d.a d.b)
+    [sign.a (sub d.a d.b)]
+  [sign.b (sub d.b d.a)]
 ::  +is-zero: check if delta is zero (sign irrelevant)
 ::
 ++  is-zero

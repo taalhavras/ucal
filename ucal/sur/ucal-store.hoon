@@ -86,7 +86,10 @@
       ==
       :: - import calendar from file
       $:  %import-from-ics
-          =path
+          cc=(unit calendar-code)
+          $%  [%path =path]
+              [%data data=@t]
+          ==
       ==
       ::
       $:  %change-permissions
@@ -94,12 +97,12 @@
       ==
   ==
 ::
-::  $to-subscriber: sent to subscribers - union of initial
-::  payload and periodic updates
+::  $to-subscriber: sent to subscribers - union of entire
+::  payload and periodic updates.
 ::
 +$  to-subscriber
   $:  =resource
-      $%  [%initial =calendar events=(list event)]
+      $%  [%entire =calendar events=(list event)]
           [%update =update]
       ==
   ==

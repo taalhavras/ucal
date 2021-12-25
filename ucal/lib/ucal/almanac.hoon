@@ -69,6 +69,17 @@
       cals  (~(put by cals.alma) calendar-code.patch new)
     ==
   ::
+  ++  change-permissions
+    |=  [cc=calendar-code new-perms=calendar-permissions]
+    ^-  [(unit calendar) almanac]
+    =/  cal=(unit calendar)  (~(get by cals.alma) cc)
+    :-  cal
+    ?~  cal
+      alma
+    %=  alma
+      cals  (~(put by cals.alma) cc u.cal(permissions new-perms))
+    ==
+  ::
   ++  update-event
     |=  [patch=event-patch now=@da]
     ^-  [(unit event) almanac]

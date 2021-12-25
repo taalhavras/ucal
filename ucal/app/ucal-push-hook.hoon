@@ -173,7 +173,7 @@
   ::  from resubscribing here.
   ?>  (can-read-cal:ucal-util [owner permissions]:cal src.bowl)
   :^    rid
-      %initial
+      %entire
     cal
   (need (~(get-events-bycal al alma) cc))
 ::
