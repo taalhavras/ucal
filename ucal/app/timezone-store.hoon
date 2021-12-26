@@ -84,6 +84,9 @@
     ::
         [%x %zones name=@ta ~]
       ``noun+!>((lookup-zone i.t.t.path))
+    ::
+        [%x %zones ~]
+      ``timezone-store-zone-list+!>((get-zone-names))
     ==
   ++  on-fail   on-fail:def
 --
@@ -141,4 +144,9 @@
   =/  linked=(unit @t)  (~(get by links.state) key)
   %-  ~(got by zones.state)
   (fall linked key)
+::
+++  get-zone-names
+  |.
+  ^-  wain
+  ~(tap in ~(key by zones.state))
 --
