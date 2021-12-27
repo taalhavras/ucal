@@ -712,6 +712,21 @@
       |=  pr=projected-event
       ^-  projected-event
       pr(data (convert-event-data data.pr))
+    ?:  =(variant %all)
+      ::  Explicitly using %all here for easier path matching - this
+      ::  is meant to match the /events scry (which gets all events).
+      ::  For now I think this is fine - if there are future issues
+      ::  with these paths being different they can be unified.
+      =/  res=(list event)  (~(get-events al almanac))
+      %-  some
+      %-  some
+      :-  %ucal-events
+      !>
+      %+  turn
+        res
+      |=  ev=event
+      ^-  event
+      ev(data (convert-event-data data.ev))
     !!
   ==
 ::  +apply-permissions-update: updates calendar permissions
