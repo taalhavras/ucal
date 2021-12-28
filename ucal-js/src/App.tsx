@@ -53,7 +53,7 @@ export const App: React.FC = () => {
               <Route exact path="/~calendar/calendar/edit/:calendar">
                 <CalendarView />
               </Route>
-              <Route exact path="/~calendar/:timeframe/:displayDay/:timezone">
+              <Route exact path="/~calendar/:timeframe/:displayDay">
                 <CalendarWrapper />
               </Route>
               <Route exact path="/~calendar/event">

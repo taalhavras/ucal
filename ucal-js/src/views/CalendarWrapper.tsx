@@ -21,7 +21,6 @@ import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
 interface RouterProps {
   timeframe: string
   displayDay: string
-  timezone: string
 }
 
 interface Props extends RouteComponentProps<RouterProps> {
@@ -34,7 +33,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const { calendars, getCalendars, deleteCalendar, toggleCalendar } =
     useCalendarsAndEvents()
   const history = useHistory()
-  const { timeframe, displayDay, timezone } = match.params
+  const { timeframe, displayDay } = match.params
   const useTf = (timeframe && (timeframe as Timeframe)) || Timeframe.month
   const useDd = (displayDay && moment(displayDay).toDate()) || new Date()
   const [timeframeState, setTimeframeState] = useState(useTf)
@@ -42,7 +41,6 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const [selectedDayState, setSelectedDayState] = useState(useDd)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [mobile, setMobile] = useState(false)
-  const [timezoneState, setTimezoneState] = useState("utc")
   let themeWatcher: any
 
   const updateViewport = ({ matches }): void => {
@@ -57,21 +55,17 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
       timeframeState === Timeframe.year
     ) {
       setTimeframeState(Timeframe.day)
-      pushViewRoute(Timeframe.day, selectedDayState, timezoneState)
+      pushViewRoute(Timeframe.day, selectedDayState)
     }
     themeWatcher.addListener(updateViewport)
   }, [])
 
-  const pushViewRoute = (tf: Timeframe, dd: Date, tz: string): void =>
-    history.push(
-      `/~calendar/${tf}/${moment(dd).format("YYYY-MM-DD")}/${encodeURIComponent(
-        tz
-      )}`
-    )
+  const pushViewRoute = (tf: Timeframe, dd: Date): void =>
+    history.push(`/~calendar/${tf}/${moment(dd).format("YYYY-MM-DD")}`)
 
   const goToToday = (): void => {
     const displayDay = new Date()
-    pushViewRoute(timeframeState, displayDayState, timezoneState)
+    pushViewRoute(timeframeState, displayDayState)
     setDisplayDayState(displayDay)
     setSelectedDayState(displayDay)
   }
@@ -80,12 +74,12 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     e.stopPropagation()
     e.preventDefault()
     const timeframe = e.target.value as Timeframe
-    pushViewRoute(timeframe, selectedDayState, timezoneState)
+    pushViewRoute(timeframe, selectedDayState)
     setTimeframeState(timeframe)
   }
 
   const handleTimeFrameButton = (timeframe: Timeframe) => {
-    pushViewRoute(timeframe, selectedDayState, timezoneState)
+    pushViewRoute(timeframe, selectedDayState)
     setTimeframeState(timeframe)
   }
 
@@ -99,7 +93,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     ) {
       timeframe = Timeframe.year
     }
-    pushViewRoute(timeframe, selectedDay, timezoneState)
+    pushViewRoute(timeframe, selectedDay)
     setSelectedDayState(selectedDay)
     setDisplayDayState(selectedDay)
   }
@@ -110,7 +104,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
       .toDate()
     const newSelected = newDisplay
 
-    pushViewRoute(timeframeState, newSelected, timezoneState)
+    pushViewRoute(timeframeState, newSelected)
     setDisplayDayState(newDisplay)
     setSelectedDayState(newSelected)
   }
