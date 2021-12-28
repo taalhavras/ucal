@@ -617,53 +617,15 @@
 ::  +handle-on-peek: handles scries for a particular almanac
 ::
 ++  handle-on-peek
-  |=  [=bowl:gall =path =almanac]
-  ^-  (unit (unit cage))
-  ?+  path  [~ ~] :: unhandled
+  =>
+  |%
+  ::  +common-timezone-handler: Handler for both timezone scries - see
+  ::  comments at callsites for why this is needed.
   ::
-      [%almanac ~]
-    ``ucal-almanac+!>(almanac)
-  ::
-      [%calendars ~]
-    ``ucal-calendars+!>((~(get-calendars al almanac)))
-  ::
-      [%events ~]
-    ``ucal-events+!>((~(get-events al almanac)))
-  ::
-      [%calendar-and-events *]
-    =/  c  (get-calendar t.path almanac)
-    ?~  c
-      ~
-    =/  evs  (get-events-bycal t.path almanac)
-    ?~  evs
-      ~
-    ``ucal-calendar-and-events+!>([u.c u.evs])
-  ::
-      [%calendars *]
-    =/  res  (get-calendar t.path almanac)
-    ?~  res
-      ~
-    ``ucal-calendar+!>(u.res)
-  ::
-      [%events %specific *]
-    =/  res  (get-specific-event t.t.path almanac)
-    ?~  res
-      ~
-    ``ucal-event+!>(u.res)
-  ::
-      [%events %bycal *]
-    =/  res  (get-events-bycal t.t.path almanac)
-    ?~  res
-      ~
-    ``ucal-events+!>(u.res)
-  ::
-      [%events %inrange *]
-    =/  res  (get-events-inrange t.t.path almanac)
-    ?~  res
-      ~
-    ``ucal-events-in-range+!>(u.res)
-  ::
-      [%timezone @t %events @t *]
+  ++  common-timezone-handler
+    |=  [=bowl:gall =path =almanac]
+    ^-  (unit (unit cage))
+    ?>  ?=([%timezone @t %events @t *] path)
     =/  tzid=@t  i.t.path
     =/  variant=@t  i.t.t.t.path
     =/  convert-event-data=$-(event-data event-data)
@@ -728,6 +690,68 @@
       ^-  event
       ev(data (convert-event-data data.ev))
     !!
+
+  --
+  |=  [=bowl:gall =path =almanac]
+  ^-  (unit (unit cage))
+  ?+  path  [~ ~] :: unhandled
+  ::
+      [%almanac ~]
+    ``ucal-almanac+!>(almanac)
+  ::
+      [%calendars ~]
+    ``ucal-calendars+!>((~(get-calendars al almanac)))
+  ::
+      [%events ~]
+    ``ucal-events+!>((~(get-events al almanac)))
+  ::
+      [%calendar-and-events *]
+    =/  c  (get-calendar t.path almanac)
+    ?~  c
+      ~
+    =/  evs  (get-events-bycal t.path almanac)
+    ?~  evs
+      ~
+    ``ucal-calendar-and-events+!>([u.c u.evs])
+  ::
+      [%calendars *]
+    =/  res  (get-calendar t.path almanac)
+    ?~  res
+      ~
+    ``ucal-calendar+!>(u.res)
+  ::
+      [%events %specific *]
+    =/  res  (get-specific-event t.t.path almanac)
+    ?~  res
+      ~
+    ``ucal-event+!>(u.res)
+  ::
+      [%events %bycal *]
+    =/  res  (get-events-bycal t.t.path almanac)
+    ?~  res
+      ~
+    ``ucal-events+!>(u.res)
+  ::
+      [%events %inrange *]
+    =/  res  (get-events-inrange t.t.path almanac)
+    ?~  res
+      ~
+    ``ucal-events-in-range+!>(u.res)
+  ::
+      [%timezone @t %events @t *]
+    (common-timezone-handler bowl path almanac)
+  ::
+      [%timezone @t @t %events @t *]
+    ::  Sometimes for timezones that include a '/' in them (i.e.
+    ::  America/New_York) path parsing logic can get screwed up and
+    ::  we can end up with two separate path entries. Instead of diving
+    ::  into eyre to find exactly why this is happening I've chosen to
+    ::  explicitly handle this case by repackaging paths.
+    =/  new-path=^path
+      :+  %timezone
+        `knot`(crip :(weld (trip i.t.path) "/" (trip i.t.t.path)))
+      t.t.t.path
+    (common-timezone-handler bowl new-path almanac)
   ==
 ::  +apply-permissions-update: updates calendar permissions
 ::
