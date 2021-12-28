@@ -16,6 +16,8 @@ type CalendarAndEventContextType = {
   saveCalendar?: (data: CalendarViewState, update: boolean) => Promise<void>
   deleteCalendar?: (calendar: Calendar) => Promise<boolean>
   toggleCalendar?: (calendar: Calendar) => void
+  timezone: string
+  setTimezone: (arg: string) => void
 }
 
 export const CalendarAndEventContext =
@@ -24,6 +26,8 @@ export const CalendarAndEventContext =
     setEvents: () => ({}),
     calendars: [],
     setCalendars: () => ({}),
+    timezone: "utc",
+    setTimezone: (arg: string) => ({}),
   })
 
 export const CalendarAndEventProvider: React.FC = ({ children }) => {
@@ -34,9 +38,13 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   //  Determine if we should be creating a default calendar. If we ever get
   //  a calendars response w/no calendars we will try to create a default.
   const [createDefaultCalendar, setCreateDefaultCalendar] = useState(false)
+  //  The current timezone - defaults to UTC.
+  const [timezone, setTimezone] = useState("America/New_York")
 
   const getEvents = async (): Promise<void> => {
-    const apiEvents = await api.scry<any>("ucal-store", "/events")
+    const path =
+      timezone == "utc" ? "/events" : "/timezone/" + timezone + "/events/all"
+    const apiEvents = await api.scry<any>("ucal-store", path)
     const filteredEvents = apiEvents
       .filter((re) => !!re)
       .map((e) => new Event(e))
@@ -188,6 +196,8 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         saveCalendar,
         deleteCalendar,
         toggleCalendar,
+        timezone,
+        setTimezone,
       }}
     >
       {!!events && !!calendars && !initialLoad ? children : "Loading..."}

@@ -30,8 +30,14 @@ interface Props extends RouteComponentProps<RouterProps> {
 }
 
 export const CalendarWrapper: React.FC<Props> = ({ match }) => {
-  const { calendars, getCalendars, deleteCalendar, toggleCalendar } =
-    useCalendarsAndEvents()
+  const {
+    calendars,
+    getCalendars,
+    deleteCalendar,
+    toggleCalendar,
+    timezone,
+    setTimezone,
+  } = useCalendarsAndEvents()
   const history = useHistory()
   const { timeframe, displayDay } = match.params
   const useTf = (timeframe && (timeframe as Timeframe)) || Timeframe.month
