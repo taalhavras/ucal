@@ -1372,6 +1372,8 @@
         %version  parse-version
         %prodid  parse-prodid
         %begin  parse-subcomponent
+        %x-wr-timezone  parse-x-wr-timezone
+        %x-wr-calname  parse-x-wr-calname
       ==
   =/  [newc=vcalendar nrt=required-tags rest=wall]
       (parser data t.trimmed-lines cal rt)
@@ -1390,6 +1392,11 @@
       %version
       %prodid
       %begin
+      ::  This is a nonstandard property that's used to set a default timezone
+      ::  for the entire calendar.
+      %x-wr-timezone
+      ::  Nonstandard property used to set a calendar name
+      %x-wr-calname
     ==
   ::
   ++  parse-prodid
@@ -1399,6 +1406,18 @@
     :+
     c(prodid t)
     rt(prodid &)
+    w
+  ++  parse-x-wr-timezone
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
+    :+  c(default-timezone (some t))
+      rt
+    w
+  ++  parse-x-wr-calname
+    |=  [t=tape w=wall c=vcalendar rt=required-tags]
+    ^-  [vcalendar required-tags wall]
+    :+  c(calendar-name (some t))
+      rt
     w
   ::
   ++  parse-version

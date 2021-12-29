@@ -48,11 +48,11 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [mobile, setMobile] = useState(false)
   //  List of all supported timezones
-  const [allTimezones, setAllTimezones] = useState<string[]>(["utc"])
+  const [allTimezones, setAllTimezones] = useState<string[]>([])
   let themeWatcher: any
 
   const getTimezones = async (): Promise<void> => {
-    const supportedTimezones = await fetch("/~/scry/timezone-store/zones.json")
+    let supportedTimezones = await fetch("/~/scry/timezone-store/zones.json")
       .then((r) => {
         if (r.status === 404) {
           throw new Error("Not found")
@@ -61,10 +61,11 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
         }
         return r.json() as Promise<T>
       })
-      .catch()
-    let fullTimezones = [...supportedTimezones, "utc"]
-    fullTimezones.sort()
-    setAllTimezones(fullTimezones)
+      .catch(() => {
+        return ["utc"]
+      })
+    supportedTimezones.sort()
+    setAllTimezones(supportedTimezones)
   }
 
   useEffect(() => {

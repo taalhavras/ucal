@@ -351,5 +351,11 @@
       ::  Optional fields
       ::
       timezones=(map tzid vtimezone)
+      ::  specified via x-wr-timezone
+      ::
+      default-timezone=(unit tape)
+      ::  specified via x-wr-calname
+      ::
+      calendar-name=(unit tape)
   ==
 --

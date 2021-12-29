@@ -42,10 +42,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   const [curTimezone, setCurTimezone] = useState("utc")
 
   const getEvents = async (): Promise<void> => {
-    const path =
-      curTimezone == "utc"
-        ? "/events"
-        : "/timezone/" + curTimezone + "/events/all"
+    const path = "/timezone/" + curTimezone + "/events/all"
     const apiEvents = await api.scry<any>("ucal-store", path)
     const filteredEvents = apiEvents
       .filter((re) => !!re)

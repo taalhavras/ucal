@@ -136,6 +136,12 @@
 ++  lookup-zone
   |=  key=@t
   ^-  zone
+  ::  Special case the 'utc' key - this is because while the IANA db
+  ::  doesn't include an entry for 'utc' as a zone we should still
+  ::  support it as an option.
+  ?:  =(key 'utc')
+    :-  'utc'
+    ~[[[| ~s0] [%nothing ~] '' [~1970.1.1 %utc] ~]]
   ::  As it stands, this doesn't allow multiple key chains. This is
   ::  simple enough to change but does allow infinite loops with link
   ::  cycles. Since the docs don't mention if links more than 1 deep
@@ -147,5 +153,5 @@
 ++  get-zone-names
   |.
   ^-  wain
-  ~(tap in ~(key by zones.state))
+  ['utc' ~(tap in ~(key by zones.state))]
 --

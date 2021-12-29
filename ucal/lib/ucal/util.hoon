@@ -180,7 +180,7 @@
     :*
       owner
       calendar-code
-      (crip prodid.vcalendar)
+      (crip (fall calendar-name.vcalendar prodid.vcalendar))
       [`~ `~]  :: default permissions are private
       now
       now
@@ -192,14 +192,14 @@
     acc
   =/  [ec=event-code continuation=_rng]  (make-uuid rng 8)
   =/  res=(unit event)
-  (vevent-to-event i.events.vcalendar ec calendar-code owner now)
+  (vevent-to-event i.events.vcalendar ec calendar-code owner now (fall default-timezone.vcalendar "utc"))
   ?~  res
     $(events.vcalendar t.events.vcalendar)
   $(acc [u.res acc], events.vcalendar t.events.vcalendar, rng continuation)
 ::  +vevent-to-event: attempts to parse event from vevent
 ::
 ++  vevent-to-event
-  |=  [v=vevent:components =event-code =calendar-code owner=@p now=@da]
+  |=  [v=vevent:components =event-code =calendar-code owner=@p now=@da default-timezone=tape]
   ^-  (unit event)
   =/  m=moment  (parse-moment ical-time.dtstart.v end.v)
   =/  start=@da  (head (moment-to-range m))
@@ -226,7 +226,7 @@
       m
       `invites`~  :: TODO parse invites? what does this look like?
       `rsvp`%yes  :: TODO parse rsvp? unclear what this should be
-      (fall tzid.dtstart.v "utc")
+      (fall tzid.dtstart.v default-timezone)
     ==
     u.res
   ==
