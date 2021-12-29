@@ -351,5 +351,8 @@
       ::  Optional fields
       ::
       timezones=(map tzid vtimezone)
+      ::
+      ::
+      default-timezone=(unit tape)
   ==
 --
