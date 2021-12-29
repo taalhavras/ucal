@@ -62,7 +62,6 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
         return r.json() as Promise<T>
       })
       .catch()
-    console.log("retrieved these timeszones:", supportedTimezones)
     let fullTimezones = [...supportedTimezones, "utc"]
     fullTimezones.sort()
     setAllTimezones(fullTimezones)
@@ -116,6 +115,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     e.stopPropagation()
     e.preventDefault()
     const timezone = e.target.value as string
+    console.log("setting current timezone to", timezone)
     setCurTimezone(timezone)
   }
 

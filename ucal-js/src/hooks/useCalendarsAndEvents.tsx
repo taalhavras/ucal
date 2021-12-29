@@ -153,6 +153,12 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   useEffect(() => {
     getEvents()
     setInitialLoad(true)
+  }, [])
+
+  // In additiona to polling for all the events when this loads,
+  // we want to do so every time the timezone changes.
+  useEffect(() => {
+    getEvents()
   }, [curTimezone])
 
   useEffect(() => {
