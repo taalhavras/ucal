@@ -180,7 +180,7 @@
     :*
       owner
       calendar-code
-      (crip prodid.vcalendar)
+      (crip (fall calendar-name.vcalendar prodid.vcalendar))
       [`~ `~]  :: default permissions are private
       now
       now
