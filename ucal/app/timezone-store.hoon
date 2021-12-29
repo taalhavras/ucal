@@ -74,7 +74,6 @@
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
-    ~&  [%peek-path-is path]
     ^-  (unit (unit cage))
     ?+  path
       (on-peek:def path)
