@@ -30,8 +30,14 @@ interface Props extends RouteComponentProps<RouterProps> {
 }
 
 export const CalendarWrapper: React.FC<Props> = ({ match }) => {
-  const { calendars, getCalendars, deleteCalendar, toggleCalendar } =
-    useCalendarsAndEvents()
+  const {
+    calendars,
+    getCalendars,
+    deleteCalendar,
+    toggleCalendar,
+    curTimezone,
+    setCurTimezone,
+  } = useCalendarsAndEvents()
   const history = useHistory()
   const { timeframe, displayDay } = match.params
   const useTf = (timeframe && (timeframe as Timeframe)) || Timeframe.month
@@ -41,7 +47,29 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const [selectedDayState, setSelectedDayState] = useState(useDd)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [mobile, setMobile] = useState(false)
+  //  List of all supported timezones
+  const [allTimezones, setAllTimezones] = useState<string[]>(["utc"])
   let themeWatcher: any
+
+  const getTimezones = async (): Promise<void> => {
+    const supportedTimezones = await fetch("/~/scry/timezone-store/zones.json")
+      .then((r) => {
+        if (r.status === 404) {
+          throw new Error("Not found")
+        } else if (r.status > 399) {
+          throw new Error("Scry failed")
+        }
+        return r.json() as Promise<T>
+      })
+      .catch()
+    let fullTimezones = [...supportedTimezones, "utc"]
+    fullTimezones.sort()
+    setAllTimezones(fullTimezones)
+  }
+
+  useEffect(() => {
+    getTimezones()
+  }, [])
 
   const updateViewport = ({ matches }): void => {
     setMobile(matches)
@@ -81,6 +109,14 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const handleTimeFrameButton = (timeframe: Timeframe) => {
     pushViewRoute(timeframe, selectedDayState)
     setTimeframeState(timeframe)
+  }
+
+  const selectTimezone = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    e.stopPropagation()
+    e.preventDefault()
+    const timezone = e.target.value as string
+    console.log("setting current timezone to", timezone)
+    setCurTimezone(timezone)
   }
 
   const selectDay = (selectedDay: Date, isSidebar?: boolean) => (): void => {
@@ -282,6 +318,27 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
             {Object.values(Timeframe).map((tf, ind) => (
               <option value={tf} key={`timeframe-${ind}`}>
                 {capitalize(tf)}
+              </option>
+            ))}
+          </select>
+        </Box>
+
+        <Box
+          height="100%"
+          display={mobile ? "none" : "flex"}
+          flexDirection="row"
+          padding="0px 8px"
+          border="1px solid rgba(0, 0, 0, 0.3)"
+          borderRadius="4px"
+        >
+          <select
+            className="timezone"
+            value={curTimezone}
+            onChange={selectTimezone}
+          >
+            {allTimezones.map((tz) => (
+              <option value={tz} key={tz}>
+                {tz}
               </option>
             ))}
           </select>
