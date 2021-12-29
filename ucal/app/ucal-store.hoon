@@ -741,16 +741,24 @@
       [%timezone @t %events @t *]
     (common-timezone-handler bowl path almanac)
   ::
-      [%timezone @t @t %events @t *]
+      [%timezone *]
     ::  Sometimes for timezones that include a '/' in them (i.e.
-    ::  America/New_York) path parsing logic can get screwed up and
-    ::  we can end up with two separate path entries. Instead of diving
-    ::  into eyre to find exactly why this is happening I've chosen to
-    ::  explicitly handle this case by repackaging paths.
+    ::  America/New_York, America/Kentucky/Louiville) path parsing logic
+    ::  can get screwed up and we can end up with two separate path entries.
+    ::  Instead of diving into airlock to find exactly why this is happening
+    ::  I've chosen to explicitly handle this case by repackaging paths.
+    =/  events-idx=@ud  (need (find ~[%events] t.path))
+    =/  timezone=@t
+      %-  crip
+      %+  reel
+        `(list @t)`(join '/' `(list @t)`(scag events-idx t.path))
+      |=  [cur=@t acc=tape]
+      ^-  tape
+      (weld (trip cur) acc)
     =/  new-path=^path
       :+  %timezone
-        `knot`(crip :(weld (trip i.t.path) "/" (trip i.t.t.path)))
-      t.t.t.path
+        timezone
+      (slag events-idx t.path)
     (common-timezone-handler bowl new-path almanac)
   ==
 ::  +apply-permissions-update: updates calendar permissions
