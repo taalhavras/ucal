@@ -16,8 +16,8 @@ type CalendarAndEventContextType = {
   saveCalendar?: (data: CalendarViewState, update: boolean) => Promise<void>
   deleteCalendar?: (calendar: Calendar) => Promise<boolean>
   toggleCalendar?: (calendar: Calendar) => void
-  timezone: string
-  setTimezone: (arg: string) => void
+  curTimezone: string
+  setCurTimezone: (arg: string) => void
 }
 
 export const CalendarAndEventContext =
@@ -26,8 +26,8 @@ export const CalendarAndEventContext =
     setEvents: () => ({}),
     calendars: [],
     setCalendars: () => ({}),
-    timezone: "utc",
-    setTimezone: (arg: string) => ({}),
+    curTimezone: "utc",
+    setCurTimezone: (arg: string) => ({}),
   })
 
 export const CalendarAndEventProvider: React.FC = ({ children }) => {
@@ -39,11 +39,13 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   //  a calendars response w/no calendars we will try to create a default.
   const [createDefaultCalendar, setCreateDefaultCalendar] = useState(false)
   //  The current timezone - defaults to UTC.
-  const [timezone, setTimezone] = useState("America/New_York")
+  const [curTimezone, setCurTimezone] = useState("utc")
 
   const getEvents = async (): Promise<void> => {
     const path =
-      timezone == "utc" ? "/events" : "/timezone/" + timezone + "/events/all"
+      curTimezone == "utc"
+        ? "/events"
+        : "/timezone/" + curTimezone + "/events/all"
     const apiEvents = await api.scry<any>("ucal-store", path)
     const filteredEvents = apiEvents
       .filter((re) => !!re)
@@ -151,7 +153,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   useEffect(() => {
     getEvents()
     setInitialLoad(true)
-  }, [])
+  }, [curTimezone])
 
   useEffect(() => {
     if (!!calendars && !!events && calendars.length < 1) {
@@ -196,8 +198,8 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         saveCalendar,
         deleteCalendar,
         toggleCalendar,
-        timezone,
-        setTimezone,
+        curTimezone,
+        setCurTimezone,
       }}
     >
       {!!events && !!calendars && !initialLoad ? children : "Loading..."}
