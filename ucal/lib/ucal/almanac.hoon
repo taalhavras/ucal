@@ -239,7 +239,7 @@
     `i.match
   ::
   ++  get-events-inrange
-    |=  [code=calendar-code start=@da end=@da]
+    |=  [[us=@p now=@da] code=calendar-code start=@da end=@da timezone=tape]
     ^-  (unit [(list event) (list projected-event)])
     =/  events=(unit (list event))  (~(get by events.alma) code)
     ?~  events
@@ -251,7 +251,7 @@
     |=  [cur=event events=(list event) projections=(list projected-event)]
     ^-  [event (list event) (list projected-event)]
     =/  [e=(unit event) p=(list projected-event)]
-        (events-overlapping-in-range:ucal-util cur start end)
+        (events-overlapping-in-range:ucal-util [us now] cur start end timezone)
     :-  cur
     :_  (weld p projections)
     ?~  e

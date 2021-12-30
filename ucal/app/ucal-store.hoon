@@ -217,7 +217,7 @@
         (slav %da (snag 1 path))
       (slav %da (snag 2 path))
   =/  timezone=tape  (reconstruct-timezone (slag 3 path))
-  (~(get-events-inrange al almanac) calendar-code start end)
+  (~(get-events-inrange al almanac) [our.bowl now.bowl] calendar-code start end timezone)
 ::
 ::  Handler for '%ucal-action' pokes
 ::

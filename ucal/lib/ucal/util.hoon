@@ -1,5 +1,5 @@
-/-  *ucal, *hora, components=ucal-components, ucal-timezone, ucal-store, *ucal-almanac
-/+  *hora, utc=ucal-timezones-utc, tzmaster=ucal-timezones-master
+/-  *ucal, *hora, components=ucal-components, ucal-store, *ucal-almanac
+/+  *hora, tzconv=iana-conversion
 |%
 ::  +is-public: A calendar is public if readers is unit
 ::
@@ -84,16 +84,20 @@
 ::  a unit event (representing whether the input event overlaps with
 ::  the target range) and a list of projected events (if the event is
 ::  recurring, these are the generated instances that also fall in range).
-::  IMPORTANT: THE INPUT TIMES ARE ASSUMED TO BE IN UTC.
-::  TODO could change above by also taking in a timezone and applying adjustment?
 ++  events-overlapping-in-range
   =<
-  |=  [e=event start=@da end=@da]
+  |=  [[us=@p now=@da] e=event start=@da end=@da timezone=tape]
   ^-  [(unit event) (list projected-event)]
   ?>  (lte start end)
-  ::  adjust by timezone
-  =/  =tz:ucal-timezone  (get-tz:tzmaster tzid.data.e)
-  =/  [start=@da end=@da]  [(from-utc.tz start) (from-utc.tz end)]
+  ::  We convert the [start end] dates to be in whatever timezone the
+  ::  event is in so that all comparisons will be in the same timezone.
+  =/  converter
+    %+  bake
+      %+  curr
+        ~(convert-between tzconv [us now])
+      [(crip timezone) (crip tzid.data.e)]
+    @da
+  =/  [start=@da end=@da]  [(converter start) (converter end)]
   =/  [event-start=@da event-end=@da]  (moment-to-range when.data.e)
   ?~  era.e
     :_  ~

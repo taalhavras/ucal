@@ -1,4 +1,3 @@
-/-  ucal-timezone
 /+  hora
 |%
 +$  title     @t
