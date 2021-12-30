@@ -1,4 +1,4 @@
-/-  *hora, *ucal, ucal-timezone, *ucal-almanac, *resource
+/-  *hora, *ucal, *ucal-almanac, *resource
 |%
 ::
 ::

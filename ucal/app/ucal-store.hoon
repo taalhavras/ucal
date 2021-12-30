@@ -166,6 +166,18 @@
 ::: helper door
 ::
 |_  bowl=bowl:gall
+::  Reconstructs a timezone from path components. Used for cases
+::  where a timezone might contain slashes and, due to path parsing,
+::  end up as multiple components of a timezone.
+::
+++  reconstruct-timezone
+  |=  p=path
+  ^-  tape
+  %+  reel
+    `(list @t)`(join '/' `(list @t)`p)
+  |=  [cur=@t acc=tape]
+  ^-  tape
+  (weld (trip cur) acc)
 ::
 ++  get-calendar
   |=  [=path =almanac]
@@ -195,14 +207,17 @@
 ++  get-events-inrange
   |=  [=path =almanac]
   ^-  (unit [(list event) (list projected-event)])
-  ?.  =((lent path) 3)
+  ::  path must include calendar-code, start, end, and a timezone.
+  ::  The timezone may be represented as many path components.
+  ?.  (gte (lent path) 4)
     ~
   =/  =calendar-code  `term`(snag 0 path)
   =/  [start=@da end=@da]
       %+  normalize-period
         (slav %da (snag 1 path))
       (slav %da (snag 2 path))
-  (~(get-events-inrange al almanac) calendar-code start end)
+  =/  timezone=tape  (reconstruct-timezone (slag 3 path))
+  (~(get-events-inrange al almanac) [our.bowl now.bowl] calendar-code start end timezone)
 ::
 ::  Handler for '%ucal-action' pokes
 ::
@@ -748,13 +763,7 @@
     ::  Instead of diving into airlock to find exactly why this is happening
     ::  I've chosen to explicitly handle this case by repackaging paths.
     =/  events-idx=@ud  (need (find ~[%events] t.path))
-    =/  timezone=@t
-      %-  crip
-      %+  reel
-        `(list @t)`(join '/' `(list @t)`(scag events-idx t.path))
-      |=  [cur=@t acc=tape]
-      ^-  tape
-      (weld (trip cur) acc)
+    =/  timezone=@t  (crip (reconstruct-timezone (scag events-idx t.path)))
     =/  new-path=^path
       :+  %timezone
         timezone

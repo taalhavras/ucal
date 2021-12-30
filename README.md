@@ -99,7 +99,7 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 | `%x ship %events %specific cal-code event-code` | event                                        | a specific event on a specific calendar                                                                                                                                                                                                                                                                                 |
 | `%x ship %events %bycal cal-code`               | (list event)                                 | all events on a specific calendar                                                                                                                                                                                                                                                                                       |
 | `%x ship %calendar-and-events cal-code`         | [calendar (list event)]                      | calendar + all events on that calendar                                                                                                                                                                                                                                                                                  |
-| `%x ship %events %inrange cal-code start end`   | [(list event) (list projected-event)]        | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. |
+| `%x ship %events %inrange cal-code start end timezone`   | [(list event) (list projected-event)]        | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. The start/end are interpreted as being times in the specified timezone. |
 |  `%x %host cal-code event-code`    |  @p  |  the ship hosting a particular event we're invited to |
 
 #### Invitation scrys
@@ -111,7 +111,7 @@ times adjusted to the specified timezone. Some examples with EST as the timezone
 ```
 /gx/~zod/events/specific/abcd-efgh/hijk-lmno/noun -> /gx/~zod/timezone/EST/events/specific/abcd-efgh/hijk-lmno/noun
 /gx/~zod/events/bycal/abcd-efgh/noun -> /gx/~zod/timezone/EST/events/bycal/abcd-efgh/noun
-/gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/noun
+/gx/~zod/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/utc/noun -> /gx/~zod/timezone/EST/events/inrange/abcd-efgh/~2020.1.1/~2020.1.3/utc/noun
 ```
 You'll need to run `timezone-store`on your ship with some imported data for this to work. See the `timezone-store` section below for more details on how to set this up.
 
