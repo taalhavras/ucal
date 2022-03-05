@@ -170,6 +170,16 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     )
   }
 
+  const importCalendar = () => {
+    hideCalendarModal()
+    history.push("/~calendar/import")
+  }
+
+  const syncCalendar = () => {
+    hideCalendarModal()
+    history.push("/~calendar/sync")
+  }
+
   const deleteCalendarHandler = (calendar: Calendar) => {
     deleteCalendar(calendar)
     getCalendars()
@@ -414,6 +424,12 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
               maxWidth="200px"
             >
               <Text fontSize="14px">Create Calendar</Text>
+            </Button>
+            <Button onClick={importCalendar} marginTop="16px" maxWidth="200px">
+              <Text fontSize="14px">Import Calendar</Text>
+            </Button>
+            <Button onClick={syncCalendar} marginTop="16px" maxWidth="200px">
+              <Text fontSize="14px">Sync Calendar</Text>
             </Button>
           </Box>
         </Box>
