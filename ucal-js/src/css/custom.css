@@ -1,4 +1,14 @@
-p, h1, h2, h3, h4, h5, h6, a, input, textarea, button {
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+a,
+input,
+textarea,
+button {
   margin-block-end: unset;
   margin-block-start: unset;
   -webkit-margin-before: unset;
@@ -11,7 +21,10 @@ a {
   text-decoration: none;
 }
 
-textarea, select, input, button {
+textarea,
+select,
+input,
+button {
   outline: none;
   -webkit-appearance: none;
   border: none;
@@ -118,7 +131,7 @@ textarea, select, input, button {
     filter: invert(1);
   }
   .o-80-d {
-    opacity: .8;
+    opacity: 0.8;
   }
   .focus-b--white-d:focus {
     border-color: #fff;
@@ -164,11 +177,13 @@ select {
   -webkit-appearance: auto;
   -moz-appearance: auto;
   font-size: 14px;
-  color:rgba(0, 0, 0, 0.8);
+  color: rgba(0, 0, 0, 0.8);
 }
 
 select.timeframe {
   width: 72px;
+  padding: 4px 0px 4px 8px;
+  border-radius: 4px;
 }
 
 .repeat-interval {
@@ -277,8 +292,8 @@ button.dark:hover {
 
 .event-tile {
   position: absolute;
-  background-color: rgba(0,0,0,0.3);
-  border: 1px solid rgba(0,0,0,0.4);
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 8px;
   left: 10%;
   width: 80%;
@@ -292,7 +307,7 @@ button.dark:hover {
   bottom: 0;
   right: 0;
   z-index: 10;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   justify-content: center;

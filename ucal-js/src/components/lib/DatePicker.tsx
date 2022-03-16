@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import moment from "moment"
 import { Box, Text } from "@tlon/indigo-react"
 import MonthTile from "./MonthTile"
+import { DropdownBackground } from "./DropdownBackground"
 
 interface Props {
   selectedDay: Date
@@ -39,22 +40,25 @@ const DatePicker: React.FC<Props> = ({
         <Text fontSize="14px">{moment(selectedDay).format("MMM D, YYYY")}</Text>
       </Box>
       {showCalendar && (
-        <Box
-          position="absolute"
-          padding="4px"
-          backgroundColor="white"
-          border="1px solid gray"
-          borderRadius="4px"
-        >
-          <MonthTile
-            selectedDay={selectedDay}
-            sidebar={false}
-            showNavArrows
-            showYear
-            displayDay={selectedDay}
-            selectDay={selectDateHandler}
-          />
-        </Box>
+        <>
+          <DropdownBackground onClick={toggleDate} />
+          <Box
+            position="absolute"
+            padding="4px"
+            backgroundColor="white"
+            border="1px solid gray"
+            borderRadius="4px"
+          >
+            <MonthTile
+              selectedDay={selectedDay}
+              sidebar={false}
+              showNavArrows
+              showYear
+              displayDay={selectedDay}
+              selectDay={selectDateHandler}
+            />
+          </Box>
+        </>
       )}
     </Box>
   )

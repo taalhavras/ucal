@@ -1,5 +1,6 @@
 :~  title+'Ucal'
     info+'An urbit calendar.'
+    image+'http://pluspng.com/img-png/calendar-icon-1600.png'
     color+0x81.88c9
     base+'calendar'
     site+/'~calendar'

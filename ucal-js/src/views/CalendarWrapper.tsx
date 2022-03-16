@@ -90,7 +90,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   }, [])
 
   const pushViewRoute = (tf: Timeframe, dd: Date): void =>
-    history.push(`/~calendar/${tf}/${moment(dd).format("YYYY-MM-DD")}`)
+    history.push(`/${tf}/${moment(dd).format("YYYY-MM-DD")}`)
 
   const goToToday = (): void => {
     const displayDay = new Date()
@@ -147,10 +147,10 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   }
 
   const createEvent = (day?: Date) => () =>
-    history.push(`/~calendar/event${day ? `?date=${day?.getTime()}` : ""}`)
+    history.push(`/event${day ? `?date=${day?.getTime()}` : ""}`)
 
   const goToEvent = (calendarCode: string, eventCode: string) => (): void => {
-    history.push(`/~calendar/event/${calendarCode}/${eventCode}`)
+    history.push(`/event/${calendarCode}/${eventCode}`)
   }
 
   const hideCalendarModal = (e?: React.MouseEvent<HTMLElement>) => {
@@ -166,7 +166,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const createCalendar = (calendarCode?: string) => () => {
     hideCalendarModal()
     history.push(
-      `/~calendar/${calendarCode ? `calendar/edit/${calendarCode}` : "create"}`
+      `/${calendarCode ? `calendar/edit/${calendarCode}` : "create"}`
     )
   }
 
@@ -233,7 +233,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   return (
     <Box
       height="100%"
-      p="4"
+      p="12px 24px"
       display="flex"
       flexDirection="column"
       borderWidth={["none", "1px"]}
@@ -256,6 +256,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
             height="12px"
             padding="2px 3px"
             margin="5px 8px 0px 0px"
+            lineHeight="1.1em"
           >
             {moment().format("DD")}
           </Text>
@@ -316,8 +317,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
         <Box
           height="100%"
           display={mobile ? "none" : "flex"}
-          flexDirection="row"
-          padding="0px 8px"
+          pr="8px"
           border="1px solid rgba(0, 0, 0, 0.3)"
           borderRadius="4px"
         >
@@ -334,7 +334,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
           </select>
         </Box>
 
-        <Box
+        {/* <Box
           height="100%"
           display={mobile ? "none" : "flex"}
           flexDirection="row"
@@ -353,7 +353,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
               </option>
             ))}
           </select>
-        </Box>
+        </Box> */}
       </Box>
       <Row width="100%">
         <Box
@@ -396,7 +396,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
                   onClick={createCalendar(cal.calendarCode)}
                 />
                 <Icon
-                  icon="TrashCan"
+                  icon="Delete"
                   color="black"
                   onClick={() => deleteCalendarHandler(cal)}
                 />

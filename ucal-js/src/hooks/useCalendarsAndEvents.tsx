@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
-import UrbitApi from "../logic/api"
 import Event, { EventForm } from "../types/Event"
 import Calendar, { DEFAULT_PERMISSIONS } from "../types/Calendar"
 import { CalendarViewState } from "../views/CalendarView"
+import api, { scryNoShip } from "../logic/api/index"
+import { Col, LoadingSpinner } from "@tlon/indigo-react"
 
 type CalendarAndEventContextType = {
   events: Event[]
@@ -12,7 +13,7 @@ type CalendarAndEventContextType = {
   saveEvent?: (event: EventForm, update: boolean) => void
   calendars: Calendar[]
   setCalendars: (arg: Calendar[]) => void
-  getCalendars?: () => Promise<void>
+  getCalendars?: () => Promise<Calendar[]>
   saveCalendar?: (data: CalendarViewState, update: boolean) => Promise<void>
   deleteCalendar?: (calendar: Calendar) => Promise<boolean>
   toggleCalendar?: (calendar: Calendar) => void
@@ -31,7 +32,6 @@ export const CalendarAndEventContext =
   })
 
 export const CalendarAndEventProvider: React.FC = ({ children }) => {
-  const api = new UrbitApi()
   const [events, setEvents] = useState<Event[]>([])
   const [calendars, setCalendars] = useState<Calendar[]>([])
   const [initialLoad, setInitialLoad] = useState(true)
@@ -42,8 +42,8 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   const [curTimezone, setCurTimezone] = useState("utc")
 
   const getEvents = async (): Promise<void> => {
-    const path = "/timezone/" + curTimezone + "/events/all"
-    const apiEvents = await api.scry<any>("ucal-store", path)
+    const path = `/~${window.ship}/timezone/${curTimezone}/events/all`
+    const apiEvents = await api.scry({ app: "ucal-store", path })
     const filteredEvents = apiEvents
       .filter((re) => !!re)
       .map((e) => new Event(e))
@@ -56,10 +56,14 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   }
 
   const deleteEvent = async (event: Event): Promise<void> => {
-    await api.action("ucal-store", "ucal-action", {
-      "delete-event": {
-        "calendar-code": event.calendarCode,
-        "event-code": event.eventCode,
+    await api.poke({
+      app: "ucal-store",
+      mark: "ucal-action",
+      json: {
+        "delete-event": {
+          "calendar-code": event.calendarCode,
+          "event-code": event.eventCode,
+        },
       },
     })
   }
@@ -73,12 +77,18 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         delete event[key]
       }
     }
-    console.log("SAVING:", JSON.stringify(event.toExportFormat(update)))
-    await api.action("ucal-store", "ucal-action", event.toExportFormat(update))
+    await api.poke({
+      app: "ucal-store",
+      mark: "ucal-action",
+      json: event.toExportFormat(update),
+    })
   }
 
-  const getCalendars = async (): Promise<void> => {
-    const apiCalendars = await api.scry<any>("ucal-store", "/calendars")
+  const getCalendars = async (): Promise<any[]> => {
+    const apiCalendars = await api.scry({
+      app: "ucal-store",
+      path: `/~${window.ship}/calendars`,
+    })
     if (apiCalendars.length == 0 && !createDefaultCalendar) {
       // If we don't find any calendars we should attempt to create a default
       setCreateDefaultCalendar(true)
@@ -103,11 +113,11 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
     )
 
     if (data.calendar?.title !== data.title) {
-      await api.action(
-        "ucal-store",
-        "ucal-action",
-        Calendar.toExportFormat(data, update)
-      )
+      await api.poke({
+        app: "ucal-store",
+        mark: "ucal-action",
+        json: Calendar.toExportFormat(data, update),
+      })
     }
     if (data.calendar && data.calendar?.permissions?.public !== data.public) {
       const payload = {
@@ -117,7 +127,11 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         data.public ? "make-public" : "make-private"
       ] = null
 
-      await api.action("ucal-store", "ucal-action", payload)
+      await api.poke({
+        app: "ucal-store",
+        mark: "ucal-action",
+        json: payload,
+      })
     }
   }
 
@@ -134,20 +148,26 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
       // If the calendar is synced, we want to also delete it from %ucal-sync.
       // We do this before we send the delete to %ucal-store because the sync may
       // re-add it in between.
-      const calendarIsSynced: bool = await api.scryNoShip<bool>(
-        "ucal-sync",
-        `/sync-active/${calendar.calendarCode}`
-      )
+      const calendarIsSynced = await scryNoShip<boolean>("ucal-sync", `/sync-active/${calendar.calendarCode}`)
+
       if (calendarIsSynced) {
-        await api.action("ucal-sync", "ucal-sync-action", {
-          remove: {
-            "calendar-code": calendar.calendarCode,
+        await api.poke({
+          app: "ucal-sync",
+          mark: "ucal-sync-action",
+          json: {
+            remove: {
+              "calendar-code": calendar.calendarCode,
+            },
           },
         })
       }
-      await api.action("ucal-store", "ucal-action", {
-        "delete-calendar": {
-          "calendar-code": calendar.calendarCode,
+      await api.poke({
+        app: "ucal-store",
+        mark: "ucal-action",
+        json: {
+          "delete-calendar": {
+            "calendar-code": calendar.calendarCode,
+          },
         },
       })
     }
@@ -219,7 +239,18 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         setCurTimezone,
       }}
     >
-      {!!events && !!calendars && !initialLoad ? children : "Loading..."}
+      {!!events && !!calendars && !initialLoad ? (
+        children
+      ) : (
+        <Col
+          alignItems="center"
+          justifyContent="center"
+          height="100vh"
+          width="100vw"
+        >
+          <LoadingSpinner />
+        </Col>
+      )}
     </Provider>
   )
 }

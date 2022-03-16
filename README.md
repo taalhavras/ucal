@@ -5,7 +5,7 @@
 ![screenshot](https://archiv.nyc3.digitaloceanspaces.com/littel-wolfur/2021.3.03..16.28.48-screen.jpg)
 
 ## Usage
-Clone the urbit repository from [here](https://github.com/urbit/urbit) first and copy the `make-app.sh` into the pkg directory. Run `./make-app.sh /path/to/pier /path/to/ucal/repo` (after creating and mounting a %ucal desk on that pier). Then `|commit %ucal` and `|install our %ucal`.
+Clone the urbit repository from [here](https://github.com/urbit/urbit) first and copy the `make-app.sh` into the pkg directory. Run `./make-app.sh /path/to/pier /path/to/ucal/repo/` (after creating and mounting a %ucal desk on that pier. also notice the trailing slash). Then `|commit %ucal` and `|install our %ucal`.
 
 ### ucal-store pokes
 The best documentation for these is the source code for `action` in `sur/ucal-store.hoon`. They're all pretty straightforward to use, though there are some convenience generators for calendar/event creation we'll talk about later.

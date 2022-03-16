@@ -9,8 +9,8 @@
     "noUnusedLocals": false,
     "noImplicitAny": false,
     "noEmit": true,
-    "target": "es2015",
-    "module": "es2015",
+    "target": "ESNext",
+    "module": "ESNext",
     "strict": true,
     "jsx": "react",
     "baseUrl": ".",
@@ -18,11 +18,6 @@
       "~/*": ["src/*"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

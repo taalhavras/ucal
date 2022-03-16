@@ -27,7 +27,6 @@ import DatePicker from "../components/lib/DatePicker"
 import TimePicker from "../components/lib/TimePicker"
 import { getDefaultStartEndTimes } from "../lib/dates"
 import { addOrRemove } from "../lib/arrays"
-import UrbitApi from "../logic/api"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
 
 const REPEAT_INTERVALS = [
@@ -73,9 +72,6 @@ export interface EventViewState {
 }
 
 const EventView: React.FC<Props> = ({ location, match }) => {
-  const {
-    authTokens: { ship },
-  } = new UrbitApi()
   const history = useHistory()
   const { calendars, saveEvent, deleteEvent, getEvents } =
     useCalendarsAndEvents()
@@ -87,7 +83,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
 
   const getCalendarCode = () =>
     (
-      calendars.find((c) => c.title === "default" && c.owner === ship) ||
+      calendars.find((c) => c.title === "default" && c.owner === window.ship) ||
       calendars[0]
     )?.calendarCode
 
@@ -103,7 +99,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
 
     return {
       calendarCode: getCalendarCode(),
-      organizer: ship,
+      organizer: window.ship,
       title: "",
       desc: "",
       location: new EventLoc({ address: "" }),
@@ -140,7 +136,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
     if (confirm("Are you sure you want to delete this event?")) {
       deleteEvent(eventState.event)
       await getEvents()
-      history.replace(eventState.prevPath || "/~calendar")
+      history.replace(eventState.prevPath || "/")
     }
   }
 
@@ -276,7 +272,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
             selectTime={selectTime(true)}
           />
         )}
-        <Text fontSize="1" margin="28px 12px 0px">
+        <Text fontSize="1" margin="22px 12px 0px">
           to
         </Text>
         <DatePicker

@@ -49,9 +49,9 @@ const DateCircle: React.FC<Props> = ({
     <Text
       className={className}
       onClick={onClick}
-      padding="5px 1px"
+      padding="2px 1px"
       width="24px"
-      margin="1px 4px"
+      margin="4px"
       borderRadius="13px"
       textAlign="center"
       verticalAlign="middle"
