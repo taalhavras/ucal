@@ -19,6 +19,7 @@ import { Location, LocationState } from "history"
 import Event, {
   EventForm,
   EventLoc,
+  InviteChange,
   RepeatInterval,
   Weekday,
   WEEKDAYS,
@@ -26,7 +27,7 @@ import Event, {
 import DatePicker from "../components/lib/DatePicker"
 import TimePicker from "../components/lib/TimePicker"
 import { getDefaultStartEndTimes } from "../lib/dates"
-import { addOrRemove } from "../lib/arrays"
+import { addOrRemove, findAdditions, findRemovals } from "../lib/arrays"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
 
 const REPEAT_INTERVALS = [
@@ -40,6 +41,7 @@ const REPEAT_INTERVALS = [
 enum EventField {
   title = "title",
   location = "location",
+  invite = "invite",
 }
 
 interface RouterProps {
@@ -66,9 +68,12 @@ export interface EventViewState {
   startTime: string
   endTime: string
   allDay: boolean
+  invited: string[]
+  invite: string
   //TODO: add all event props here
   event?: Event
   prevPath?: Location<LocationState>
+  inviteChanges?: InviteChange[]
 }
 
 const EventView: React.FC<Props> = ({ location, match }) => {
@@ -110,17 +115,35 @@ const EventView: React.FC<Props> = ({ location, match }) => {
       allDay: false,
       startTime,
       endTime,
+      invited: [],
+      invite: "",
     }
   }
 
   const [eventState, setEventState] = useState<EventViewState>({
     ...initState(eventToEdit),
-    ...(eventToEdit || {}),
     weekdays: [moment(start).format("ddd").toLowerCase() as Weekday],
   })
 
   const saveEventHandler = async () => {
-    const eventToSave = new EventForm(eventState)
+    const updated = Boolean(eventState.event)
+
+    const eventToSave = new EventForm({
+      ...eventState,
+      inviteChanges: updated
+        ? [
+            ...findAdditions(
+              eventState?.event?.invitedShips() || [],
+              eventState.invited
+            ).map((who) => ({ who, invite: true })),
+            ...findRemovals(
+              eventState?.event?.invitedShips() || [],
+              eventState.invited
+            ).map((who) => ({ who, invite: false })),
+          ]
+        : undefined,
+    })
+
     try {
       const updated = Boolean(eventState.event)
       saveEvent(eventToSave, updated)
@@ -133,7 +156,10 @@ const EventView: React.FC<Props> = ({ location, match }) => {
   }
 
   const deleteEventHandler = async (): Promise<void> => {
-    if (confirm("Are you sure you want to delete this event?")) {
+    if (
+      eventState.event &&
+      confirm("Are you sure you want to delete this event?")
+    ) {
       deleteEvent(eventState.event)
       await getEvents()
       history.replace(eventState.prevPath || "/")
@@ -209,6 +235,37 @@ const EventView: React.FC<Props> = ({ location, match }) => {
     })
   }
   const saveDisabled = disableSave()
+
+  const addInvite = () => {
+    const { invite, invited } = eventState
+    const cleanedShip = invite.trim()
+
+    if (cleanedShip) {
+      const formattedShip =
+        cleanedShip[0] === "~" ? cleanedShip : `~${cleanedShip}`
+
+      if (
+        !invited.includes(formattedShip) &&
+        !(formattedShip === `~${window.ship}`)
+      ) {
+        setEventState({ ...eventState, invited: invited.concat(formattedShip) })
+      }
+
+      setEventState({ ...eventState, invite: "" })
+    }
+  }
+
+  const removeInvite = (ship) => () =>
+    setEventState({
+      ...eventState,
+      invited: addOrRemove(eventState.invited, ship),
+    })
+
+  const checkEnter = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      addInvite()
+    }
+  }
 
   return (
     <Box
@@ -336,6 +393,48 @@ const EventView: React.FC<Props> = ({ location, match }) => {
           </Box>
         )}
       </Box>
+
+      <Text fontSize="1" marginTop="20px">
+        Invites
+      </Text>
+      <Row marginTop={eventState.invited.length && "12px"}>
+        {eventState.invited.map((ship, ind) => (
+          <Text
+            className="invite"
+            key={`ship-${ship}`}
+            onClick={removeInvite(ship)}
+          >
+            {ind > 0 ? `, ${ship}` : ship}
+          </Text>
+        ))}
+      </Row>
+      <StatelessTextInput
+        onKeyPress={checkEnter}
+        fontSize="14px"
+        placeholder="Type ship name here"
+        width="30%"
+        margin="20px 0px 0px"
+        onChange={(e) => updateValueHandler(e, EventField.invite)}
+        value={eventState.invite}
+      />
+      <Button width="100px" marginTop="8px" onClick={addInvite}>
+        Add Invite
+      </Button>
+
+      {!!eventState.event?.invited?.length && (
+        <Box marginTop="20px">
+          <Text fontSize="1">RSVPs</Text>
+          <Box>
+            {eventState.event.invited.map(({ ship, status }, ind) => (
+              <Row key={`rsvp-${ship}`} marginTop="8px">
+                <Text>
+                  {ship} : {status || "no response"}
+                </Text>
+              </Row>
+            ))}
+          </Box>
+        </Box>
+      )}
 
       <StatelessTextInput
         fontSize="14px"

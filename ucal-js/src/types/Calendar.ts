@@ -1,3 +1,4 @@
+import { arraysMatch } from "../lib/arrays"
 import { CalendarViewState } from "../views/CalendarView"
 import Event from "./Event"
 
@@ -20,6 +21,18 @@ export interface Permissions {
   public: boolean
 }
 
+export const permissionsMatch = (
+  current: Permissions,
+  changed: Permissions
+) => {
+  return (
+    current.public === changed.public &&
+    arraysMatch(current.readers, changed.readers) &&
+    arraysMatch(current.writers, changed.writers) &&
+    arraysMatch(current.acolytes, changed.acolytes)
+  )
+}
+
 export const DEFAULT_PERMISSIONS: Permissions = {
   readers: [],
   writers: [],
@@ -27,9 +40,24 @@ export const DEFAULT_PERMISSIONS: Permissions = {
   public: false,
 }
 
+export type CalendarPermission = "reader" | "writer" | "acolyte"
+
+export interface CalendarPermissionsChange {
+  who: string
+  role?: CalendarPermission
+}
+
 export interface CalendarCreationData extends Permissions {
   title: string
   calendar?: Calendar
+  changes: CalendarPermissionsChange[]
+  readers: string[]
+  writers: string[]
+  acolytes: string[]
+  public: boolean
+  reader: string
+  writer: string
+  acolyte: string
 }
 
 export default class Calendar {
@@ -70,12 +98,19 @@ export default class Calendar {
     title: this.title,
     ...this.permissions,
     calendar: this,
+    changes: [],
+    reader: "",
+    writer: "",
+    acolyte: "",
   })
 
   isUnchanged = (state: CalendarViewState) => {
-    return (
-      state.title === this.title && state.public === this.permissions.public
-    )
+    const titleUnchanged = state.title === this.title
+    const permissionsUnchanged = permissionsMatch(this.permissions, {
+      ...state,
+    })
+
+    return titleUnchanged && permissionsUnchanged
   }
 
   static generateCalendars = (

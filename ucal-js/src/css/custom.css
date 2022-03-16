@@ -362,3 +362,24 @@ button.dark:hover {
   background-color: #f1f3f4;
   border: 6px solid #f1f3f4;
 }
+
+.invite:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.permission {
+  padding: 2px 4px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.permission:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+button.disabled {
+  opacity: 0.5;
+}
