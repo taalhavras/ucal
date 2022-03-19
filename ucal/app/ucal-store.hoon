@@ -814,7 +814,7 @@
   :*  %pass
       wir
       %agent
-      [our.bowl %ucal-store]
+      [to %ucal-store]
       %poke
       %ucal-invitation
       !>(`invitation:ucal-store`inv)
