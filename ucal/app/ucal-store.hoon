@@ -400,31 +400,19 @@
     ::  only the ship (or a moon) ucal-store is running on can import calendars
     ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
+    ::  If we have a URL to import from we must try to fetch the data
+    ::  before importing anything.
+    ?:  ?=([%url *] +.input)
+      :_  state
+      !!
+    ::  We either have a path or a blob of data, directly import
     =/  =vcalendar:ucal-components
     ?:  ?=([%path *] +.input)
       (calendar-from-file:ucal-parser path.input)
     ?:  ?=([%data *] +.input)
       (calendar-from-cord:ucal-parser data.input)
     !!
-    =/  [cc=term rng=_~(. og 0)]
-    ?~  cc.input
-      (make-uuid ~(. og `@`eny.bowl) 8)
-    [u.cc.input ~(. og `@`eny.bowl)]
-    =/  [cal=calendar events=(list event)]
-        (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
-    ::  Here we publish the state of the calendar to potential
-    ::  subscribers. We do this when a calendar-code is specified in
-    ::  the poke because it's possible this is a refresh of an
-    ::  already imported calendar.
-    :-
-      ?~  cc.input
-        ~
-      =/  ts=to-subscriber:ucal-store
-      [(resource-for-calendar u.cc.input) %entire cal events]
-      ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
-    %=  state
-      alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
-    ==
+    (calendar-import-helper cc.input vcalendar)
     ::
       %change-permissions
     =/  input=permission-change:ucal-store  +.action
@@ -440,6 +428,30 @@
     %=  state
       alma  (tail (~(change-permissions al alma.state) cc updated))
     ==
+  ==
+::  +calendar-import-helper: Common handling between %path, %data, and
+::  %url import requests.
+::
+++  calendar-import-helper
+  |=  [ccu=(unit calendar-code) =vcalendar:ucal-components]
+  =/  [cc=term rng=_~(. og 0)]
+  ?~  ccu
+    (make-uuid ~(. og `@`eny.bowl) 8)
+  [u.ccu ~(. og `@`eny.bowl)]
+  =/  [cal=calendar events=(list event)]
+      (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
+  ::  Here we publish the state of the calendar to potential
+  ::  subscribers. We do this when a calendar-code is specified in
+  ::  the poke because it's possible this is a refresh of an
+  ::  already imported calendar.
+  :-
+    ?~  ccu
+      ~
+    =/  ts=to-subscriber:ucal-store
+    [(resource-for-calendar u.ccu) %entire cal events]
+    ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
+  %=  state
+    alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
   ==
 ::  +poke-ucal-to-subscriber: handler for %ucal-to-subscriber pokes
 ::
