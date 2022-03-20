@@ -89,6 +89,11 @@
           cc=(unit calendar-code)
           $%  [%path =path]
               [%data data=@t]
+              ::  This is needed b/c we cannot directly fetch from i.e.
+              ::  gcal URLs from the frontend due to CORS
+              ::  TODO get rid of the %data poke since we can do this
+              ::  now?
+              [%url url=tape]
           ==
       ==
       ::
