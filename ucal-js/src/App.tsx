@@ -14,6 +14,7 @@ import { Box } from "@tlon/indigo-react"
 import CalendarWrapper from "./views/CalendarWrapper"
 import CalendarView from "./views/CalendarView"
 import EventView from "./views/EventView"
+import ImportView from "./views/ImportView"
 
 export const App: React.FC = () => {
   const [dark, setDark] = useState(false)
@@ -61,6 +62,9 @@ export const App: React.FC = () => {
               </Route>
               <Route exact path="/~calendar/event/:calendar/:event">
                 <EventView />
+              </Route>
+              <Route exact path="/~calendar/import">
+                <ImportView />
               </Route>
             </Box>
           </UserLocationProvider>

@@ -7,17 +7,9 @@ import {
   StatelessTextInput,
   Checkbox,
 } from "@tlon/indigo-react"
-import Calendar, {
-  CalendarCreationData,
-  DEFAULT_PERMISSIONS,
-} from "../types/Calendar"
 import { match, RouteComponentProps, withRouter } from "react-router-dom"
 import { History, Location, LocationState } from "history"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
-
-interface RouterProps {
-  calendar: string
-}
 
 interface Props extends RouteComponentProps<RouterProps> {
   history: History
@@ -25,18 +17,7 @@ interface Props extends RouteComponentProps<RouterProps> {
   match: match<RouterProps>
 }
 
-export interface ImportViewState extends CalendarCreationData {
-  prevPath?: Location<LocationState>
-}
-
 const ImportView: React.FC<Props> = ({ history, match }) => {
-  const { calendars, getCalendars, saveCalendar, deleteCalendar } =
-    useCalendarsAndEvents()
-  const { calendar } = match.params
-  const selectedCalendar = calendars.find(
-    ({ calendarCode }) => calendarCode === calendar
-  )
-
   const importCalendar = async (url: string): Promise<void> => {
     console.log("IMPORTING FROM: ", url)
     let response = await fetch(url)
@@ -59,41 +40,15 @@ const ImportView: React.FC<Props> = ({ history, match }) => {
         data: blob.text(),
       },
     })
+
+    await getCalendars()
+    history.goBack()
   }
 
-  const saveCalendarHandler = async () => {
-    try {
-      saveCalendar(calendarState, Boolean(calendarState.calendar))
-      await getCalendars()
-      history.goBack()
-    } catch (e) {
-      console.log("SAVE CALENDAR ERROR:", e)
-    }
+  const [importURLState, setImportURLState] = useState("")
+  const changeURLState = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setImportURLState(e.target.value)
   }
-
-  const deleteCalendarHandler = async (): Promise<void> => {
-    const confirmed = await deleteCalendar(calendarState.calendar)
-    if (confirmed) {
-      history.goBack()
-    }
-  }
-
-  const changeTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setCalenderState({ ...calendarState, title: e.target.value })
-  }
-
-  const disableSave = (): boolean => {
-    if (!calendarState.calendar) {
-      return !calendarState.title
-    }
-
-    return calendarState.calendar.isUnchanged(calendarState)
-  }
-
-  const togglePublic = () =>
-    setCalenderState({ ...calendarState, public: !calendarState.public })
-
-  const saveDisabled = disableSave()
 
   return (
     <Box
@@ -111,35 +66,20 @@ const ImportView: React.FC<Props> = ({ history, match }) => {
         </Button>
         <StatelessTextInput
           fontSize="1"
-          placeholder="URL title"
+          placeholder="URL"
           width="40%"
           marginRight="20px"
-          onChange={(e) => changeTitle(e)}
-          value={calendarState.title}
+          onChange={changeURLState}
+          value={importURLState}
         />
         <Button
-          disabled={saveDisabled}
           className="dark"
           marginRight="20px"
-          onClick={() => saveCalendarHandler()}
+          onClick={() => importCalendar(importURLState)}
         >
-          Save
+          Import
         </Button>
-        {!!calendarState.calendar?.title && (
-          <Button onClick={() => deleteCalendarHandler()}>Delete</Button>
-        )}
       </Row>
-      <Row marginTop="20px">
-        <Checkbox
-          selected={calendarState.public}
-          onClick={() => togglePublic()}
-        />
-        <Text marginLeft="8px">Public</Text>
-      </Row>
-      {/* readers */}
-      {/* writers */}
-      {/* acolytes */}
-      {/* public */}
     </Box>
   )
 }
