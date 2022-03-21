@@ -26,7 +26,7 @@ const SyncView: React.FC<Props> = ({ history, match }) => {
     await api.action("ucal-sync", "ucal-sync-action", {
       add: {
         url: url,
-        timeout: "~5m",
+        timeout: "~m5",
       },
     })
 
