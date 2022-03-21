@@ -27,8 +27,6 @@ const SyncView: React.FC<Props> = ({ history, match }) => {
       add: {
         url: url,
         timeout: "~5m",
-        // NOCOMMIT figure out how to generate a code? or do it on the backend
-        "calendar-code": "abcd-efgh",
       },
     })
 
