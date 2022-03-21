@@ -730,7 +730,7 @@
     (bo:dejs (~(got by p.jon) 'invite'))
   ++  convert-import
     |=  jon=json
-    ^-  [(unit calendar-code) $%([%path path] [%data @t])]
+    ^-  [(unit calendar-code) $%([%path path] [%data @t] [%url tape])]
     =,  format
     ?>  ?=([%o *] jon)
     :-  (bind (~(get by p.jon) 'calendar-code') so:dejs)
@@ -738,6 +738,7 @@
     %-  of:dejs
     :~  [%path |=(j=json `path`(pa:dejs:format j))]
         [%data |=(j=json `@t`?:(?=([%s *] j) +.j !!))]
+        [%url |=(j=json `tape`?:(?=([%s *] j) (trip +.j) !!))]
     ==
   ++  convert-change-permissions
     |=  jon=json

@@ -131,6 +131,20 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
     )
 
     if (confirmed) {
+      // If the calendar is synced, we want to also delete it from %ucal-sync.
+      // We do this before we send the delete to %ucal-store because the sync may
+      // re-add it in between.
+      const calendarIsSynced: bool = await api.scryNoShip<bool>(
+        "ucal-sync",
+        `/sync-active/${calendar.calendarCode}`
+      )
+      if (calendarIsSynced) {
+        await api.action("ucal-sync", "ucal-sync-action", {
+          remove: {
+            "calendar-code": calendar.calendarCode,
+          },
+        })
+      }
       await api.action("ucal-store", "ucal-action", {
         "delete-calendar": {
           "calendar-code": calendar.calendarCode,
