@@ -69,7 +69,16 @@
 ::
 ++  on-leave  on-leave:def
 ::
-++  on-peek  on-peek:def
+++  on-peek
+  |=  =path
+  ^-  (unit (unit cage))
+  ?+  path
+    (on-peek:def path)
+  ::
+      [%x %sync-active @tas ~]
+    =/  cc=calendar-code  i.t.t.path
+    ``ucal-sync-present+!>((~(has by cals.state) cc))
+  ==
 ::
 ++  on-agent  on-agent:def
 ::
