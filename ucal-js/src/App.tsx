@@ -15,6 +15,7 @@ import CalendarWrapper from "./views/CalendarWrapper"
 import CalendarView from "./views/CalendarView"
 import EventView from "./views/EventView"
 import ImportView from "./views/ImportView"
+import SyncView from "./views/SyncView"
 
 export const App: React.FC = () => {
   const [dark, setDark] = useState(false)
@@ -65,6 +66,9 @@ export const App: React.FC = () => {
               </Route>
               <Route exact path="/~calendar/import">
                 <ImportView />
+              </Route>
+              <Route exact path="/~calendar/sync">
+                <SyncView />
               </Route>
             </Box>
           </UserLocationProvider>
