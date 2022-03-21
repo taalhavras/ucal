@@ -1,5 +1,5 @@
 /-  ucal, ucal-sync, ucal-store
-/+  default-agent
+/+  default-agent, ucal-util
 |%
 +$  card  card:agent:gall
 +$  calendar-code  calendar-code:ucal
@@ -114,12 +114,11 @@
   ^-  (quip card _state)
   ?-    -.action
       %add
-    ::  Cannot add an already existing calendar
-    ?>  !(~(has by cals.state) cc.action)
+    =/  cc=calendar-code  -:(make-uuid:ucal-util ~(. og `@`eny.bowl) 8)
     ::  send a request for the calendar immediately.
     =/  pcs=per-cal-state  [url.action timeout.action (add now.bowl timeout.action)]
-    :_  state(cals (~(put by cals.state) cc.action pcs))
-    ~[(request-url url.action cc.action)]
+    :_  state(cals (~(put by cals.state) cc pcs))
+    ~[(request-url url.action cc)]
   ::
       %remove
     ::  delete entry from map and clear any future timers.

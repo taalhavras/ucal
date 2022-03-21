@@ -22,11 +22,10 @@
     |%
     ++  convert-add
       |=  jon=^json
-      ^-  [tape calendar-code @dr]
+      ^-  [tape @dr]
       =,  format
       ?>  ?=([%o *] jon)
-      :+  (sa:dejs (~(got by p.jon) 'url'))
-        (so:dejs (~(got by p.jon) 'calendar-code'))
+      :-  (sa:dejs (~(got by p.jon) 'url'))
       ((se:dejs %dr) (~(got by p.jon) 'timeout'))
     ::
     ++  convert-remove
