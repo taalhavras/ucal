@@ -13,6 +13,7 @@
 +$  calendar-code  calendar-code:ucal
 +$  event-code  event-code:ucal
 +$  almanac  almanac:ucal-almanac
++$  rng  _~(. og 0)
 ++  al  al:alma-door
 ::
 +$  state-zero
@@ -400,11 +401,17 @@
     ::  only the ship (or a moon) ucal-store is running on can import calendars
     ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
-    ::  If we have a URL to import from we must try to fetch the data
-    ::  before importing anything.
+    =/  [cc=term =rng]
+    ?~  cc.input
+      (make-uuid ~(. og `@`eny.bowl) 8)
+    [u.cc.input ~(. og `@`eny.bowl)]
     ?:  ?=([%url *] +.input)
+      ::  If we have a URL to import from we must try to fetch the data
+      ::  before importing anything.
       :_  state
-      !!
+      =/  =request:http  [%'GET' (crip url.input) ~ ~]
+      =/  =task:iris  [%request request *outbound-config:iris]
+      [%pass /ucal-store/import/[cc] %arvo %i task]~
     ::  We either have a path or a blob of data, directly import
     =/  =vcalendar:ucal-components
     ?:  ?=([%path *] +.input)
@@ -412,7 +419,7 @@
     ?:  ?=([%data *] +.input)
       (calendar-from-cord:ucal-parser data.input)
     !!
-    (calendar-import-helper cc.input vcalendar)
+    (calendar-import-helper cc =(cc.input ~) rng vcalendar)
     ::
       %change-permissions
     =/  input=permission-change:ucal-store  +.action
@@ -431,13 +438,12 @@
   ==
 ::  +calendar-import-helper: Common handling between %path, %data, and
 ::  %url import requests.
+::  Takes a flag indicating whether the code was specified by the poke
+::  that called into this or whether it was automatically generated. If
+::  it was manually specified, we need to update potential subscribers
 ::
 ++  calendar-import-helper
-  |=  [ccu=(unit calendar-code) =vcalendar:ucal-components]
-  =/  [cc=term rng=_~(. og 0)]
-  ?~  ccu
-    (make-uuid ~(. og `@`eny.bowl) 8)
-  [u.ccu ~(. og `@`eny.bowl)]
+  |=  [cc=calendar-code code-generated=flag =rng =vcalendar:ucal-components]
   =/  [cal=calendar events=(list event)]
       (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
   ::  Here we publish the state of the calendar to potential
@@ -445,10 +451,10 @@
   ::  the poke because it's possible this is a refresh of an
   ::  already imported calendar.
   :-
-    ?~  ccu
+    ?:  code-generated
       ~
     =/  ts=to-subscriber:ucal-store
-    [(resource-for-calendar u.ccu) %entire cal events]
+    [(resource-for-calendar cc) %entire cal events]
     ~[[%give %fact ~[/almanac] %ucal-to-subscriber-0 !>(ts)]]
   %=  state
     alma  (~(add-events al (~(add-calendar al alma.state) cal)) events)
