@@ -73,6 +73,20 @@ export default class UrbitApi {
     })
   }
 
+  scryNoShip<T>(app: string, path: string): Promise<T | void> {
+    console.log("SCRY", app, path)
+    return fetch(`/~/scry/${app}${path}.json`)
+      .then((r) => {
+        if (r.status === 404) {
+          throw new Error("Not found")
+        } else if (r.status > 399) {
+          throw new Error("Scry failed")
+        }
+        return r.json() as Promise<T>
+      })
+      .catch()
+  }
+
   scry<T>(app: string, path: string): Promise<T | void> {
     console.log("SCRY", app, path)
     return fetch(`/~/scry/${app}/~${this.authTokens.ship}${path}.json`)
