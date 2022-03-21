@@ -131,14 +131,43 @@
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
-    ?.  ?=([%bind-ucal-ics ~] wire)
-      (on-arvo:def [wire sign-arvo])
-    ?>  ?=([%eyre %bound *] sign-arvo)
-    ?:  accepted.sign-arvo
-      %-  (slog leaf+"/ucal-ics bound successfully!" ~)
+    ?+    wire  (on-arvo:def wire sign-arvo)
+        [%bind-ucal-ics ~]
+      ?>  ?=([%eyre %bound *] sign-arvo)
+      ?:  accepted.sign-arvo
+        %-  (slog leaf+"/ucal-ics bound successfully!" ~)
+        `this
+      %-  (slog leaf+"ucal: Binding /ucal-ics failed!" ~)
       `this
-    %-  (slog leaf+"ucal: Binding /ucal-ics failed!" ~)
-    `this
+    ::
+        [%ucal-store %import @ta @ta ~]
+      =/  cc=calendar-code  i.t.t.wire
+      =/  generated=flag  =(i.t.t.t.wire %generated)
+      ?.  ?=([%iris %http-response %finished *] sign-arvo)
+        ::  No need to complain about anything here - we could
+        ::  be receiving %progess for instance.
+        `this
+      ?~  full-file.client-response.sign-arvo
+        ::  Here we do want to complain - this indicates that
+        ::  the data we got back couldn't be parsed to MIME
+        ::  It's a bit unfortunate that the URL is lost to the sands of
+        ::  time here so we can't log it (we cannot put a URL in a wire).
+        ::  TODO track some state so we can log in this case?
+        %-
+          %-  slog
+          ~[leaf+"ucal-store: failed to import data"]
+        `this
+      =/  data=@t  `@t`q.data.u.full-file.client-response.sign-arvo
+      =/  =rng  ~(. og `@`eny.bowl)
+      =^  cards  state
+      %:  calendar-import-helper:uc
+        cc
+        generated
+        rng
+        (calendar-from-cord:ucal-parser data)
+      ==
+      [cards this]
+    ==
   ++  on-leave  on-leave:def
   ++  on-peek
     |=  =path
@@ -401,17 +430,19 @@
     ::  only the ship (or a moon) ucal-store is running on can import calendars
     ?>  (team:title our.bowl src.bowl)
     =/  input  +.action
-    =/  [cc=term =rng]
+    =/  [generated=flag cc=term =rng]
     ?~  cc.input
-      (make-uuid ~(. og `@`eny.bowl) 8)
-    [u.cc.input ~(. og `@`eny.bowl)]
+      [& (make-uuid ~(. og `@`eny.bowl) 8)]
+    [| u.cc.input ~(. og `@`eny.bowl)]
     ?:  ?=([%url *] +.input)
       ::  If we have a URL to import from we must try to fetch the data
       ::  before importing anything.
       :_  state
       =/  =request:http  [%'GET' (crip url.input) ~ ~]
       =/  =task:iris  [%request request *outbound-config:iris]
-      [%pass /ucal-store/import/[cc] %arvo %i task]~
+      =/  wir=wire  /ucal-store/import/[cc]/[?:(generated %generated %supplied)]
+      ^-  (list card)
+      ~[[%pass wir %arvo %i task]]
     ::  We either have a path or a blob of data, directly import
     =/  =vcalendar:ucal-components
     ?:  ?=([%path *] +.input)
@@ -419,7 +450,7 @@
     ?:  ?=([%data *] +.input)
       (calendar-from-cord:ucal-parser data.input)
     !!
-    (calendar-import-helper cc =(cc.input ~) rng vcalendar)
+    (calendar-import-helper cc generated rng vcalendar)
     ::
       %change-permissions
     =/  input=permission-change:ucal-store  +.action
@@ -444,6 +475,7 @@
 ::
 ++  calendar-import-helper
   |=  [cc=calendar-code code-generated=flag =rng =vcalendar:ucal-components]
+  ^-  (quip card _state)
   =/  [cal=calendar events=(list event)]
       (vcal-to-ucal vcalendar cc our.bowl now.bowl rng)
   ::  Here we publish the state of the calendar to potential
