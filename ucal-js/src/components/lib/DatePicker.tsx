@@ -30,12 +30,13 @@ const DatePicker: React.FC<Props> = ({
   return (
     <Box>
       <Box
-        margin="16px 0px 0px"
-        padding="8px"
+        margin="20px 0px 4px"
+        padding="4px 8px"
         borderRadius="4px"
         backgroundColor={endAfterStart ? "#fce8e6" : "white"}
         onClick={toggleDate}
         cursor="pointer"
+        border="1px solid lightGray"
       >
         <Text fontSize="14px">{moment(selectedDay).format("MMM D, YYYY")}</Text>
       </Box>

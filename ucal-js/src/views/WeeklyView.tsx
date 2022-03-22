@@ -1,5 +1,5 @@
-import React from "react"
-import { Text, Box } from "@tlon/indigo-react"
+import React, { useState } from "react"
+import { Text, Box, Button, Row, Col } from "@tlon/indigo-react"
 import moment from "moment"
 import Calendar, { Timeframe, ViewProps } from "../types/Calendar"
 import { getWeekDays, getHours, HOUR_HEIGHT } from "../lib/dates"
@@ -9,6 +9,7 @@ import EventTile from "../components/lib/EventTile"
 import { scrollToSelectedDay } from "../lib/position"
 import { useUserLocation } from "../hooks/useUserLocation"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
+import Modal from "../components/lib/Modal/Modal"
 
 const WeeklyView: React.FC<ViewProps> = ({
   selectedDay,
@@ -22,6 +23,12 @@ const WeeklyView: React.FC<ViewProps> = ({
   const days = getWeekDays(selectedDay)
   const month = selectedDay.getMonth()
   const hours = getHours()
+  const [selectedAllDayEvents, setSelectedAllDayEvents] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const showEvents = (events: any) => () => {
+    setSelectedAllDayEvents(events)
+    setShowModal(true)
+  }
 
   return (
     <Box
@@ -31,29 +38,55 @@ const WeeklyView: React.FC<ViewProps> = ({
       margin="16px 0px 0px 0px"
     >
       <Box width="100%" display="flex" flexDirection="row">
-        <Box width="calc(12.5% - 2px)" />
-        {days.map((day, ind) => (
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            width="calc(12.5% - 2px)"
-            key={`weekday-header-${ind}`}
-          >
-            <Text color="gray">
-              {moment(day).format("ddd").toLocaleUpperCase()}
-            </Text>
-            <DateCircle
-              selectDay={selectDay}
-              selectedDay={selectedDay}
-              sidebar={false}
-              day={day}
-              month={month}
+        <Box width="calc(12.5% + 2px)" />
+        {days.map((day, ind) => {
+          const events = Calendar.getRelevantEvents(calendars, day)
+          const allDayEvents = events
+            .filter(({ allDay }) => allDay)
+            .map((e, _ind, events) => (
+              <EventTile
+                goToEvent={goToEvent}
+                weeklyView={false}
+                event={e}
+                events={events}
+                key={`${e.calendarCode}${e.eventCode}`}
+                mobile={mobile}
+                allDay
+              />
+            ))
+
+          return (
+            <Col
+              alignItems="center"
+              width="calc(12.5% - 2px)"
+              key={`weekday-header-${ind}`}
             >
-              {day.getDate()}
-            </DateCircle>
-          </Box>
-        ))}
+              <Text color="gray">
+                {moment(day).format("ddd").toLocaleUpperCase()}
+              </Text>
+              <DateCircle
+                selectDay={selectDay}
+                selectedDay={selectedDay}
+                sidebar={false}
+                day={day}
+                month={month}
+              >
+                {day.getDate()}
+              </DateCircle>
+              {allDayEvents.length > 0 && (
+                <Button
+                  fontSize={13}
+                  p={0}
+                  my={1}
+                  width={60}
+                  onClick={showEvents(allDayEvents)}
+                >
+                  All-day Events
+                </Button>
+              )}
+            </Col>
+          )
+        })}
       </Box>
       <Box
         width="100%"
@@ -68,18 +101,19 @@ const WeeklyView: React.FC<ViewProps> = ({
             mobile={mobile}
           />
           {days.map((day, ind) => {
-            const events = Calendar.getRelevantEvents(calendars, day).map(
-              (e, _ind, events) => (
+            const events = Calendar.getRelevantEvents(calendars, day)
+            const eventTiles = events
+              .filter(({ allDay }) => !allDay)
+              .map((e, _ind, events) => (
                 <EventTile
                   goToEvent={goToEvent}
+                  weeklyView={false}
                   event={e}
                   events={events}
-                  weeklyView={true}
-                  mobile={mobile}
                   key={`${e.calendarCode}${e.eventCode}`}
+                  mobile={mobile}
                 />
-              )
-            )
+              ))
 
             return (
               <Box className="weekly-day" key={`weekday-${ind}`}>
@@ -106,12 +140,17 @@ const WeeklyView: React.FC<ViewProps> = ({
                     key={`hour-${ind}-${hour}`}
                   ></Box>
                 ))}
-                {events}
+                {eventTiles}
               </Box>
             )
           })}
         </Box>
       </Box>
+      <Modal show={showModal} hide={() => setShowModal(false)}>
+        <Row width="100%" flexWrap="wrap">
+          {selectedAllDayEvents}
+        </Row>
+      </Modal>
     </Box>
   )
 }

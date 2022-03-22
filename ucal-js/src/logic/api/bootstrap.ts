@@ -15,7 +15,7 @@ export async function bootstrapApi(reset = false) {
 
   airlock.onError = async (err) => {
     airlock.reset()
-    console.log("AIRLOCK ERROR", err)
+    console.error("AIRLOCK ERROR", err)
     await bootstrapApi()
   }
 

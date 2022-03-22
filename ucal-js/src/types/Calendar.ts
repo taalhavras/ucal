@@ -1,4 +1,4 @@
-import { arraysMatch } from "../lib/arrays"
+import { arraysMatch, findAdditions, findRemovals } from "../lib/arrays"
 import { CalendarViewState } from "../views/CalendarView"
 import Event from "./Event"
 
@@ -30,6 +30,26 @@ export const permissionsMatch = (
     arraysMatch(current.readers, changed.readers) &&
     arraysMatch(current.writers, changed.writers) &&
     arraysMatch(current.acolytes, changed.acolytes)
+  )
+}
+
+export const getPermissionsChanges = (
+  calendar: Calendar,
+  data: Permissions
+): CalendarPermissionsChange[] => {
+  const { readers, writers, acolytes } = calendar.permissions
+  const toPermissionsChange =
+    (role?: CalendarPermission) =>
+    (who: string): CalendarPermissionsChange => ({ who, role })
+
+  return [].concat(
+    findAdditions(readers, data.readers).map(toPermissionsChange("reader")),
+    findAdditions(writers, data.writers).map(toPermissionsChange("writer")),
+    findAdditions(acolytes, data.acolytes).map(toPermissionsChange("acolyte")),
+    findRemovals(
+      [...readers, ...writers, ...acolytes],
+      [...data.readers, ...data.writers, ...data.acolytes]
+    ).map(toPermissionsChange(undefined))
   )
 }
 
@@ -117,6 +137,10 @@ export default class Calendar {
     calendars: Calendar[],
     events: Event[]
   ): Calendar[] => {
+    if (!calendars.length) {
+      return []
+    }
+
     const all = new Map<string, Calendar | undefined>()
 
     calendars.forEach((calendar) =>
@@ -124,7 +148,22 @@ export default class Calendar {
     )
     events.forEach((event) => {
       const updatedCalendar = all.get(event.calendarCode)
-      if (
+
+      // invite
+      if (!updatedCalendar) {
+        const inviteCalendar =
+          all.get("invites") ||
+          new Calendar({
+            owner: window.ship,
+            "calendar-code": "invites",
+            title: "invites",
+            permissions: DEFAULT_PERMISSIONS,
+            "date-created": new Date(),
+            "last-modified": new Date(),
+          })
+        inviteCalendar.events.push(event)
+        all.set("invites", inviteCalendar)
+      } else if (
         updatedCalendar?.active &&
         !updatedCalendar.events.find((e) => e.eventCode === event.eventCode)
       ) {
@@ -181,10 +220,7 @@ export interface ViewProps {
   displayDay: Date
   selectedDay: Date
   selectDay?: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
-  goToEvent: (
-    calendarCode: string,
-    eventCode: string
-  ) => (event: React.MouseEvent<HTMLElement>) => void
+  goToEvent: (event: Event) => (event: React.MouseEvent<HTMLElement>) => void
   createEvent: (day?: Date) => () => void
   mobile?: boolean
 }

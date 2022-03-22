@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react"
 import { capitalize } from "lodash"
-import { Text, Box, Button, Checkbox, Row, Icon } from "@tlon/indigo-react"
+import {
+  Text,
+  Box,
+  Button,
+  Checkbox,
+  Row,
+  Icon,
+  Col,
+  Label,
+} from "@tlon/indigo-react"
 import moment from "moment"
 import Calendar, { NavDirection, Timeframe } from "../types/Calendar"
 import WeeklyView from "./WeeklyView"
@@ -17,6 +26,9 @@ import {
 } from "react-router-dom"
 import { Location, History } from "history"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
+import Modal from "../components/lib/Modal/Modal"
+import Event, { Rsvp } from "../types/Event"
+import { useTheme } from "styled-components"
 
 interface RouterProps {
   timeframe: string
@@ -37,6 +49,8 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     toggleCalendar,
     curTimezone,
     setCurTimezone,
+    rsvpToEvent,
+    getEvents,
   } = useCalendarsAndEvents()
   const history = useHistory()
   const { timeframe, displayDay } = match.params
@@ -46,9 +60,15 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const [displayDayState, setDisplayDayState] = useState(useDd)
   const [selectedDayState, setSelectedDayState] = useState(useDd)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
+  const [showEventModal, setShowEventModal] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [mobile, setMobile] = useState(false)
   //  List of all supported timezones
   const [allTimezones, setAllTimezones] = useState<string[]>([])
+  const {
+    // @ts-expect-error colors does exist, TS is being dumb.
+    colors: { black },
+  } = useTheme()
   let themeWatcher: any
 
   const getTimezones = async (): Promise<void> => {
@@ -89,6 +109,22 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     themeWatcher.addListener(updateViewport)
   }, [])
 
+  const sendRsvp = (event: Event | null, rsvp: Rsvp) => async () => {
+    if (event && rsvpToEvent && getEvents && rsvp !== event.rsvp) {
+      await rsvpToEvent(event, rsvp)
+      getEvents()
+      setShowEventModal(false)
+    }
+  }
+
+  const isLight = black.split(",").includes("255")
+  const rsvpBackground = (event: Event, rsvp: Rsvp | null) =>
+    event && rsvp && rsvp === event.rsvp
+      ? isLight
+        ? "rgba(255,255,255, 0.1)"
+        : "rgba(0,0,0,0.2)"
+      : undefined
+
   const pushViewRoute = (tf: Timeframe, dd: Date): void =>
     history.push(`/${tf}/${moment(dd).format("YYYY-MM-DD")}`)
 
@@ -116,7 +152,6 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     e.stopPropagation()
     e.preventDefault()
     const timezone = e.target.value as string
-    console.log("setting current timezone to", timezone)
     setCurTimezone(timezone)
   }
 
@@ -149,8 +184,13 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
   const createEvent = (day?: Date) => () =>
     history.push(`/event${day ? `?date=${day?.getTime()}` : ""}`)
 
-  const goToEvent = (calendarCode: string, eventCode: string) => (): void => {
-    history.push(`/event/${calendarCode}/${eventCode}`)
+  const goToEvent = (event: Event) => (): void => {
+    if (event.invite) {
+      setSelectedEvent(event)
+      setShowEventModal(true)
+    } else {
+      history.push(`/event/${event.calendarCode}/${event.eventCode}`)
+    }
   }
 
   const hideCalendarModal = (e?: React.MouseEvent<HTMLElement>) => {
@@ -159,9 +199,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
     setShowCalendarModal(false)
   }
 
-  const addCalendar = () => {
-    setShowCalendarModal(true)
-  }
+  const addCalendar = () => setShowCalendarModal(true)
 
   const createCalendar = (calendarCode?: string) => () => {
     hideCalendarModal()
@@ -361,10 +399,10 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
           flexDirection="column"
           margin="32px 2% 0px 0px"
         >
-          <Button onClick={createEvent()} marginBottom="20px" width="100px">
+          <Button onClick={createEvent()} marginBottom="20px" width="140px">
             <Text fontSize="20px">+</Text>{" "}
             <Text margin="2px 0px 0px 6px" fontSize="14px">
-              Create
+              New Event
             </Text>
           </Button>
           <MonthTile
@@ -380,7 +418,7 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
           </Text>
           {calendars.map((cal, ind) => (
             <Row className="calendar-selector" key={`cal-${ind}`}>
-              <Row>
+              <Row alignItems="center">
                 <Checkbox
                   selected={cal.active}
                   onClick={() => toggleCalendar(cal)}
@@ -389,21 +427,23 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
                   {cal.owner} - {cal.title}
                 </Text>
               </Row>
-              <Row className="edit-icon">
-                <Icon
-                  icon="Ellipsis"
-                  color="black"
-                  onClick={createCalendar(cal.calendarCode)}
-                />
-                <Icon
-                  icon="Delete"
-                  color="black"
-                  onClick={() => deleteCalendarHandler(cal)}
-                />
-              </Row>
+              {cal.calendarCode !== "invites" && (
+                <Row className="edit-icon">
+                  <Icon
+                    icon="Ellipsis"
+                    color="black"
+                    onClick={createCalendar(cal.calendarCode)}
+                  />
+                  <Icon
+                    icon="Delete"
+                    color="black"
+                    onClick={() => deleteCalendarHandler(cal)}
+                  />
+                </Row>
+              )}
             </Row>
           ))}
-          <Button onClick={() => addCalendar()} marginTop="16px" width="120px">
+          <Button onClick={addCalendar} marginTop="16px" width="120px">
             <Text fontSize="12px">Add Calendar</Text>
           </Button>
         </Box>
@@ -411,29 +451,64 @@ export const CalendarWrapper: React.FC<Props> = ({ match }) => {
         {layout}
       </Row>
 
-      {showCalendarModal && (
-        <Box
-          onClick={hideCalendarModal}
-          id="create-calendar-modal"
-          className="modal"
-        >
-          <Box className="content">
+      <Modal show={showCalendarModal} hide={hideCalendarModal}>
+        <Button onClick={createCalendar()} marginTop="16px" width="200px">
+          <Text fontSize="14px">Create Calendar</Text>
+        </Button>
+        <Button onClick={importCalendar} marginTop="16px" width="200px">
+          <Text fontSize="14px">Import Calendar</Text>
+        </Button>
+        <Button onClick={syncCalendar} marginTop="16px" width="200px">
+          <Text fontSize="14px">Sync Calendar</Text>
+        </Button>
+      </Modal>
+      <Modal show={showEventModal} hide={() => setShowEventModal(false)}>
+        <Col>
+          <Text mb={1} fontWeight={600}>
+            {selectedEvent?.title}
+          </Text>
+          <Text mb={3} fontSize={13}>
+            Hosted by ~{selectedEvent?.organizer}
+          </Text>
+          <Label mb={2} color="gray" fontSize={14}>
+            Location
+          </Label>
+          <Text mb={3} fontSize={13}>
+            {selectedEvent?.location.address}
+          </Text>
+          <Label mb={2} color="gray" fontSize={14}>
+            Description
+          </Label>
+          <Text mb={3} fontSize={13}>
+            {selectedEvent?.desc}
+          </Text>
+          <Label mb={2} color="gray" fontSize={14}>
+            RSVP
+          </Label>
+          <Row>
             <Button
-              onClick={createCalendar()}
-              marginTop="16px"
-              maxWidth="200px"
+              backgroundColor={rsvpBackground(selectedEvent, Rsvp.yes)}
+              onClick={sendRsvp(selectedEvent, Rsvp.yes)}
+              mr={3}
             >
-              <Text fontSize="14px">Create Calendar</Text>
+              Yes
             </Button>
-            <Button onClick={importCalendar} marginTop="16px" maxWidth="200px">
-              <Text fontSize="14px">Import Calendar</Text>
+            <Button
+              backgroundColor={rsvpBackground(selectedEvent, Rsvp.no)}
+              onClick={sendRsvp(selectedEvent, Rsvp.no)}
+              mr={3}
+            >
+              No
             </Button>
-            <Button onClick={syncCalendar} marginTop="16px" maxWidth="200px">
-              <Text fontSize="14px">Sync Calendar</Text>
+            <Button
+              backgroundColor={rsvpBackground(selectedEvent, Rsvp.maybe)}
+              onClick={sendRsvp(selectedEvent, Rsvp.maybe)}
+            >
+              Maybe
             </Button>
-          </Box>
-        </Box>
-      )}
+          </Row>
+        </Col>
+      </Modal>
     </Box>
   )
 }

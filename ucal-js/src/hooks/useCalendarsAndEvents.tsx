@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
-import Event, { EventForm } from "../types/Event"
-import Calendar, { DEFAULT_PERMISSIONS } from "../types/Calendar"
+import { Col, LoadingSpinner } from "@tlon/indigo-react"
+import Event, { EventForm, Rsvp } from "../types/Event"
+import Calendar, {
+  DEFAULT_PERMISSIONS,
+  getPermissionsChanges,
+  permissionsMatch,
+} from "../types/Calendar"
 import { CalendarViewState } from "../views/CalendarView"
 import api, { scryNoShip } from "../logic/api/index"
-import { Col, LoadingSpinner } from "@tlon/indigo-react"
+import { formatShip } from "../lib/format"
 
 type CalendarAndEventContextType = {
   events: Event[]
@@ -17,6 +22,7 @@ type CalendarAndEventContextType = {
   saveCalendar?: (data: CalendarViewState, update: boolean) => Promise<void>
   deleteCalendar?: (calendar: Calendar) => Promise<boolean>
   toggleCalendar?: (calendar: Calendar) => void
+  rsvpToEvent?: (event: Event, rsvp: Rsvp) => void
   curTimezone: string
   setCurTimezone: (arg: string) => void
 }
@@ -44,13 +50,22 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
   const getEvents = async (): Promise<void> => {
     const path = `/~${window.ship}/timezone/${curTimezone}/events/all`
     const apiEvents = await api.scry({ app: "ucal-store", path })
-    const filteredEvents = apiEvents
-      .filter((re) => !!re)
-      .map((e) => new Event(e))
-    setEvents(filteredEvents)
+
+    const invitedEvents = await api.scry({
+      app: "ucal-store",
+      path: `/invited-to/timezone/${curTimezone}/events/all`,
+    })
+
+    const filteredEvents = apiEvents.filter((re) => re).map((e) => new Event(e))
+    const invites = invitedEvents
+      .filter((re) => re)
+      .map((e) => new Event({ era: e.era, data: { ...e.data, invite: true } }))
+    const events = filteredEvents.concat(invites)
+
+    setEvents(events)
     const updatedCalendars = Calendar.generateCalendars(
       calendars ? calendars : [],
-      filteredEvents
+      events
     )
     setCalendars(updatedCalendars)
   }
@@ -67,6 +82,22 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
       },
     })
   }
+
+  const rsvpToEvent = async (event: Event, rsvp: Rsvp): Promise<void> => {
+    await api.poke({
+      app: "ucal-pull-hook",
+      mark: "ucal-hook-action",
+      json: {
+        "invitation-response": {
+          "calendar-code": event.calendarCode,
+          "event-code": event.eventCode,
+          status: String(rsvp),
+        },
+      },
+    })
+  }
+
+  // {'query-cals': {'who': 'some-ship'}}
 
   const saveEvent = async (
     event: EventForm,
@@ -119,24 +150,49 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         json: Calendar.toExportFormat(data, update),
       })
     }
-    if (data.calendar && data.calendar?.permissions?.public !== data.public) {
+    if (
+      data.calendar?.permissions &&
+      !permissionsMatch(data.calendar.permissions, { ...data })
+    ) {
       const payload = {
         "change-permissions": { "calendar-code": data.calendar.calendarCode },
       }
-      payload["change-permissions"][
-        data.public ? "make-public" : "make-private"
-      ] = null
 
-      await api.poke({
-        app: "ucal-store",
-        mark: "ucal-action",
-        json: payload,
-      })
+      if (data.public !== data.calendar.permissions.public) {
+        payload["change-permissions"][
+          data.public ? "make-public" : "make-private"
+        ] = null
+
+        await api.poke({
+          app: "ucal-store",
+          mark: "ucal-action",
+          json: payload,
+        })
+      } else {
+        const changes = getPermissionsChanges(data.calendar, { ...data })
+
+        changes.map((change) => {
+          payload["change-permissions"]["change"] = change
+
+          return api.poke({
+            app: "ucal-store",
+            mark: "ucal-action",
+            json: payload,
+          })
+        })
+      }
     }
   }
 
   const saveInitialCalendar = async () => {
-    return saveCalendar({ title: "default", ...DEFAULT_PERMISSIONS })
+    return saveCalendar({
+      title: "default",
+      ...DEFAULT_PERMISSIONS,
+      changes: [],
+      reader: "",
+      writer: "",
+      acolyte: "",
+    })
   }
 
   const deleteCalendar = async (calendar: Calendar): Promise<boolean> => {
@@ -148,7 +204,10 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
       // If the calendar is synced, we want to also delete it from %ucal-sync.
       // We do this before we send the delete to %ucal-store because the sync may
       // re-add it in between.
-      const calendarIsSynced = await scryNoShip<boolean>("ucal-sync", `/sync-active/${calendar.calendarCode}`)
+      const calendarIsSynced = await scryNoShip<boolean>(
+        "ucal-sync",
+        `/sync-active/${calendar.calendarCode}`
+      )
 
       if (calendarIsSynced) {
         await api.poke({
@@ -210,7 +269,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
           const cals = await getCalendars()
           setCalendars(Calendar.generateCalendars(cals, []))
         } catch (error) {
-          console.log({ error })
+          console.error({ error })
         }
       }
       return () => {
@@ -237,6 +296,7 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
         toggleCalendar,
         curTimezone,
         setCurTimezone,
+        rsvpToEvent,
       }}
     >
       {!!events && !!calendars && !initialLoad ? (
@@ -256,96 +316,3 @@ export const CalendarAndEventProvider: React.FC = ({ children }) => {
 }
 
 export const useCalendarsAndEvents = () => useContext(CalendarAndEventContext)
-
-// getCalendars = async () : Promise<Calendar[]> => {
-//   const calendars = await this.api.scry<any>('ucal-store', '/calendars')
-//   this.store.updateStore({ data: { calendars } })
-//   return calendars
-// }
-
-// saveCalendar = async (data : CalendarViewState, update = false) : Promise<void> => {
-//   if (data.calendar?.title !== data.title) {
-//     await this.api.action('ucal-store', 'ucal-action', Calendar.toExportFormat(data, update))
-//   }
-//   if (data.calendar && data.calendar?.permissions?.public !== data.public) {
-//     const payload = { 'change-permissions': {'calendar-code': data.calendar.calendarCode } }
-//     payload['change-permissions'][data.public ? 'make-public' : 'make-private'] = null
-//     await this.api.action('ucal-store', 'ucal-action', payload)
-//   }
-//   if (data.calendar && data.changes) {
-//     Promise.all(data.changes.map((change) => this.api.action('ucal-store', 'ucal-action', {
-//       'change-permissions': {
-//         'calendar-code': data.calendar.calendarCode,
-//         change
-//       }
-//     })))
-//   }
-
-//   await this.getCalendars()
-// }
-
-// deleteCalendar = async (calendar: Calendar) : Promise<boolean> => {
-//   const confirmed = confirm('Are you sure you want to delete this calendar? This cannot be undone.')
-
-//   if (confirmed) {
-//     await this.api.action('ucal-store', 'ucal-action', {
-//       'delete-calendar': {
-//         'calendar-code': calendar.calendarCode,
-//       }
-//     })
-//     await this.getCalendars()
-//   }
-
-//   return confirmed
-// }
-
-// getEvents = async () : Promise<Event[]> => {
-//   const events = await this.api.scry<any>('ucal-store', '/events')
-//   console.log('EVENT DATA', events)
-//   this.store.updateStore({ data: { events } })
-//   return events
-// }
-
-// getInvitedEvents = async () : Promise<Event[]> => {
-//   const events = await this.api.scry<any>('ucal-store', '/events', 'invited-to')
-//   console.log('INVITED EVENTS DATA', events)
-//   // this.store.updateStore({ data: { events } })
-//   return events
-// }
-
-// deleteEvent = async (event: Event) : Promise<void> => {
-//   await this.api.action('ucal-store', 'ucal-action', {
-//     'delete-event': {
-//       'calendar-code': event.calendarCode,
-//       'event-code': event.eventCode
-//     }
-//   })
-// }
-
-// saveEvent = async (event: EventForm, update: boolean) : Promise<void> => {
-//   for(let key in event) {
-//     if (event[key] === undefined) {
-//       delete event[key]
-//     }
-//   }
-
-//   if (event.inviteChanges) {
-//     await Promise.all(
-//       event.inviteChanges.map(
-//         ({ who, invite }) => this.api.action('ucal-store', 'ucal-action', {
-//           'change-rsvp': {
-//             'calendar-code': event.calendarCode,
-//             'event-code': event.eventCode,
-//             who,
-//             invite,
-//           }
-//         })
-//       )
-//     )
-//   }
-
-//   await this.api.action('ucal-store', 'ucal-action', event.toExportFormat(update))
-//   await this.getEvents()
-// }
-
-// toggleCalendar = (calendar: Calendar) => () => this.store.updateStore({ data: { calendars: this.store.state.calendars.map((c) => c.toggle(calendar)) } })

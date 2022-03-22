@@ -148,7 +148,7 @@ module.exports = {
     },
     chunkFilename: "[name].js",
     path: path.resolve(__dirname, "../dist"),
-    publicPath: "/js/",
+    publicPath: "/apps/calendar/",
     globalObject: "this",
   },
   optimization: {

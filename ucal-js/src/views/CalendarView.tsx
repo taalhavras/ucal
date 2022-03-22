@@ -70,42 +70,12 @@ const CalendarView: React.FC<Props> = ({ history, match }) => {
     }
 
   const saveCalendarHandler = async () => {
-    let changes: CalendarPermissionsChange[] = []
-
-    const toPermissionsChange =
-      (role?: CalendarPermission) =>
-      (who: string): CalendarPermissionsChange => ({ who, role })
-
-    if (selectedCalendar) {
-      const { readers, writers, acolytes } = selectedCalendar.permissions
-
-      changes = changes.concat(
-        findAdditions(readers, calendarState.readers).map(
-          toPermissionsChange("reader")
-        ),
-        findAdditions(writers, calendarState.writers).map(
-          toPermissionsChange("writer")
-        ),
-        findAdditions(acolytes, calendarState.acolytes).map(
-          toPermissionsChange("acolyte")
-        ),
-        findRemovals(
-          [...readers, ...writers, ...acolytes],
-          [
-            ...calendarState.readers,
-            ...calendarState.writers,
-            ...calendarState.acolytes,
-          ]
-        ).map(toPermissionsChange(undefined))
-      )
-    }
-
     try {
       saveCalendar(calendarState, Boolean(calendarState.calendar))
       await getCalendars()
       history.goBack()
     } catch (e) {
-      console.log("SAVE CALENDAR ERROR:", e)
+      console.error("SAVE CALENDAR ERROR:", e)
     }
   }
 

@@ -44,6 +44,7 @@ echo "before symbolic-merge.sh"
 ./symbolic-merge.sh base-dev $app_name
 ./symbolic-merge.sh garden-dev $app_name
 ./symbolic-merge.sh $app_name-tmp $app_name
+cp ./arvo/lib/pretty-file.hoon ./ucal/lib/pretty-file.hoon
 
 if [ "$path_to_app_code" != "" ]; then
     ./symbolic-merge.sh "./${app_name}-tmp" $app_name

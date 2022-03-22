@@ -23,12 +23,13 @@ const TimePicker: React.FC<Props> = ({ selectedTime, selectTime }) => {
   return (
     <Box>
       <Box
-        margin="16px 0px 0px 12px"
-        padding="8px"
+        margin="20px 0px 4px 12px"
+        padding="4px 8px"
         borderRadius="4px"
         backgroundColor="white"
         onClick={toggleDate}
         cursor="pointer"
+        border="1px solid lightGray"
       >
         <Text fontSize="14px">{selectedTime}</Text>
       </Box>

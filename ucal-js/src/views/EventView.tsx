@@ -29,6 +29,7 @@ import TimePicker from "../components/lib/TimePicker"
 import { getDefaultStartEndTimes } from "../lib/dates"
 import { addOrRemove, findAdditions, findRemovals } from "../lib/arrays"
 import { useCalendarsAndEvents } from "../hooks/useCalendarsAndEvents"
+import { formatShip } from "../lib/format"
 
 const REPEAT_INTERVALS = [
   RepeatInterval.doesNotRepeat,
@@ -151,7 +152,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
       await getEvents()
       history.goBack()
     } catch (e) {
-      console.log("SAVE EVENT ERROR:", e)
+      console.error("SAVE EVENT ERROR:", e)
     }
   }
 
@@ -241,17 +242,20 @@ const EventView: React.FC<Props> = ({ location, match }) => {
     const cleanedShip = invite.trim()
 
     if (cleanedShip) {
-      const formattedShip =
-        cleanedShip[0] === "~" ? cleanedShip : `~${cleanedShip}`
+      const formattedShip = formatShip(cleanedShip)
 
       if (
         !invited.includes(formattedShip) &&
         !(formattedShip === `~${window.ship}`)
       ) {
-        setEventState({ ...eventState, invited: invited.concat(formattedShip) })
+        setEventState({
+          ...eventState,
+          invited: invited.concat(formattedShip),
+          invite: "",
+        })
+      } else {
+        setEventState({ ...eventState, invite: "" })
       }
-
-      setEventState({ ...eventState, invite: "" })
     }
   }
 
@@ -329,7 +333,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
             selectTime={selectTime(true)}
           />
         )}
-        <Text fontSize="1" margin="22px 12px 0px">
+        <Text fontSize="1" margin="24px 12px 0px">
           to
         </Text>
         <DatePicker
@@ -417,7 +421,7 @@ const EventView: React.FC<Props> = ({ location, match }) => {
         onChange={(e) => updateValueHandler(e, EventField.invite)}
         value={eventState.invite}
       />
-      <Button width="100px" marginTop="8px" onClick={addInvite}>
+      <Button width="120px" marginTop="8px" onClick={addInvite}>
         Add Invite
       </Button>
 

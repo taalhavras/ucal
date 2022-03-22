@@ -291,12 +291,10 @@ button.dark:hover {
 }
 
 .event-tile {
-  position: absolute;
+  cursor: pointer;
   background-color: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 8px;
-  left: 10%;
-  width: 80%;
   overflow: hidden;
 }
 

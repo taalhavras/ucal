@@ -35,7 +35,6 @@ export const stateSetter = <T extends {}>(
     any,
     Patch[]
   ]
-  // console.log(patches);
   set(state)
 }
 
@@ -93,7 +92,6 @@ export const stateStorageKey = (stateName: string) => {
   stateStorageKeys = [...new Set([...stateStorageKeys, key])]
   return key
 }
-
 ;(window as any).clearStates = () => {
   stateStorageKeys.forEach((key) => {
     localStorage.removeItem(key)

@@ -36,10 +36,14 @@ const Hour = styled(Text)`
 interface Props {
   displayDay: Date
   userLocation: string
-  mobile: boolean
+  mobile?: boolean
 }
 
-const HoursBar: React.FC<Props> = ({ displayDay, userLocation, mobile }) => {
+const HoursBar: React.FC<Props> = ({
+  displayDay,
+  userLocation,
+  mobile = false,
+}) => {
   const loc = (userLocation.includes(",") && userLocation) || "40.4, -74.5"
   const [lat, lon] = loc.split(",")
 
