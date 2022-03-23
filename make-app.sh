@@ -59,6 +59,7 @@ echo "[%zuse 419]" > ${app_name}/sys.kelvin
 # delete unnecessary %file-server files
 rm ./ucal/app/file-server.hoon
 rm ./ucal/lib/file-server.hoon
+rm ./ucal/lib/file-server.hoon
 rm -rf ./ucal/mar/file-server
 
 # Place the desk in given pier.
