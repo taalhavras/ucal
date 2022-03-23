@@ -224,10 +224,28 @@ Created from tlon's [create-landscape-app](https://github.com/urbit/create-lands
 
 0. Ensure your have followed installation instructions above
 
-1. Copy `.urbitrc-example` to `.urbitrc` and change it to point to your pier(s).
+1. Go to the `ucal-js` directory and run `yarn`.
 
-2. Make whatever changes you want to make in the `ucal-js/src` folder. Being familiar with [React](https://reactjs.org) will be helpful here.
+2. Copy `ucal-js/config/urbitrc-example` to `ucal-js/config/urbitrc` and change it to point to your pier(s). Note that you can run multiple ships locally. Just add the address in `FLEET` and navigate to `zod.localhost:9000/apps/calendar` (replace "zod" with the ship name in the `FLEET` entry). On the first visit you should explicitly authenticate at `zod.localhost:9000/~/login` for each ship.
 
-3. run `yarn build` from the `ucal-js` directory - this should update the js files in this repo
+3. Run `yarn start`.
 
-4. run `make-app.sh` like you did in the initial setup - the new javascript should be copied over along with the other app files.
+4. Make whatever changes you want to make in the `ucal-js/src` folder. Being familiar with [React](https://reactjs.org) will be helpful here.
+
+### Creating a Frontend Production Build
+
+1. Run `yarn build:prod` in `ucal-js`
+
+2. Run the following with a clean fakezod after mounting the `landscape` desk:
+
+```
+cp -r /path/to/ucal-js/src/dist /path/to/zod/landscape/
+cd /path/to/zod/landscape/dist && rm *.js.map*
+urbit /path/to/zod
+|commit %landscape
+-garden!make-glob %landscape /dist
+```
+
+3. Get the glob from `/path/to/zod/.urb/put/`
+
+4. Upload to a public URL and update `desk.docket-0`'s `glob-http` entry.
