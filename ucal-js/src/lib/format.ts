@@ -3,3 +3,6 @@ export const capitalize = (word: string) =>
 
 export const warnError = (prefix: string) => (error: any) =>
   console.warn(prefix, error)
+
+export const formatShip = (ship: string) =>
+  ship[0] === "~" ? ship : `~${ship}`

@@ -11,10 +11,7 @@ interface Props {
   day: Date
   month: number
   events: Event[]
-  goToEvent: (
-    calendarCode: string,
-    eventCode: string
-  ) => (event: React.MouseEvent<HTMLElement>) => void
+  goToEvent: (event: Event) => (event: React.MouseEvent<HTMLElement>) => void
   selectDay: (day: Date) => (event: React.MouseEvent<HTMLElement>) => void
 }
 
@@ -68,7 +65,7 @@ const MonthDay: React.FC<Props> = ({
           <Box
             className="event-title-ellipsis"
             key={`event-${ind}`}
-            onClick={goToEvent(ae.calendarCode, ae.eventCode)}
+            onClick={goToEvent(ae)}
           >
             <Text>{ae.title}</Text>
           </Box>

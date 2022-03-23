@@ -2,7 +2,8 @@ txt/hg.txt
 txt/rn.txt
 ics/*
 *.temp
-.urbitrc
+urbitrc
+dist/
 node_modules/
 urbit/gen/dummy.hoon
 urbit/gen/resource-test.hoon

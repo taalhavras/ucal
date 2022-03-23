@@ -44,6 +44,7 @@ echo "before symbolic-merge.sh"
 ./symbolic-merge.sh base-dev $app_name
 ./symbolic-merge.sh garden-dev $app_name
 ./symbolic-merge.sh $app_name-tmp $app_name
+cp ./arvo/lib/pretty-file.hoon ./ucal/lib/pretty-file.hoon
 
 if [ "$path_to_app_code" != "" ]; then
     ./symbolic-merge.sh "./${app_name}-tmp" $app_name
@@ -55,11 +56,17 @@ fi
 # Update this as the kelvin version changes
 echo "[%zuse 419]" > ${app_name}/sys.kelvin
 
+# delete unnecessary %file-server files
+rm ./ucal/app/file-server.hoon
+rm ./ucal/lib/file-server.hoon
+rm ./ucal/lib/file-server.hoon
+rm -rf ./ucal/mar/file-server
+
 # Place the desk in given pier.
 echo "deleting old desk"
-rm -r "${path_to_pier}/${app_name}"
+rm -r "${path_to_pier}/${app_name}/"*
 echo "copying over"
-cp -Lr $app_name $path_to_pier
+cp -LR "$app_name/"* "$path_to_pier/$app_name/"
 
 # Clean up.
 rm -r $app_name

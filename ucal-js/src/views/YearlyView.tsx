@@ -39,7 +39,7 @@ const YearlyView: React.FC<ViewProps> = ({
   const events = Calendar.getRelevantEvents(calendars, selectedDay).map((e) => (
     <Text
       className="yearly-view-event"
-      onClick={goToEvent(e.calendarCode, e.eventCode)}
+      onClick={goToEvent(e)}
       key={`${e.calendarCode}-${e.eventCode}`}
     >
       {moment(e.getStart()).format("hh:mm")} - {e.title}

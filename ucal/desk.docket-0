@@ -1,9 +1,10 @@
 :~  title+'Ucal'
     info+'An urbit calendar.'
+    image+'https://calendar-app-distro.s3.us-east-2.amazonaws.com/calendar-outline.png'
     color+0x81.88c9
     base+'calendar'
-    site+/'~calendar'
-    version+[0 0 3]
+    glob-http+['https://calendar-app-distro.s3.us-east-2.amazonaws.com/glob-0vebi8l.d9hsj.6jb28.fr7g0.r9e43.glob' 0vebi8l.d9hsj.6jb28.fr7g0.r9e43]
+    version+[0 0 4]
     website+'https://github.com/taalhavras/ucal'
     license+'MIT'
 ==

@@ -36,10 +36,14 @@ const Hour = styled(Text)`
 interface Props {
   displayDay: Date
   userLocation: string
-  mobile: boolean
+  mobile?: boolean
 }
 
-const HoursBar: React.FC<Props> = ({ displayDay, userLocation, mobile }) => {
+const HoursBar: React.FC<Props> = ({
+  displayDay,
+  userLocation,
+  mobile = false,
+}) => {
   const loc = (userLocation.includes(",") && userLocation) || "40.4, -74.5"
   const [lat, lon] = loc.split(",")
 
@@ -69,49 +73,31 @@ const HoursBar: React.FC<Props> = ({ displayDay, userLocation, mobile }) => {
 
   const hours = getHours()
 
+  const width = "16px"
+
   return (
     <Row width="12.5%" display="flex" justifyContent="space-around">
       <Box height="calc(100% - 24px)" marginTop="24px">
         <Row height={preDayNight + "%"}>
-          <Box
-            width="40px"
-            maxWidth="20px"
-            background="rgba(0, 0, 0, .8)"
-          ></Box>
+          <Box width={width} background="rgba(0, 0, 0, .8)" />
         </Row>
         <Row height={sunrise1 + "%"}>
-          <Box
-            width="40px"
-            maxWidth="20px"
-            background="rgba(255, 65, 54, .8)"
-          ></Box>
+          <Box width={width} background="rgba(255, 65, 54, .8)" />
         </Row>
         <Row height={sunrise2 + "%"}>
-          <Box width="40px" maxWidth="20px" background="#FFC700"></Box>
+          <Box width={width} background="#FFC700" />
         </Row>
         <Row height={day + "%"}>
-          <Box
-            width="40px"
-            maxWidth="20px"
-            background="rgba(33, 157, 255, .2)"
-          ></Box>
+          <Box width={width} background="rgba(33, 157, 255, .2)" />
         </Row>
         <Row height={sunset1 + "%"}>
-          <Box width="40px" maxWidth="20px" background="#FCC440"></Box>
+          <Box width={width} background="#FCC440"></Box>
         </Row>
         <Row height={sunset2 + "%"}>
-          <Box
-            width="40px"
-            maxWidth="20px"
-            background="rgba(255, 65, 54, .8)"
-          ></Box>
+          <Box width={width} background="rgba(255, 65, 54, .8)" />
         </Row>
         <Row height={postDayNight + "%"}>
-          <Box
-            width="40px"
-            maxWidth="20px"
-            background="rgba(0, 0, 0, .8)"
-          ></Box>
+          <Box width={width} background="rgba(0, 0, 0, .8)" />
         </Row>
       </Box>
       <Box display="flex" flexDirection="column" alignItems="flex-end">

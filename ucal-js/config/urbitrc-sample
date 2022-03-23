@@ -1,0 +1,12 @@
+module.exports = {
+  URBIT_PIERS: [
+    "/Users/williamgalebach/work/urbit/nev",
+    "/Users/williamgalebach/work/urbit/wet",
+  ],
+  herb: false,
+  URL: 'http://localhost:8080',
+  FLEET: {
+    'nev': 'http://localhost:8080',
+    'wet': 'http://localhost:8081',
+  }
+};

@@ -1,6 +1,6 @@
 import React from "react"
 
-import { Text, Box } from "@tlon/indigo-react"
+import { Text, Box, Row } from "@tlon/indigo-react"
 import moment from "moment"
 import Calendar, { Timeframe, ViewProps } from "../types/Calendar"
 import { getHours, HOUR_HEIGHT } from "../lib/dates"
@@ -21,17 +21,32 @@ const DailyView: React.FC<ViewProps> = ({
   const hours = getHours()
   const selectedMoment = moment(selectedDay)
 
-  const events = Calendar.getRelevantEvents(calendars, selectedDay).map(
-    (e, _ind, events) => (
+  const events = Calendar.getRelevantEvents(calendars, selectedDay)
+  const eventTiles = events
+    .filter(({ allDay }) => !allDay)
+    .map((e, _ind, events) => (
       <EventTile
         goToEvent={goToEvent}
         weeklyView={false}
         event={e}
         events={events}
         key={`${e.calendarCode}${e.eventCode}`}
+        mobile={mobile}
       />
-    )
-  )
+    ))
+  const allDayEvents = events
+    .filter(({ allDay }) => allDay)
+    .map((e, _ind, events) => (
+      <EventTile
+        goToEvent={goToEvent}
+        weeklyView={false}
+        event={e}
+        events={events}
+        key={`${e.calendarCode}${e.eventCode}`}
+        mobile={mobile}
+        allDay
+      />
+    ))
 
   return (
     <Box
@@ -40,18 +55,21 @@ const DailyView: React.FC<ViewProps> = ({
       width="100%"
       margin="16px 0px 0px 0px"
     >
-      <Box
-        marginLeft="14%"
-        display="flex"
-        flexDirection="column"
-        width="40px"
-        alignItems="center"
-      >
-        <Text>{selectedMoment.format("ddd").toLocaleUpperCase()}</Text>
-        <Text fontSize="2">
-          {selectedMoment.format("D").toLocaleUpperCase()}
-        </Text>
-      </Box>
+      <Row>
+        <Box
+          marginLeft="14%"
+          display="flex"
+          flexDirection="column"
+          width="40px"
+          alignItems="center"
+        >
+          <Text>{selectedMoment.format("ddd").toLocaleUpperCase()}</Text>
+          <Text fontSize="2">
+            {selectedMoment.format("D").toLocaleUpperCase()}
+          </Text>
+        </Box>
+        {allDayEvents}
+      </Row>
       <Box
         width="100%"
         height="calc(100vh - 212px)"
@@ -94,7 +112,7 @@ const DailyView: React.FC<ViewProps> = ({
                   key={`hour-blocks-${hour}`}
                 ></Box>
               ))}
-              {events}
+              {eventTiles}
             </Box>
           </Box>
         </Box>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { BrowserRouter, Route } from "react-router-dom"
+import { BrowserRouter, Route, Redirect } from "react-router-dom"
 import HeaderBar from "./components/lib/header-bar.js"
 
 import { ThemeProvider } from "styled-components"
@@ -31,8 +31,11 @@ export const App: React.FC = () => {
     themeWatcher.addListener(updateTheme)
   }, [])
 
+  const urlParams = new URLSearchParams(window.location.search)
+  const isEmbedded = urlParams.get("embedded") === "true"
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/apps/calendar">
       <ThemeProvider theme={dark ? darkTheme : lightTheme}>
         <CalendarAndEventProvider>
           <UserLocationProvider>
@@ -43,25 +46,24 @@ export const App: React.FC = () => {
               backgroundColor="white"
               width="100%"
               px={[0, 4]}
-              pb={[0, 4]}
             >
-              <HeaderBar />
-              <Route exact path="/~calendar">
+              {!isEmbedded && <HeaderBar />}
+              <Route exact path="/">
                 <CalendarWrapper />
               </Route>
-              <Route exact path="/~calendar/create">
+              <Route exact path="/create">
                 <CalendarView />
               </Route>
-              <Route exact path="/~calendar/calendar/edit/:calendar">
+              <Route exact path="/calendar/edit/:calendar">
                 <CalendarView />
               </Route>
-              <Route exact path="/~calendar/:timeframe/:displayDay">
+              <Route exact path="/:timeframe/:displayDay">
                 <CalendarWrapper />
               </Route>
-              <Route exact path="/~calendar/event">
+              <Route exact path="/event">
                 <EventView />
               </Route>
-              <Route exact path="/~calendar/event/:calendar/:event">
+              <Route exact path="/event/:calendar/:event">
                 <EventView />
               </Route>
               <Route exact path="/~calendar/import">
