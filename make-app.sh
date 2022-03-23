@@ -58,9 +58,9 @@ echo "[%zuse 419]" > ${app_name}/sys.kelvin
 
 # Place the desk in given pier.
 echo "deleting old desk"
-rm -r "${path_to_pier}/${app_name}/*"
+rm -r "${path_to_pier}/${app_name}/"*
 echo "copying over"
-cp -LR "$app_name/*" "$path_to_pier/$app_name/"
+cp -LR "$app_name/"* "$path_to_pier/$app_name/"
 
 # Clean up.
 rm -r $app_name
