@@ -60,9 +60,10 @@
         =/  cals=(list calendar)
             .^  (list calendar)
               %gx
-              (scot %p our.bowl)
+              us
               %ucal-store
               (scot %da now.bowl)
+              us
               /calendars/noun
             ==
         %+  turn
@@ -161,9 +162,10 @@
   =/  alma=almanac
       .^  almanac
         %gx
-        (scot %p our.bowl)
+        us
         %ucal-store
         (scot %da now.bowl)
+        us
         /almanac/noun
       ==
   =/  cc=calendar-code  name.rid
