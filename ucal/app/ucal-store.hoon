@@ -708,14 +708,14 @@
         =/  new-start=@da
             (~(convert-between tzconv [our.bowl now.bowl]) start src-zone tzid)
         ed(when (move-moment-start when.ed new-start), tzid (trip tzid))
-    ::  now we support the same scrys we do earlier
-    ?:  =(variant %specific)
-      ?>  ?=([%timezone @t %events %specific *] path)
+    ?+  path  [~ ~]
+        [%timezone @t %events %specific *]
       =/  res=(unit event)  (get-specific-event t.t.t.t.path almanac)
       ?~  res
         ~
       ``ucal-event+!>(u.res(data (convert-event-data data.u.res)))
-    ?:  =(variant %bycal)
+    ::
+        [%timezone @t %events %bycal *]
       =/  res=(unit (list event))  (get-events-bycal t.t.path almanac)
       ?~  res
         ~
@@ -728,7 +728,8 @@
       |=  ev=event
       ^-  event
       ev(data (convert-event-data data.ev))
-    ?:  =(variant %inrange)
+    ::
+        [%timezone @t %events %inrange *]
       =/  res=(unit [(list event) (list projected-event)])  (get-events-inrange t.t.path almanac)
       ?~  res
         ~
@@ -747,11 +748,8 @@
       |=  pr=projected-event
       ^-  projected-event
       pr(data (convert-event-data data.pr))
-    ?:  =(variant %all)
-      ::  Explicitly using %all here for easier path matching - this
-      ::  is meant to match the /events scry (which gets all events).
-      ::  For now I think this is fine - if there are future issues
-      ::  with these paths being different they can be unified.
+    ::
+        ?([%timezone @t %events %all ~] [%timezone @t %events ~])
       =/  res=(list event)  (~(get-events al almanac))
       %-  some
       %-  some
@@ -762,7 +760,7 @@
       |=  ev=event
       ^-  event
       ev(data (convert-event-data data.ev))
-    !!
+    ==
   --
   |=  [=bowl:gall =path =almanac]
   ^-  (unit (unit cage))
