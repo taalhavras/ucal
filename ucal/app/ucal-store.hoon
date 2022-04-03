@@ -689,9 +689,17 @@
   ++  timezone-handler
     |=  [=bowl:gall =path =almanac]
     ^-  (unit (unit cage))
-    ?>  ?=([%timezone @t %events @t *] path)
+    ::  At this point, the path must be something like
+    ::  /timezone/utc/events/{variant}
+    ::  where {variant} is ?(%all, %specific, %bycal, %inrange)
+    ::  It's also possible for {variant} to be omitted, in which case
+    ::  we treat it as if it were %all.
+    ::  TODO get rid of %all as a variant since it diverges from the
+    ::  contract of how these scries should work - we shouldn't have
+    ::  to specify anything.
+    ?>  ?=([%timezone @t %events *] path)
     =/  tzid=@t  i.t.path
-    =/  variant=@t  i.t.t.t.path
+    =/  variant=@t  ?~(t.t.t.path %all i.t.t.t.path)
     =/  convert-event-data=$-(event-data event-data)
         |=  ed=event-data
         ^-  event-data
@@ -702,6 +710,7 @@
         ed(when (move-moment-start when.ed new-start), tzid (trip tzid))
     ::  now we support the same scrys we do earlier
     ?:  =(variant %specific)
+      ?>  ?=([%timezone @t %events %specific *] path)
       =/  res=(unit event)  (get-specific-event t.t.t.t.path almanac)
       ?~  res
         ~
@@ -754,7 +763,6 @@
       ^-  event
       ev(data (convert-event-data data.ev))
     !!
-
   --
   |=  [=bowl:gall =path =almanac]
   ^-  (unit (unit cage))
