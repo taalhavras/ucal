@@ -179,16 +179,27 @@
       ``ucal-event-host+!>((~(got by outgoing-rsvps.state) [i.t.t.path i.t.t.t.path]))
     ::
         [%x %invited-to *]
-      (handle-on-peek bowl t.t.path invited-to.state)
+      (handle-on-peek bowl t.t.path ~[invited-to.state])
     ::
-        [%x @p *]
-      =/  who=@p  `@p`(slav %p `@tas`+<:path)
+        [%x @tas *]
+      =/  target=@tas  i.t.path
+      ?:  =(target %all)
+        ::  Special case handling for some scries that can retrieve all
+        ::  entities across multiple ships. This includes %events and
+        ::  %calendars at the moment, though could be extended to other
+        ::  scries.
+        =/  all-almas=(list almanac)
+          :+  alma.state
+            invited-to.state
+          ~(val by external.state)
+        (handle-on-peek bowl t.t.path all-almas)
+      =/  who=@p  `@p`(slav %p target)
       ?:  =(who our.bowl)
-        (handle-on-peek bowl t.t.path alma.state)
+        (handle-on-peek bowl t.t.path ~[alma.state])
       =/  other-alma=(unit almanac)  (~(get by external.state) `entity`who)
       ?~  other-alma
         ~
-      (handle-on-peek bowl t.t.path u.other-alma)
+      (handle-on-peek bowl t.t.path ~[u.other-alma])
     ==
   ++  on-fail   on-fail:def
 --
@@ -687,7 +698,7 @@
   ::  +timezone-handler: Handler for timezone scries
   ::
   ++  timezone-handler
-    |=  [=bowl:gall =path =almanac]
+    |=  [=bowl:gall =path almas=(list almanac)]
     ^-  (unit (unit cage))
     ::  At this point, the path must be something like
     ::  /timezone/utc/events/{variant}
@@ -708,15 +719,18 @@
         =/  new-start=@da
             (~(convert-between tzconv [our.bowl now.bowl]) start src-zone tzid)
         ed(when (move-moment-start when.ed new-start), tzid (trip tzid))
+    =/  n=@ud  (lent almas)
     ?+  path  [~ ~]
         [%timezone @t %events %specific *]
-      =/  res=(unit event)  (get-specific-event t.t.t.t.path almanac)
+      ?>  =(n 1)
+      =/  res=(unit event)  (get-specific-event t.t.t.t.path (snag 0 almas))
       ?~  res
         ~
       ``ucal-event+!>(u.res(data (convert-event-data data.u.res)))
     ::
         [%timezone @t %events %bycal *]
-      =/  res=(unit (list event))  (get-events-bycal t.t.path almanac)
+      ?>  =(n 1)
+      =/  res=(unit (list event))  (get-events-bycal t.t.path (snag 0 almas))
       ?~  res
         ~
       %-  some
@@ -730,7 +744,9 @@
       ev(data (convert-event-data data.ev))
     ::
         [%timezone @t %events %inrange *]
-      =/  res=(unit [(list event) (list projected-event)])  (get-events-inrange t.t.path almanac)
+      ?>  =(n 1)
+      =/  res=(unit [(list event) (list projected-event)])
+          (get-events-inrange t.t.path (snag 0 almas))
       ?~  res
         ~
       %-  some
@@ -750,7 +766,7 @@
       pr(data (convert-event-data data.pr))
     ::
         ?([%timezone @t %events %all ~] [%timezone @t %events ~])
-      =/  res=(list event)  (~(get-events al almanac))
+      =/  res=(list event)  (zing (turn almas |=(a=almanac (~(get-events al a)))))
       %-  some
       %-  some
       :-  %ucal-events
@@ -762,20 +778,27 @@
       ev(data (convert-event-data data.ev))
     ==
   --
-  |=  [=bowl:gall =path =almanac]
+  |=  [=bowl:gall =path almas=(list almanac)]
   ^-  (unit (unit cage))
+  ::  The caller can specify as many almanacs as they want, but the list
+  ::  should never be empty (and should only be 1 for most scries)
+  =/  n=@ud  (lent almas)
+  ?>  !=(n 0)
   ?+  path  [~ ~] :: unhandled
   ::
       [%almanac ~]
-    ``ucal-almanac+!>(almanac)
+    ?>  =(n 1)
+    ``ucal-almanac+!>((snag 0 almas))
   ::
       [%calendars ~]
-    ``ucal-calendars+!>((~(get-calendars al almanac)))
+    ``ucal-calendars+!>((zing (turn almas |=(a=almanac (~(get-calendars al a))))))
   ::
       [%events ~]
-    ``ucal-events+!>((~(get-events al almanac)))
+    ``ucal-events+!>((zing (turn almas |=(a=almanac (~(get-events al a))))))
   ::
       [%calendar-and-events *]
+    ?>  =(n 1)
+    =/  almanac  (snag 0 almas)
     =/  c  (get-calendar t.path almanac)
     ?~  c
       ~
@@ -785,25 +808,29 @@
     ``ucal-calendar-and-events+!>([u.c u.evs])
   ::
       [%calendars *]
-    =/  res  (get-calendar t.path almanac)
+    ?>  =(n 1)
+    =/  res  (get-calendar t.path (snag 0 almas))
     ?~  res
       ~
     ``ucal-calendar+!>(u.res)
   ::
       [%events %specific *]
-    =/  res  (get-specific-event t.t.path almanac)
+    ?>  =(n 1)
+    =/  res  (get-specific-event t.t.path (snag 0 almas))
     ?~  res
       ~
     ``ucal-event+!>(u.res)
   ::
       [%events %bycal *]
-    =/  res  (get-events-bycal t.t.path almanac)
+    ?>  =(n 1)
+    =/  res  (get-events-bycal t.t.path (snag 0 almas))
     ?~  res
       ~
     ``ucal-events+!>(u.res)
   ::
       [%events %inrange *]
-    =/  res  (get-events-inrange t.t.path almanac)
+    ?>  =(n 1)
+    =/  res  (get-events-inrange t.t.path (snag 0 almas))
     ?~  res
       ~
     ``ucal-events-in-range+!>(u.res)
@@ -820,7 +847,7 @@
       :+  %timezone
         timezone
       (slag events-idx t.path)
-    (timezone-handler bowl new-path almanac)
+    (timezone-handler bowl new-path almas)
   ==
 ::  +apply-permissions-update: updates calendar permissions
 ::
