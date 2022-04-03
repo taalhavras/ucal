@@ -684,10 +684,9 @@
 ++  handle-on-peek
   =>
   |%
-  ::  +common-timezone-handler: Handler for both timezone scries - see
-  ::  comments at callsites for why this is needed.
+  ::  +timezone-handler: Handler for timezone scries
   ::
-  ++  common-timezone-handler
+  ++  timezone-handler
     |=  [=bowl:gall =path =almanac]
     ^-  (unit (unit cage))
     ?>  ?=([%timezone @t %events @t *] path)
@@ -803,9 +802,6 @@
       ~
     ``ucal-events-in-range+!>(u.res)
   ::
-      [%timezone @t %events @t *]
-    (common-timezone-handler bowl path almanac)
-  ::
       [%timezone *]
     ::  Sometimes for timezones that include a '/' in them (i.e.
     ::  America/New_York, America/Kentucky/Louiville) path parsing logic
@@ -818,7 +814,7 @@
       :+  %timezone
         timezone
       (slag events-idx t.path)
-    (common-timezone-handler bowl new-path almanac)
+    (timezone-handler bowl new-path almanac)
   ==
 ::  +apply-permissions-update: updates calendar permissions
 ::
