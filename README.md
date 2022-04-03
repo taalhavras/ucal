@@ -88,7 +88,7 @@ era:
 }
 </pre>
 
-### ucal-store scrys
+### ucal-store scries
 Note: All paths below should be suffixed with a mark - either `noun` or `json` will work (for noun and json results respectively). You can also use the `ics` mark for the %calendar-and-events scry as well as any other scry that returns a single calendar, single event, or list of events. This mark produces an @t of the data parsed into the ICS file format as specified by [RFC 5545](https://datatracker.ietf.org/doc/html/rfc5545). The most useful scry here is %calendar-and-events - the others are mostly supported because it was easy to add such support.
 `cal-code` and `event-code` are unique per calendar/event and are just `@tas`s (they're just uuids). For the scry for events in range, start and end are `@da`s. `ship` is an `@p` whose almanac (a collection of calendars and events) we're examining.
 | Path                                     | Return type                                  | Notes                                                                                                                                                                                                                                                                                                                   |
@@ -102,10 +102,16 @@ Note: All paths below should be suffixed with a mark - either `noun` or `json` w
 | `%x ship %events %inrange cal-code start end timezone`   | [(list event) (list projected-event)]        | produces two lists if a calendar with the specified code exits, unit otherwise. the  (list event) is exactly what you'd expect and the (list projected-event) contains specific instances of recurring events found in the target range. the convention is start then end, but they can be supplied in reverse as well. The start/end are interpreted as being times in the specified timezone. |
 |  `%x %host cal-code event-code`    |  @p  |  the ship hosting a particular event we're invited to |
 
-#### Invitation scrys
-The above scrys can also be used to retrieve information about events you've been invited to. You won't have access to calendar data for these events (unless you separately have access to it), but by using `%invited-to` instead of an `@p` in the path all scries that produce events will get you events you've been invited to. These scries are the only way to see these events if you don't have access to the calendars they're hsoted on.
+### Special scries
+The following details some special scries %ucal supports. The first two involve suppling special values for the ship (in fact these values are not valid `@p` so perhaps "ship" isn't the right word) while the last involves some changes to the path structure. While the first two are mutually exlusive the timezone section can be combined with either of them.
 
-### Timezones in ucal
+#### Invitation scries
+The above scries can also be used to retrieve information about events you've been invited to. You won't have access to calendar data for these events (unless you separately have access to it), but by using `%invited-to` instead of an `@p` in the path all scries that produce events will get you events you've been invited to. These scries are the only way to see these events if you don't have access to the calendars they're hsoted on.
+
+#### All-encompassing scries
+You can use `%all` instead of an `@p` for the %events and %calendars scries (the ones that produce all calendars and all events). This does what you'd expect and produces the list of all events/calendars that %ucal knows about. This includes local calendars, calendars that you've subscribed to, and events you've been invited to.
+
+#### Timezones in ucal
 All scries that produce events can have `/timezone/ZONE_NAME` included after the ship. This means that the events produced wil have
 times adjusted to the specified timezone. Some examples with EST as the timezone of choice:
 ```
@@ -123,7 +129,7 @@ You'll need to run `timezone-store`on your ship with some imported data for this
 
 Again, the best documentation for these is the source (specifically the `++on-poke` arm in `ucal-pull-hook.hoon`) but here's an overview. `%invitation-response` is hopefully fairly obvious - it just sends an rsvp for a specified event. `%query-cals` sends a request to a given ship for all the calendar metadata that we (the sender) have access to. Responses to this poke can be accessed via a scry (documented below).
 
-### ucal-pull-hook scrys
+### ucal-pull-hook scries
 These scries can also be suffixed with either noun or json, depending on what you want.
 | Scry              | Return type     | Notes                                             |
 |-------------------|-----------------|---------------------------------------------------|
@@ -152,7 +158,7 @@ Now if ~nel creates events on this calendar, they'll be sent to ~zod's store (th
 
 ### timezone-store
 Timezones are handled with the help of a separate store - `timezone-store` to be exact. The store is itself fairly simple - it
-has one poke and two main scrys. It's built to handle the [tz database](https://github.com/eggert/tz) - a canonical source for all timezone data, past and present.
+has one poke and two main scries. It's built to handle the [tz database](https://github.com/eggert/tz) - a canonical source for all timezone data, past and present.
 Timezones are obviously important to `ucal`, but they will certainly be important to other applications as well which is why this
 is a wholly separate store. Applications using this will probably be interested in `lib/iana/*`, specifically `lib/iana/conversion.hoon`.
 To use `timezone-store` you'll need to populate it with some data. You can either clone the repo linked above or copy specific files
